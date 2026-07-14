@@ -46,11 +46,35 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return session
     },
     authorized({ auth: session, request }) {
-      const pathname = request.nextUrl.pathname
-      if (pathname === "/login") return true
-      if (!session?.user) return false
-      if (pathname.startsWith("/pengaturan") && session.user.role !== "ADMIN") return false
-      return true
-    },
+  const pathname = request.nextUrl.pathname
+
+  // Halaman dan endpoint autentikasi
+  if (
+    pathname === "/login" ||
+    pathname.startsWith("/api/auth")
+  ) {
+    return true
+  }
+
+  // Endpoint untuk ESP32.
+  // Diamankan dengan SENSOR_API_KEY pada route.ts.
+  if (pathname === "/api/sensor") {
+    return true
+  }
+
+  // Halaman dan API lainnya membutuhkan login
+  if (!session?.user) {
+    return false
+  }
+
+  if (
+    pathname.startsWith("/pengaturan") &&
+    session.user.role !== "ADMIN"
+  ) {
+    return false
+  }
+
+  return true
+},
   },
 })
