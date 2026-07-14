@@ -45,35 +45,25 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       return session
     },
-   authorized({ auth: session, request }) {
-  const pathname = request.nextUrl.pathname
+    authorized({ auth: session, request }) {
+      const pathname = request.nextUrl.pathname
 
-  if (
-    pathname === "/login" ||
-    pathname.startsWith("/api/auth")
-  ) {
-    return true
-  }
+      if (pathname === "/login") {
+        return true
+      }
 
-  // Endpoint alat IoT memakai SENSOR_API_KEY,
-  // bukan session login pengguna.
-  if (pathname === "/api/sensor") {
-    return true
-  }
+      if (!session?.user) {
+        return false
+      }
 
-  if (!session?.user) {
-    return false
-  }
+      if (
+        pathname.startsWith("/pengaturan") &&
+        session.user.role !== "ADMIN"
+      ) {
+        return false
+      }
 
-  if (
-    pathname.startsWith("/pengaturan") &&
-    session.user.role !== "ADMIN"
-  ) {
-    return false
-  }
-
-  return true
-},
-  
+      return true
+    },
   },
 })
