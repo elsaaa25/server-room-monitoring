@@ -5,22 +5,9 @@ import { db } from "@/lib/db"
 export const runtime = "nodejs"
 
 const readingSchema = z.object({
-  // Untuk tahap pertama hanya menerima sensor suhu lantai 4
   sensorId: z.literal("TEMP-L4"),
-
-  temperature: z
-    .number()
-    .finite()
-    .min(-40)
-    .max(100),
-
-  // Belum digunakan, tetapi disiapkan untuk tahap berikutnya
-  voltage: z
-    .number()
-    .finite()
-    .min(0)
-    .max(10)
-    .optional(),
+  temperature: z.number().finite().min(-40).max(100),
+  voltage: z.number().finite().min(0).max(10).optional(),
 })
 
 export async function POST(request: Request) {
@@ -28,9 +15,7 @@ export async function POST(request: Request) {
     const sensorApiKey = process.env.SENSOR_API_KEY
 
     if (!sensorApiKey) {
-      console.error(
-        "SENSOR_API_KEY belum tersedia pada environment server.",
-      )
+      console.error("SENSOR_API_KEY belum tersedia.")
 
       return NextResponse.json(
         {
@@ -68,11 +53,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const {
-      sensorId,
-      temperature,
-      voltage,
-    } = parsed.data
+    const { sensorId, temperature, voltage } = parsed.data
 
     const result = await db.query(
       `
@@ -90,11 +71,7 @@ export async function POST(request: Request) {
           voltage,
           recorded_at AS "recordedAt"
       `,
-      [
-        sensorId,
-        temperature,
-        voltage ?? null,
-      ],
+      [sensorId, temperature, voltage ?? null],
     )
 
     return NextResponse.json(
@@ -106,10 +83,7 @@ export async function POST(request: Request) {
       { status: 201 },
     )
   } catch (error) {
-    console.error(
-      "Gagal menyimpan data sensor:",
-      error,
-    )
+    console.error("Gagal menyimpan data sensor:", error)
 
     return NextResponse.json(
       {
