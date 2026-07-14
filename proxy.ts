@@ -2,6 +2,10 @@ export { auth as proxy } from "@/auth"
 
 export const config = {
   matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico).*)",
+    /*
+     * Jalankan autentikasi hanya untuk halaman.
+     * Semua endpoint /api dilewati oleh proxy.
+     */
+    "/((?!api|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)",
   ],
 }
