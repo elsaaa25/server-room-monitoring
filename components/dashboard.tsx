@@ -78,19 +78,34 @@ export function Dashboard() {
   }, [])
 
   // Fetch Data dari API
-  const fetchData = useCallback(async () => {
-    try {
-      const res = await fetch(`/api/sensor/history?hours=${period}`)
-      const json = await res.json()
-      if (json.success) {
-        setRawReadings(json.data)
-      }
-    } catch (err) {
-      console.error("Gagal memuat data sensor:", err)
-    } finally {
-      setLoading(false)
+const fetchData = useCallback(async () => {
+  try {
+    const res = await fetch(
+      `/api/sensor/history?hours=${period}`,
+    )
+
+    const json = await res.json()
+
+    if (json.success) {
+      const readings: RawReading[] = (json.data ?? []).map(
+        (reading: RawReading) => ({
+          ...reading,
+          temperature: Number(reading.temperature),
+          voltage:
+            reading.voltage !== null
+              ? Number(reading.voltage)
+              : null,
+        }),
+      )
+
+      setRawReadings(readings)
     }
-  }, [period])
+  } catch (err) {
+    console.error("Gagal memuat data sensor:", err)
+  } finally {
+    setLoading(false)
+  }
+}, [period])
 
   // Polling data sesuai interval pengaturan
   useEffect(() => {
@@ -154,13 +169,39 @@ export function Dashboard() {
   const recentReadings = rawReadings.slice(0, 5)
 
   // Hitung Nilai Rata-rata & Ekstrim Hari Ini (Sesuai Lantai Aktif)
-  const activeTemps = rawReadings
-    .filter(r => r.sensorId === (activeFloor === "4" ? "TEMP-L4" : "esp32-lantai5"))
-    .map(r => r.temperature)
-  
-  const maxTemp = activeTemps.length ? Math.max(...activeTemps) : 0
-  const minTemp = activeTemps.length ? Math.min(...activeTemps) : 0
-  const avgTemp = activeTemps.length ? activeTemps.reduce((a, b) => a + b, 0) / activeTemps.length : 0
+  const activeSensorId =
+  activeFloor === "4"
+    ? "TEMP-L4"
+    : "esp32-lantai5"
+
+const activeTemps = rawReadings
+  .filter(
+    reading =>
+      reading.sensorId === activeSensorId,
+  )
+  .map(reading => Number(reading.temperature))
+  .filter(temperature =>
+    Number.isFinite(temperature),
+  )
+
+const maxTemp =
+  activeTemps.length > 0
+    ? Math.max(...activeTemps)
+    : null
+
+const minTemp =
+  activeTemps.length > 0
+    ? Math.min(...activeTemps)
+    : null
+
+const avgTemp =
+  activeTemps.length > 0
+    ? activeTemps.reduce(
+        (total, temperature) =>
+          total + temperature,
+        0,
+      ) / activeTemps.length
+    : null
 
   return (
     <div className="min-h-screen p-2 lg:flex bg-slate-50/50">
@@ -272,7 +313,7 @@ export function Dashboard() {
                   <Metric 
                     icon={ShieldCheck} 
                     label="Kondisi Ruangan L4" 
-                    value={statusL4 === "Bahaya" ? "KRITIS" : statusL4 === "Waspada" ? "PERHATIAN" : "AMAN"} 
+                    value={statusL4 === "Bahaya" ? "BAHAYA" : statusL4 === "Waspada" ? "PERHATIAN" : "AMAN"} 
                     detail={statusL4 === "Normal" ? "Suhu & Tegangan aman" : "Segera periksa AC server!"}
                     valueClassName={statusColor(statusL4)}
                     iconColor="bg-slate-50 text-slate-700"
@@ -567,9 +608,38 @@ export function Dashboard() {
                   <CardTitle className="text-sm font-semibold">Ringkasan Hari Ini ({activeFloor === "4" ? "Lantai 4" : "Lantai 5"})</CardTitle>
                 </CardHeader>
                 <CardContent className="divide-y">
-                  <SummaryRow icon={TrendingUp} label="Suhu Tertinggi" value={`${Number(maxTemp)}°C`} color="bg-rose-50 text-rose-500" />
-                  <SummaryRow icon={TrendingDown} label="Suhu Terendah" value={`${Number(minTemp)}°C`} color="bg-blue-50 text-blue-500" />
-                  <SummaryRow icon={Activity} label="Rata-rata Suhu" value={`${Number(avgTemp.toFixed(1))}°C`} color="bg-emerald-50 text-emerald-600" />
+                  <SummaryRow
+  icon={TrendingUp}
+  label="Suhu Tertinggi"
+  value={
+    maxTemp !== null
+      ? `${maxTemp.toFixed(2)}°C`
+      : "--°C"
+  }
+  color="bg-rose-50 text-rose-500"
+/>
+
+<SummaryRow
+  icon={TrendingDown}
+  label="Suhu Terendah"
+  value={
+    minTemp !== null
+      ? `${minTemp.toFixed(2)}°C`
+      : "--°C"
+  }
+  color="bg-blue-50 text-blue-500"
+/>
+
+<SummaryRow
+  icon={Activity}
+  label="Rata-rata Suhu"
+  value={
+    avgTemp !== null
+      ? `${avgTemp.toFixed(2)}°C`
+      : "--°C"
+  }
+  color="bg-emerald-50 text-emerald-600"
+/>
                 </CardContent>
               </Card>
             </section>
