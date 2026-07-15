@@ -498,7 +498,7 @@ const avgTemp =
                   <Metric 
                     icon={ShieldCheck} 
                     label="Kondisi Ruangan L5" 
-                    value={statusL5 === "Bahaya" ? "KRITIS" : statusL5 === "Waspada" ? "PERHATIAN" : "AMAN"} 
+                    value={statusL5 === "Bahaya" ? "BAHAYA" : statusL5 === "Waspada" ? "PERHATIAN" : "AMAN"} 
                     detail={statusL5 === "Normal" ? "Suhu ruangan normal" : "Periksa kondisi AC Lantai 5!"}
                     valueClassName={statusColor(statusL5)}
                     iconColor="bg-slate-50 text-slate-700"
