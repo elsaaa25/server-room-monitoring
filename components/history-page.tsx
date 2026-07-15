@@ -50,9 +50,20 @@ export function HistoryPage() {
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
 
-  // Load settings
+  // Load settings dari Database PostgreSQL
   useEffect(() => {
-    setSettings(readMonitoringSettings())
+    const fetchSettings = async () => {
+      try {
+        const res = await fetch("/api/settings")
+        const json = await res.json()
+        if (json.success) {
+          setSettings(json.data)
+        }
+      } catch (err) {
+        console.error("Gagal memuat pengaturan di riwayat:", err)
+      }
+    }
+    fetchSettings()
   }, [])
 
   // Fetch data dari database berdasarkan tanggal & pencarian sensorId
