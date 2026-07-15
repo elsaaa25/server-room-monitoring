@@ -3,14 +3,14 @@
 import { useEffect, useState, useCallback } from "react"
 import Link from "next/link"
 import { getSession, signOut } from "next-auth/react"
-import { 
-  Activity, Bell, CalendarDays, CheckCircle2, ChevronDown, Clock3, 
-  Database, Menu, Radio, ShieldCheck, Thermometer, TrendingDown, 
-  TrendingUp, UserRound, Zap 
+import {
+  Activity, Bell, CalendarDays, CheckCircle2, ChevronDown, Clock3,
+  Database, Menu, Radio, ShieldCheck, Thermometer, TrendingDown,
+  TrendingUp, UserRound, Zap
 } from "lucide-react"
-import { 
-  Area, AreaChart, CartesianGrid, ReferenceLine, ResponsiveContainer, 
-  Tooltip, XAxis, YAxis 
+import {
+  Area, AreaChart, CartesianGrid, ReferenceLine, ResponsiveContainer,
+  Tooltip, XAxis, YAxis
 } from "recharts"
 import { AppSidebar } from "@/components/app-sidebar"
 import { Badge } from "@/components/ui/badge"
@@ -31,20 +31,20 @@ type RawReading = {
 
 type Status = "Normal" | "Waspada" | "Bahaya"
 
-const clock = (value: string, seconds = false) => 
-  new Intl.DateTimeFormat("id-ID", { 
-    timeZone: "Asia/Bangkok", 
-    hour: "2-digit", 
-    minute: "2-digit", 
-    second: seconds ? "2-digit" : undefined 
+const clock = (value: string, seconds = false) =>
+  new Intl.DateTimeFormat("id-ID", {
+    timeZone: "Asia/Bangkok",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: seconds ? "2-digit" : undefined
   }).format(new Date(value))
 
-const fullDate = (value: Date) => 
-  new Intl.DateTimeFormat("id-ID", { 
-    timeZone: "Asia/Bangkok", 
-    day: "2-digit", 
-    month: "long", 
-    year: "numeric" 
+const fullDate = (value: Date) =>
+  new Intl.DateTimeFormat("id-ID", {
+    timeZone: "Asia/Bangkok",
+    day: "2-digit",
+    month: "long",
+    year: "numeric"
   }).format(value)
 
 export function Dashboard() {
@@ -78,34 +78,34 @@ export function Dashboard() {
   }, [])
 
   // Fetch Data dari API
-const fetchData = useCallback(async () => {
-  try {
-    const res = await fetch(
-      `/api/sensor/history?hours=${period}`,
-    )
-
-    const json = await res.json()
-
-    if (json.success) {
-      const readings: RawReading[] = (json.data ?? []).map(
-        (reading: RawReading) => ({
-          ...reading,
-          temperature: Number(reading.temperature),
-          voltage:
-            reading.voltage !== null
-              ? Number(reading.voltage)
-              : null,
-        }),
+  const fetchData = useCallback(async () => {
+    try {
+      const res = await fetch(
+        `/api/sensor/history?hours=${period}`,
       )
 
-      setRawReadings(readings)
+      const json = await res.json()
+
+      if (json.success) {
+        const readings: RawReading[] = (json.data ?? []).map(
+          (reading: RawReading) => ({
+            ...reading,
+            temperature: Number(reading.temperature),
+            voltage:
+              reading.voltage !== null
+                ? Number(reading.voltage)
+                : null,
+          }),
+        )
+
+        setRawReadings(readings)
+      }
+    } catch (err) {
+      console.error("Gagal memuat data sensor:", err)
+    } finally {
+      setLoading(false)
     }
-  } catch (err) {
-    console.error("Gagal memuat data sensor:", err)
-  } finally {
-    setLoading(false)
-  }
-}, [period])
+  }, [period])
 
   // Polling data sesuai interval pengaturan
   useEffect(() => {
@@ -146,10 +146,10 @@ const fetchData = useCallback(async () => {
   const statusL4 = getTempStatus(readingL4?.temperature)
   const statusL5 = getTempStatus(readingL5?.temperature)
 
-  const statusColor = (status: Status) => 
+  const statusColor = (status: Status) =>
     status === "Normal" ? "text-emerald-600" : status === "Waspada" ? "text-amber-500" : "text-rose-600"
 
-  const statusBg = (status: Status) => 
+  const statusBg = (status: Status) =>
     status === "Normal" ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-50" : status === "Waspada" ? "bg-amber-50 text-amber-700 hover:bg-amber-50" : "bg-rose-50 text-rose-700 hover:bg-rose-50"
 
   // Filter Data Historis berdasarkan Lantai yang Aktif untuk Grafik
@@ -170,45 +170,45 @@ const fetchData = useCallback(async () => {
 
   // Hitung Nilai Rata-rata & Ekstrim Hari Ini (Sesuai Lantai Aktif)
   const activeSensorId =
-  activeFloor === "4"
-    ? "TEMP-L4"
-    : "esp32-lantai5"
+    activeFloor === "4"
+      ? "TEMP-L4"
+      : "esp32-lantai5"
 
-const activeTemps = rawReadings
-  .filter(
-    reading =>
-      reading.sensorId === activeSensorId,
-  )
-  .map(reading => Number(reading.temperature))
-  .filter(temperature =>
-    Number.isFinite(temperature),
-  )
+  const activeTemps = rawReadings
+    .filter(
+      reading =>
+        reading.sensorId === activeSensorId,
+    )
+    .map(reading => Number(reading.temperature))
+    .filter(temperature =>
+      Number.isFinite(temperature),
+    )
 
-const maxTemp =
-  activeTemps.length > 0
-    ? Math.max(...activeTemps)
-    : null
+  const maxTemp =
+    activeTemps.length > 0
+      ? Math.max(...activeTemps)
+      : null
 
-const minTemp =
-  activeTemps.length > 0
-    ? Math.min(...activeTemps)
-    : null
+  const minTemp =
+    activeTemps.length > 0
+      ? Math.min(...activeTemps)
+      : null
 
-const avgTemp =
-  activeTemps.length > 0
-    ? activeTemps.reduce(
+  const avgTemp =
+    activeTemps.length > 0
+      ? activeTemps.reduce(
         (total, temperature) =>
           total + temperature,
         0,
       ) / activeTemps.length
-    : null
+      : null
 
   return (
     <div className="min-h-screen p-2 lg:flex bg-slate-50/50">
       <aside className="sticky top-2 hidden h-[calc(100vh-1rem)] w-56 shrink-0 overflow-hidden rounded-3xl border bg-white shadow-sm lg:block">
         <AppSidebar />
       </aside>
-      
+
       <main className="min-w-0 flex-1 px-2 pb-6 lg:px-6">
         {/* Header */}
         <header className="flex min-h-20 items-center gap-3">
@@ -244,20 +244,20 @@ const avgTemp =
 
         {/* Menu Pilihan Lantai (Tabs) */}
         <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
-          <Tabs 
-            value={activeFloor} 
-            onValueChange={val => setActiveFloor(val as "4" | "5")} 
+          <Tabs
+            value={activeFloor}
+            onValueChange={val => setActiveFloor(val as "4" | "5")}
             className="w-full sm:w-auto"
           >
             <TabsList className="bg-slate-100 p-1 rounded-xl">
-              <TabsTrigger 
-                value="4" 
+              <TabsTrigger
+                value="4"
                 className="px-4 py-2 text-sm font-semibold rounded-lg transition-all data-[state=active]:bg-[#005a9c] data-[state=active]:text-white"
               >
                 Lantai 4 - Ruang Server
               </TabsTrigger>
-              <TabsTrigger 
-                value="5" 
+              <TabsTrigger
+                value="5"
                 className="px-4 py-2 text-sm font-semibold rounded-lg transition-all data-[state=active]:bg-purple-600 data-[state=active]:text-white"
               >
                 Lantai 5 - Ruangan Kerja
@@ -286,34 +286,34 @@ const avgTemp =
             {activeFloor === "4" && (
               <div>
                 <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                  <Metric 
-                    icon={Thermometer} 
-                    label="Suhu Ruang Server" 
-                    value={readingL4 ? `${Number(readingL4.temperature)}°C` : "--°C"} 
+                  <Metric
+                    icon={Thermometer}
+                    label="Suhu Ruang Server"
+                    value={readingL4 ? `${Number(readingL4.temperature)}°C` : "--°C"}
                     detail={`Status: ${statusL4}`}
                     valueClassName={statusColor(statusL4)}
                     iconColor="bg-emerald-50 text-[#005a9c]"
                   />
-                  <Metric 
-                    icon={Zap} 
-                    label="Tegangan Server AC" 
-                    value={readingL4?.voltage !== null && readingL4?.voltage !== undefined ? `${Number(readingL4.voltage).toFixed(1)} V` : "-- V"} 
+                  <Metric
+                    icon={Zap}
+                    label="Tegangan Server AC"
+                    value={readingL4?.voltage !== null && readingL4?.voltage !== undefined ? `${Number(readingL4.voltage).toFixed(1)} V` : "-- V"}
                     detail={readingL4?.voltage ? (readingL4.voltage >= 200 && readingL4.voltage <= 240 ? "Normal (Stabil)" : "Tegangan Tidak Stabil") : "Tidak ada data"}
                     valueClassName={readingL4?.voltage ? (readingL4.voltage >= 200 && readingL4.voltage <= 240 ? "text-emerald-600" : "text-rose-600") : "text-slate-400"}
                     iconColor="bg-amber-50 text-amber-500"
                   />
-                  <Metric 
-                    icon={Radio} 
-                    label="Status Sensor L4" 
-                    value={onlineL4 ? "Online" : "Offline"} 
+                  <Metric
+                    icon={Radio}
+                    label="Status Sensor L4"
+                    value={onlineL4 ? "Online" : "Offline"}
                     detail={readingL4 ? `Update: ${clock(readingL4.recordedAt, true)}` : "Belum ada data"}
                     valueClassName={onlineL4 ? "text-emerald-600" : "text-rose-600"}
                     iconColor="bg-blue-50 text-blue-500"
                   />
-                  <Metric 
-                    icon={ShieldCheck} 
-                    label="Kondisi Ruangan L4" 
-                    value={statusL4 === "Bahaya" ? "BAHAYA" : statusL4 === "Waspada" ? "PERHATIAN" : "AMAN"} 
+                  <Metric
+                    icon={ShieldCheck}
+                    label="Kondisi Ruangan L4"
+                    value={statusL4 === "Bahaya" ? "BAHAYA" : statusL4 === "Waspada" ? "PERHATIAN" : "AMAN"}
                     detail={statusL4 === "Normal" ? "Suhu & Tegangan aman" : "Segera periksa AC server!"}
                     valueClassName={statusColor(statusL4)}
                     iconColor="bg-slate-50 text-slate-700"
@@ -338,53 +338,53 @@ const avgTemp =
                             </linearGradient>
                           </defs>
                           <CartesianGrid vertical={false} stroke="#edf1ef" />
-                          <XAxis 
-                            dataKey="time" 
-                            tickFormatter={v => clock(v)} 
-                            axisLine={false} 
-                            tickLine={false} 
-                            minTickGap={45} 
-                            fontSize={11} 
+                          <XAxis
+                            dataKey="time"
+                            tickFormatter={v => clock(v)}
+                            axisLine={false}
+                            tickLine={false}
+                            minTickGap={45}
+                            fontSize={11}
                           />
-                          <YAxis 
-                            domain={[18, 36]} 
-                            ticks={[18, 21, 24, 27, 30, 33, 36]} 
-                            axisLine={false} 
-                            tickLine={false} 
-                            fontSize={11} 
+                          <YAxis
+                            domain={[18, 36]}
+                            ticks={[18, 21, 24, 27, 30, 33, 36]}
+                            axisLine={false}
+                            tickLine={false}
+                            fontSize={11}
                           />
-                          <Tooltip 
-                            labelFormatter={v => clock(String(v), true)} 
-                            formatter={v => [`${Number(v)}°C`, "Suhu"]} 
+                          <Tooltip
+                            labelFormatter={v => clock(String(v), true)}
+                            formatter={v => [`${Number(v)}°C`, "Suhu"]}
                           />
-                          <ReferenceLine 
-                            y={settings.dangerTemperature} 
-                            stroke="#fb7185" 
-                            strokeDasharray="5 4" 
-                            label={{ 
-                              value: `Bahaya (≥${settings.dangerTemperature}°C)`, 
-                              fill: "#f43f5e", 
-                              fontSize: 10, 
-                              position: "insideTopLeft" 
-                            }} 
+                          <ReferenceLine
+                            y={settings.dangerTemperature}
+                            stroke="#fb7185"
+                            strokeDasharray="5 4"
+                            label={{
+                              value: `Bahaya (≥${settings.dangerTemperature}°C)`,
+                              fill: "#f43f5e",
+                              fontSize: 10,
+                              position: "insideTopLeft"
+                            }}
                           />
-                          <ReferenceLine 
-                            y={settings.warningTemperature} 
-                            stroke="#f59e0b" 
-                            strokeDasharray="5 4" 
-                            label={{ 
-                              value: `Waspada (${settings.warningTemperature}°C)`, 
-                              fill: "#d97706", 
-                              fontSize: 10, 
-                              position: "insideTopLeft" 
-                            }} 
+                          <ReferenceLine
+                            y={settings.warningTemperature}
+                            stroke="#f59e0b"
+                            strokeDasharray="5 4"
+                            label={{
+                              value: `Waspada (${settings.warningTemperature}°C)`,
+                              fill: "#d97706",
+                              fontSize: 10,
+                              position: "insideTopLeft"
+                            }}
                           />
-                          <Area 
-                            type="monotone" 
-                            dataKey="temperature" 
-                            stroke="#10b981" 
-                            strokeWidth={2.4} 
-                            fill="url(#tempL4Grad)" 
+                          <Area
+                            type="monotone"
+                            dataKey="temperature"
+                            stroke="#10b981"
+                            strokeWidth={2.4}
+                            fill="url(#tempL4Grad)"
                           />
                         </AreaChart>
                       </ResponsiveContainer>
@@ -407,64 +407,64 @@ const avgTemp =
                             </linearGradient>
                           </defs>
                           <CartesianGrid vertical={false} stroke="#edf1ef" />
-                          <XAxis 
-                            dataKey="time" 
-                            tickFormatter={v => clock(v)} 
-                            axisLine={false} 
-                            tickLine={false} 
-                            minTickGap={45} 
-                            fontSize={11} 
+                          <XAxis
+                            dataKey="time"
+                            tickFormatter={v => clock(v)}
+                            axisLine={false}
+                            tickLine={false}
+                            minTickGap={45}
+                            fontSize={11}
                           />
-                          <YAxis 
-                            domain={[180, 260]} 
-                            ticks={[180, 200, 220, 240, 260]} 
-                            axisLine={false} 
-                            tickLine={false} 
-                            fontSize={11} 
+                          <YAxis
+                            domain={[180, 260]}
+                            ticks={[180, 200, 220, 240, 260]}
+                            axisLine={false}
+                            tickLine={false}
+                            fontSize={11}
                           />
-                          <Tooltip 
-                            labelFormatter={v => clock(String(v), true)} 
-                            formatter={v => [v !== null ? `${Number(v).toFixed(1)} V` : "-- V", "Tegangan"]} 
+                          <Tooltip
+                            labelFormatter={v => clock(String(v), true)}
+                            formatter={v => [v !== null ? `${Number(v).toFixed(1)} V` : "-- V", "Tegangan"]}
                           />
-                          <ReferenceLine 
-                            y={220} 
-                            stroke="#3b82f6" 
-                            strokeDasharray="4 4" 
-                            label={{ 
-                              value: "PLN Target (220V)", 
-                              fill: "#2563eb", 
-                              fontSize: 10, 
-                              position: "insideTopLeft" 
-                            }} 
+                          <ReferenceLine
+                            y={220}
+                            stroke="#3b82f6"
+                            strokeDasharray="4 4"
+                            label={{
+                              value: "PLN Target (220V)",
+                              fill: "#2563eb",
+                              fontSize: 10,
+                              position: "insideTopLeft"
+                            }}
                           />
-                          <ReferenceLine 
-                            y={200} 
-                            stroke="#f43f5e" 
-                            strokeDasharray="4 4" 
-                            label={{ 
-                              value: "Batas Bawah (200V)", 
-                              fill: "#e11d48", 
-                              fontSize: 10, 
-                              position: "insideBottomLeft" 
-                            }} 
+                          <ReferenceLine
+                            y={200}
+                            stroke="#f43f5e"
+                            strokeDasharray="4 4"
+                            label={{
+                              value: "Batas Bawah (200V)",
+                              fill: "#e11d48",
+                              fontSize: 10,
+                              position: "insideBottomLeft"
+                            }}
                           />
-                          <ReferenceLine 
-                            y={240} 
-                            stroke="#f43f5e" 
-                            strokeDasharray="4 4" 
-                            label={{ 
-                              value: "Batas Atas (240V)", 
-                              fill: "#e11d48", 
-                              fontSize: 10, 
-                              position: "insideTopLeft" 
-                            }} 
+                          <ReferenceLine
+                            y={240}
+                            stroke="#f43f5e"
+                            strokeDasharray="4 4"
+                            label={{
+                              value: "Batas Atas (240V)",
+                              fill: "#e11d48",
+                              fontSize: 10,
+                              position: "insideTopLeft"
+                            }}
                           />
-                          <Area 
-                            type="monotone" 
-                            dataKey="voltage" 
-                            stroke="#d97706" 
-                            strokeWidth={2.4} 
-                            fill="url(#voltL4Grad)" 
+                          <Area
+                            type="monotone"
+                            dataKey="voltage"
+                            stroke="#d97706"
+                            strokeWidth={2.4}
+                            fill="url(#voltL4Grad)"
                             connectNulls
                           />
                         </AreaChart>
@@ -479,26 +479,26 @@ const avgTemp =
             {activeFloor === "5" && (
               <div>
                 <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                  <Metric 
-                    icon={Thermometer} 
-                    label="Suhu Ruangan L5" 
-                    value={readingL5 ? `${Number(readingL5.temperature)}°C` : "--°C"} 
+                  <Metric
+                    icon={Thermometer}
+                    label="Suhu Ruangan L5"
+                    value={readingL5 ? `${Number(readingL5.temperature)}°C` : "--°C"}
                     detail={`Status: ${statusL5}`}
                     valueClassName={statusColor(statusL5)}
                     iconColor="bg-purple-50 text-purple-600"
                   />
-                  <Metric 
-                    icon={Radio} 
-                    label="Status Sensor L5" 
-                    value={onlineL5 ? "Online" : "Offline"} 
+                  <Metric
+                    icon={Radio}
+                    label="Status Sensor L5"
+                    value={onlineL5 ? "Online" : "Offline"}
                     detail={readingL5 ? `Update: ${clock(readingL5.recordedAt, true)}` : "Belum ada data"}
                     valueClassName={onlineL5 ? "text-emerald-600" : "text-rose-600"}
                     iconColor="bg-blue-50 text-blue-500"
                   />
-                  <Metric 
-                    icon={ShieldCheck} 
-                    label="Kondisi Ruangan L5" 
-                    value={statusL5 === "Bahaya" ? "BAHAYA" : statusL5 === "Waspada" ? "PERHATIAN" : "AMAN"} 
+                  <Metric
+                    icon={ShieldCheck}
+                    label="Kondisi Ruangan L5"
+                    value={statusL5 === "Bahaya" ? "BAHAYA" : statusL5 === "Waspada" ? "PERHATIAN" : "AMAN"}
                     detail={statusL5 === "Normal" ? "Suhu ruangan normal" : "Periksa kondisi AC Lantai 5!"}
                     valueClassName={statusColor(statusL5)}
                     iconColor="bg-slate-50 text-slate-700"
@@ -522,53 +522,53 @@ const avgTemp =
                             </linearGradient>
                           </defs>
                           <CartesianGrid vertical={false} stroke="#edf1ef" />
-                          <XAxis 
-                            dataKey="time" 
-                            tickFormatter={v => clock(v)} 
-                            axisLine={false} 
-                            tickLine={false} 
-                            minTickGap={45} 
-                            fontSize={11} 
+                          <XAxis
+                            dataKey="time"
+                            tickFormatter={v => clock(v)}
+                            axisLine={false}
+                            tickLine={false}
+                            minTickGap={45}
+                            fontSize={11}
                           />
-                          <YAxis 
-                            domain={[18, 36]} 
-                            ticks={[18, 21, 24, 27, 30, 33, 36]} 
-                            axisLine={false} 
-                            tickLine={false} 
-                            fontSize={11} 
+                          <YAxis
+                            domain={[18, 36]}
+                            ticks={[18, 21, 24, 27, 30, 33, 36]}
+                            axisLine={false}
+                            tickLine={false}
+                            fontSize={11}
                           />
-                          <Tooltip 
-                            labelFormatter={v => clock(String(v), true)} 
-                            formatter={v => [`${Number(v)}°C`, "Suhu"]} 
+                          <Tooltip
+                            labelFormatter={v => clock(String(v), true)}
+                            formatter={v => [`${Number(v)}°C`, "Suhu"]}
                           />
-                          <ReferenceLine 
-                            y={settings.dangerTemperature} 
-                            stroke="#fb7185" 
-                            strokeDasharray="5 4" 
-                            label={{ 
-                              value: `Bahaya (≥${settings.dangerTemperature}°C)`, 
-                              fill: "#f43f5e", 
-                              fontSize: 10, 
-                              position: "insideTopLeft" 
-                            }} 
+                          <ReferenceLine
+                            y={settings.dangerTemperature}
+                            stroke="#fb7185"
+                            strokeDasharray="5 4"
+                            label={{
+                              value: `Bahaya (≥${settings.dangerTemperature}°C)`,
+                              fill: "#f43f5e",
+                              fontSize: 10,
+                              position: "insideTopLeft"
+                            }}
                           />
-                          <ReferenceLine 
-                            y={settings.warningTemperature} 
-                            stroke="#f59e0b" 
-                            strokeDasharray="5 4" 
-                            label={{ 
-                              value: `Waspada (${settings.warningTemperature}°C)`, 
-                              fill: "#d97706", 
-                              fontSize: 10, 
-                              position: "insideTopLeft" 
-                            }} 
+                          <ReferenceLine
+                            y={settings.warningTemperature}
+                            stroke="#f59e0b"
+                            strokeDasharray="5 4"
+                            label={{
+                              value: `Waspada (${settings.warningTemperature}°C)`,
+                              fill: "#d97706",
+                              fontSize: 10,
+                              position: "insideTopLeft"
+                            }}
                           />
-                          <Area 
-                            type="monotone" 
-                            dataKey="temperature" 
-                            stroke="#8b5cf6" 
-                            strokeWidth={2.4} 
-                            fill="url(#tempL5Grad)" 
+                          <Area
+                            type="monotone"
+                            dataKey="temperature"
+                            stroke="#8b5cf6"
+                            strokeWidth={2.4}
+                            fill="url(#tempL5Grad)"
                           />
                         </AreaChart>
                       </ResponsiveContainer>
@@ -605,41 +605,44 @@ const avgTemp =
 
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-sm font-semibold">Ringkasan Hari Ini ({activeFloor === "4" ? "Lantai 4" : "Lantai 5"})</CardTitle>
+                  <CardTitle className="text-sm font-semibold">
+                    Ringkasan {period} Jam Terakhir (
+                    {activeFloor === "4" ? "Lantai 4" : "Lantai 5"})
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="divide-y">
                   <SummaryRow
-  icon={TrendingUp}
-  label="Suhu Tertinggi"
-  value={
-    maxTemp !== null
-      ? `${maxTemp.toFixed(2)}°C`
-      : "--°C"
-  }
-  color="bg-rose-50 text-rose-500"
-/>
+                    icon={TrendingUp}
+                    label="Suhu Tertinggi"
+                    value={
+                      maxTemp !== null
+                        ? `${maxTemp.toFixed(2)}°C`
+                        : "--°C"
+                    }
+                    color="bg-rose-50 text-rose-500"
+                  />
 
-<SummaryRow
-  icon={TrendingDown}
-  label="Suhu Terendah"
-  value={
-    minTemp !== null
-      ? `${minTemp.toFixed(2)}°C`
-      : "--°C"
-  }
-  color="bg-blue-50 text-blue-500"
-/>
+                  <SummaryRow
+                    icon={TrendingDown}
+                    label="Suhu Terendah"
+                    value={
+                      minTemp !== null
+                        ? `${minTemp.toFixed(2)}°C`
+                        : "--°C"
+                    }
+                    color="bg-blue-50 text-blue-500"
+                  />
 
-<SummaryRow
-  icon={Activity}
-  label="Rata-rata Suhu"
-  value={
-    avgTemp !== null
-      ? `${avgTemp.toFixed(2)}°C`
-      : "--°C"
-  }
-  color="bg-emerald-50 text-emerald-600"
-/>
+                  <SummaryRow
+                    icon={Activity}
+                    label="Rata-rata Suhu"
+                    value={
+                      avgTemp !== null
+                        ? `${avgTemp.toFixed(2)}°C`
+                        : "--°C"
+                    }
+                    color="bg-emerald-50 text-emerald-600"
+                  />
                 </CardContent>
               </Card>
             </section>
@@ -760,11 +763,11 @@ function SystemRow({ icon: Icon, label, online = true }: { icon: any, label: str
 
 function ProfilePanel() {
   const [profile, setProfile] = useState<{ name?: string | null; email?: string | null; role?: string } | null>(null)
-  
+
   useEffect(() => {
     getSession().then(session => setProfile(session?.user ?? null))
   }, [])
-  
+
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -800,9 +803,9 @@ function ProfilePanel() {
           <Button asChild variant="ghost" className="w-full justify-start text-slate-600">
             <Link href="/peringatan">Pusat peringatan</Link>
           </Button>
-          <Button 
-            variant="outline" 
-            className="mt-4 w-full text-rose-600 border-rose-200 hover:bg-rose-50" 
+          <Button
+            variant="outline"
+            className="mt-4 w-full text-rose-600 border-rose-200 hover:bg-rose-50"
             onClick={() => signOut({ callbackUrl: "/login" })}
           >
             Keluar
