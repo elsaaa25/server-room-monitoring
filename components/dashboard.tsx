@@ -544,9 +544,9 @@ export function Dashboard() {
                   <CardTitle className="text-sm font-semibold">Ambang Batas Suhu</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  <Limit color="bg-emerald-500" label="Normal" value={`≤ ${settings.warningTemperature}°C`} />
-                  <Limit color="bg-amber-400" label="Waspada" value={`${settings.warningTemperature}–${settings.dangerTemperature}°C`} />
-                  <Limit color="bg-rose-500" label="Bahaya" value={`≥ ${settings.dangerTemperature}°C`} />
+                  <Limit color="bg-emerald-500" label="Normal" value={`≤ ${Number(settings.warningTemperature)}°C`} />
+                  <Limit color="bg-amber-400" label="Waspada" value={`${Number(settings.warningTemperature)}–${Number(settings.dangerTemperature)}°C`} />
+                  <Limit color="bg-rose-500" label="Bahaya" value={`≥ ${Number(settings.dangerTemperature)}°C`} />
                 </CardContent>
               </Card>
 

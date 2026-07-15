@@ -130,9 +130,9 @@ export function SettingsPage() {
               </div>
               {!valid && <p className="mt-3 text-sm text-rose-600">Batas bahaya harus lebih tinggi dari batas waspada.</p>}
               <div className="mt-5 flex flex-wrap gap-3 text-xs">
-                <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">Normal ≤ {settings.warningTemperature}°C</Badge>
-                <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100">Waspada {settings.warningTemperature}–{settings.dangerTemperature}°C</Badge>
-                <Badge className="bg-rose-100 text-rose-700 hover:bg-rose-100">Bahaya ≥ {settings.dangerTemperature}°C</Badge>
+                <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">Normal ≤ {Number(settings.warningTemperature)}°C</Badge>
+                <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100">Waspada {Number(settings.warningTemperature)}–{Number(settings.dangerTemperature)}°C</Badge>
+                <Badge className="bg-rose-100 text-rose-700 hover:bg-rose-100">Bahaya ≥ {Number(settings.dangerTemperature)}°C</Badge>
               </div>
             </SettingsCard>
 
