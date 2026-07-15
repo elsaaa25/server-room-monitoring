@@ -225,7 +225,6 @@ export function Dashboard() {
           </Sheet>
           <div>
             <h1 className="text-xl font-semibold sm:text-2xl text-slate-800">Monitoring Dashboard</h1>
-            <p className="hidden sm:block text-xs text-slate-500">Pemantauan Terpisah Suhu & Tegangan Gedung Kantor</p>
           </div>
           <div className="ml-auto flex items-center gap-2">
             <span className="hidden items-center gap-2 text-sm text-slate-500 xl:flex">
@@ -260,7 +259,7 @@ export function Dashboard() {
                 value="5"
                 className="px-4 py-2 text-sm font-semibold rounded-lg transition-all data-[state=active]:bg-purple-600 data-[state=active]:text-white"
               >
-                Lantai 5 - Ruangan Kerja
+                Lantai 5 - Ruangan ATC
               </TabsTrigger>
             </TabsList>
           </Tabs>
