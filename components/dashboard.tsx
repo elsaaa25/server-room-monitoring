@@ -248,7 +248,7 @@ export function Dashboard() {
                   <Metric 
                     icon={Thermometer} 
                     label="Suhu Ruang Server" 
-                    value={readingL4 ? `${Number(readingL4.temperature).toFixed(1)}°C` : "--°C"} 
+                    value={readingL4 ? `${Number(readingL4.temperature)}°C` : "--°C"} 
                     detail={`Status: ${statusL4}`}
                     valueClassName={statusColor(statusL4)}
                     iconColor="bg-emerald-50 text-[#005a9c]"
@@ -314,7 +314,7 @@ export function Dashboard() {
                           />
                           <Tooltip 
                             labelFormatter={v => clock(String(v), true)} 
-                            formatter={v => [`${Number(v).toFixed(1)}°C`, "Suhu"]} 
+                            formatter={v => [`${Number(v)}°C`, "Suhu"]} 
                           />
                           <ReferenceLine 
                             y={settings.dangerTemperature} 
@@ -441,7 +441,7 @@ export function Dashboard() {
                   <Metric 
                     icon={Thermometer} 
                     label="Suhu Ruangan L5" 
-                    value={readingL5 ? `${Number(readingL5.temperature).toFixed(1)}°C` : "--°C"} 
+                    value={readingL5 ? `${Number(readingL5.temperature)}°C` : "--°C"} 
                     detail={`Status: ${statusL5}`}
                     valueClassName={statusColor(statusL5)}
                     iconColor="bg-purple-50 text-purple-600"
@@ -498,7 +498,7 @@ export function Dashboard() {
                           />
                           <Tooltip 
                             labelFormatter={v => clock(String(v), true)} 
-                            formatter={v => [`${Number(v).toFixed(1)}°C`, "Suhu"]} 
+                            formatter={v => [`${Number(v)}°C`, "Suhu"]} 
                           />
                           <ReferenceLine 
                             y={settings.dangerTemperature} 
@@ -567,9 +567,9 @@ export function Dashboard() {
                   <CardTitle className="text-sm font-semibold">Ringkasan Hari Ini ({activeFloor === "4" ? "Lantai 4" : "Lantai 5"})</CardTitle>
                 </CardHeader>
                 <CardContent className="divide-y">
-                  <SummaryRow icon={TrendingUp} label="Suhu Tertinggi" value={`${maxTemp.toFixed(1)}°C`} color="bg-rose-50 text-rose-500" />
-                  <SummaryRow icon={TrendingDown} label="Suhu Terendah" value={`${minTemp.toFixed(1)}°C`} color="bg-blue-50 text-blue-500" />
-                  <SummaryRow icon={Activity} label="Rata-rata Suhu" value={`${avgTemp.toFixed(1)}°C`} color="bg-emerald-50 text-emerald-600" />
+                  <SummaryRow icon={TrendingUp} label="Suhu Tertinggi" value={`${Number(maxTemp)}°C`} color="bg-rose-50 text-rose-500" />
+                  <SummaryRow icon={TrendingDown} label="Suhu Terendah" value={`${Number(minTemp)}°C`} color="bg-blue-50 text-blue-500" />
+                  <SummaryRow icon={Activity} label="Rata-rata Suhu" value={`${Number(avgTemp.toFixed(1))}°C`} color="bg-emerald-50 text-emerald-600" />
                 </CardContent>
               </Card>
             </section>
@@ -606,7 +606,7 @@ export function Dashboard() {
                                   {row.sensorId === "esp32-lantai4" ? "Lantai 4 (Server)" : "Lantai 5 (Ruang Kerja)"}
                                 </code>
                               </TableCell>
-                              <TableCell className="font-semibold text-slate-800">{Number(row.temperature).toFixed(1)}°C</TableCell>
+                              <TableCell className="font-semibold text-slate-800">{Number(row.temperature)}°C</TableCell>
                               <TableCell className="text-slate-600">{row.voltage !== null ? `${Number(row.voltage).toFixed(1)} V` : "-- V"}</TableCell>
                               <TableCell className="pr-6">
                                 <Badge variant="secondary" className={statusBg(status)}>

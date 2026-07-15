@@ -252,7 +252,7 @@ export function HistoryPage() {
                                   {item.sensorId}
                                 </code>
                               </TableCell>
-                              <TableCell className="font-semibold text-slate-800">{Number(item.temperature).toFixed(1)}°C</TableCell>
+                              <TableCell className="font-semibold text-slate-800">{Number(item.temperature)}°C</TableCell>
                               <TableCell className="text-slate-700">{item.voltage !== null && item.voltage !== undefined ? `${Number(item.voltage).toFixed(1)} V` : "-- V"}</TableCell>
                               <TableCell>
                                 <StatusBadge status={status} />
