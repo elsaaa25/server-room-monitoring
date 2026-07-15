@@ -107,7 +107,7 @@ export function Dashboard() {
   }, [])
 
   // Pemilahan Data Terakhir per Sensor
-  const readingL4 = rawReadings.find(r => r.sensorId === "esp32-lantai4")
+  const readingL4 = rawReadings.find(r => r.sensorId === "TEMP-L4")
   const readingL5 = rawReadings.find(r => r.sensorId === "esp32-lantai5")
 
   // Cek Status Keaktifan Sensor
@@ -139,7 +139,7 @@ export function Dashboard() {
 
   // Filter Data Historis berdasarkan Lantai yang Aktif untuk Grafik
   const getChartData = () => {
-    const targetId = activeFloor === "4" ? "esp32-lantai4" : "esp32-lantai5"
+    const targetId = activeFloor === "4" ? "TEMP-L4" : "esp32-lantai5"
     return rawReadings
       .filter(r => r.sensorId === targetId)
       .map(r => ({
@@ -155,7 +155,7 @@ export function Dashboard() {
 
   // Hitung Nilai Rata-rata & Ekstrim Hari Ini (Sesuai Lantai Aktif)
   const activeTemps = rawReadings
-    .filter(r => r.sensorId === (activeFloor === "4" ? "esp32-lantai4" : "esp32-lantai5"))
+    .filter(r => r.sensorId === (activeFloor === "4" ? "TEMP-L4" : "esp32-lantai5"))
     .map(r => r.temperature)
   
   const maxTemp = activeTemps.length ? Math.max(...activeTemps) : 0
@@ -603,7 +603,7 @@ export function Dashboard() {
                               <TableCell className="pl-6">{clock(row.recordedAt, true)}</TableCell>
                               <TableCell>
                                 <code className="rounded bg-slate-100 px-2 py-1 text-xs font-mono font-medium">
-                                  {row.sensorId === "esp32-lantai4" ? "Lantai 4 (Server)" : "Lantai 5 (Ruang Kerja)"}
+                                  {row.sensorId === "TEMP-L4" ? "Lantai 4 (Server)" : "Lantai 5 (Ruang Kerja)"}
                                 </code>
                               </TableCell>
                               <TableCell className="font-semibold text-slate-800">{Number(row.temperature)}°C</TableCell>
