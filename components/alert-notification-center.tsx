@@ -26,7 +26,7 @@ type ActiveAlert = {
 }
 
 const SEEN_ALERTS_KEY =
-  "server-room-seen-alert-ids-v1"
+  "server-room-seen-alert-ids-v2"
 const MAX_SEEN_IDS = 100
 
 function readSeenAlertIds() {
@@ -58,28 +58,34 @@ function writeSeenAlertIds(ids: Set<number>) {
   )
 }
 
-function showBrowserNotification(alert: ActiveAlert) {
+function showBrowserNotification(
+  alert: ActiveAlert,
+): boolean {
   if (
     typeof Notification === "undefined" ||
     Notification.permission !== "granted"
   ) {
-    return
+    return false
   }
 
-  const notification = new Notification(alert.title, {
-    body:
-      `${alert.temperature.toFixed(2)}°C — ` +
-      alert.detail,
-    icon: "/favicon.ico",
-    tag: `temperature-alert-${alert.id}`,
-    requireInteraction: alert.level === "Bahaya",
-  })
+  const notification = new Notification(
+    alert.title,
+    {
+      body:
+        `${alert.temperature.toFixed(2)}°C — ` +
+        alert.detail,
+      icon: "/favicon.ico",
+      tag: `temperature-alert-${alert.id}`,
+    },
+  )
 
   notification.onclick = () => {
     window.focus()
     window.location.href = "/peringatan"
     notification.close()
   }
+
+  return true
 }
 
 export function AlertNotificationCenter() {
@@ -88,7 +94,8 @@ export function AlertNotificationCenter() {
     useState<MonitoringSettings>(
       defaultMonitoringSettings,
     )
-  const firstCheckRef = useRef(true)
+const [settingsReady, setSettingsReady] =
+  useState(false)
   const checkingRef = useRef(false)
 
   const loadSettings = useCallback(async () => {
@@ -122,6 +129,7 @@ export function AlertNotificationCenter() {
             json.data.soundAlert,
           ),
         })
+        setSettingsReady(true)
       }
     } catch (error) {
       console.error(
@@ -132,9 +140,12 @@ export function AlertNotificationCenter() {
   }, [])
 
   const checkActiveAlerts = useCallback(async () => {
-    if (checkingRef.current) {
-      return
-    }
+    if (
+  !settingsReady ||
+  checkingRef.current
+) {
+  return
+}
 
     checkingRef.current = true
 
@@ -171,57 +182,62 @@ export function AlertNotificationCenter() {
             Number.isFinite(item.temperature),
         )
 
-      const seenIds = readSeenAlertIds()
+      const activeIds = new Set(
+  alerts.map(alert => alert.id),
+)
 
-      // Saat komponen pertama dipasang, tandai peringatan lama
-      // sebagai sudah dilihat supaya browser tidak membanjiri
-      // pengguna dengan notifikasi historis.
-      if (
-        firstCheckRef.current &&
-        localStorage.getItem(SEEN_ALERTS_KEY) === null
-      ) {
-        for (const alert of alerts) {
-          seenIds.add(alert.id)
-        }
+const seenIds = readSeenAlertIds()
 
-        writeSeenAlertIds(seenIds)
-        firstCheckRef.current = false
-        return
-      }
+/*
+ * Hapus peringatan yang sudah tidak aktif.
+ * Ketika suhu Normal, daftar aktif kosong.
+ * Dengan demikian siklus Bahaya berikutnya
+ * bisa menyalakan alarm kembali.
+ */
+for (const id of seenIds) {
+  if (!activeIds.has(id)) {
+    seenIds.delete(id)
+  }
+}
 
-      firstCheckRef.current = false
+const newAlerts = alerts
+  .filter(alert => !seenIds.has(alert.id))
+  .reverse()
 
-      // API mengirim terbaru dahulu. Balik agar urutan notifikasi
-      // berjalan dari kejadian lama ke kejadian terbaru.
-      const newAlerts = alerts
-        .filter(alert => !seenIds.has(alert.id))
-        .reverse()
+for (const alert of newAlerts) {
+  let delivered = false
 
-      for (const alert of newAlerts) {
-        if (settings.browserNotification) {
-          showBrowserNotification(alert)
-        }
+  if (settings.browserNotification) {
+    delivered =
+      showBrowserNotification(alert) ||
+      delivered
+  }
 
-        if (
-          settings.soundAlert &&
-          alert.level === "Bahaya"
-        ) {
-          try {
-            await playAlertSound("danger")
-          } catch (error) {
-            console.warn(
-              "Alarm suara diblokir browser:",
-              error,
-            )
-          }
-        }
+  if (
+    settings.soundAlert &&
+    alert.level === "Bahaya"
+  ) {
+    try {
+      await playAlertSound("danger")
+      delivered = true
+    } catch (error) {
+      console.warn(
+        "Alarm suara diblokir browser:",
+        error,
+      )
+    }
+  }
 
-        seenIds.add(alert.id)
-      }
+  /*
+   * ID hanya ditandai sudah dilihat jika
+   * setidaknya suara atau notifikasi berhasil.
+   */
+  if (delivered) {
+    seenIds.add(alert.id)
+  }
+}
 
-      if (newAlerts.length > 0) {
-        writeSeenAlertIds(seenIds)
-      }
+writeSeenAlertIds(seenIds)
     } catch (error) {
       console.error(
         "Gagal memeriksa peringatan aktif:",
@@ -233,13 +249,16 @@ export function AlertNotificationCenter() {
   }, [
     settings.browserNotification,
     settings.soundAlert,
+    settingsReady,
   ])
 
   useEffect(() => {
-    if (pathname === "/login") {
-      return
-    }
-
+    if (
+  pathname === "/login" ||
+  !settingsReady
+) {
+  return
+}
     void loadSettings()
 
     const settingsTimer = window.setInterval(
@@ -311,6 +330,7 @@ export function AlertNotificationCenter() {
     checkActiveAlerts,
     pathname,
     settings.refreshInterval,
+    settingsReady,
   ])
 
   return null
