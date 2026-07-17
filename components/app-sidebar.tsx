@@ -21,7 +21,7 @@ export function AppSidebar() {
     <nav className="space-y-2">{navigation.map(({ label, icon: Icon, href }) => {
       const active = pathname === href
       return <Button key={label} asChild variant="ghost" className={`w-full justify-start gap-3 ${active ? "bg-blue-50 text-[#005a9c] hover:bg-blue-100" : "text-slate-500"}`}>
-        <Link href={href}><Icon className="size-5" />{label}{label === "Peringatan" && <Badge className="ml-auto rounded-full bg-emerald-600">2</Badge>}</Link>
+        <Link href={href}><Icon className="size-5" /></Link>
       </Button>
     })}</nav>
     <div className="mt-auto flex gap-2 px-3 text-xs text-slate-400"><Radio className="size-4 text-[#005a9c]" />ESP32 Monitor</div>

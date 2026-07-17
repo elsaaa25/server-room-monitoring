@@ -20,6 +20,7 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/s
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { defaultMonitoringSettings, readMonitoringSettings, type MonitoringSettings } from "@/lib/monitoring-settings"
+import { AlertHeaderButton,} from "@/components/alert-header-button"
 
 type RawReading = {
   id: number
@@ -231,12 +232,7 @@ export function Dashboard() {
               <CalendarDays className="size-4" />
               {now ? `${fullDate(now)}, ${clock(now.toISOString(), true)} WIB` : "Memuat waktu..."}
             </span>
-            <Button asChild variant="outline" className="border-red-100 bg-red-50 text-red-500">
-              <Link href="/peringatan">
-                <Bell />
-                <span className="hidden sm:inline">Peringatan</span>
-              </Link>
-            </Button>
+            <AlertHeaderButton />
             <ProfilePanel />
           </div>
         </header>
