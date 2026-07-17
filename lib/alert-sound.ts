@@ -45,66 +45,207 @@ async function prepareAudioContext() {
   return context
 }
 
-function createSirenBurst(
+function createMasterOutput(
   context: AudioContext,
-  startTime: number,
-  duration: number,
   volume: number,
 ) {
-  const oscillator =
-    context.createOscillator()
-  const gain = context.createGain()
+  const masterGain = context.createGain()
+  const compressor =
+    context.createDynamicsCompressor()
 
-  oscillator.type = "sawtooth"
-
-  // Frekuensi sirene naik dan turun.
-  oscillator.frequency.setValueAtTime(
-    650,
-    startTime,
+  /*
+   * Compressor membuat suara terasa lebih padat
+   * dan keras tanpa mudah pecah.
+   */
+  compressor.threshold.setValueAtTime(
+    -24,
+    context.currentTime,
+  )
+  compressor.knee.setValueAtTime(
+    12,
+    context.currentTime,
+  )
+  compressor.ratio.setValueAtTime(
+    12,
+    context.currentTime,
+  )
+  compressor.attack.setValueAtTime(
+    0.003,
+    context.currentTime,
+  )
+  compressor.release.setValueAtTime(
+    0.2,
+    context.currentTime,
   )
 
-  oscillator.frequency.exponentialRampToValueAtTime(
-    1450,
-    startTime + duration / 2,
-  )
-
-  oscillator.frequency.exponentialRampToValueAtTime(
-    650,
-    startTime + duration,
-  )
-
-  // Suara masuk dan keluar secara halus.
-  gain.gain.setValueAtTime(
-    0.0001,
-    startTime,
-  )
-
-  gain.gain.exponentialRampToValueAtTime(
+  masterGain.gain.setValueAtTime(
     volume,
-    startTime + 0.04,
+    context.currentTime,
   )
 
-  gain.gain.setValueAtTime(
-    volume,
-    startTime + duration - 0.06,
-  )
+  masterGain.connect(compressor)
+  compressor.connect(context.destination)
 
-  gain.gain.exponentialRampToValueAtTime(
-    0.0001,
-    startTime + duration,
-  )
-
-  oscillator.connect(gain)
-  gain.connect(context.destination)
-
-  oscillator.start(startTime)
-  oscillator.stop(startTime + duration + 0.05)
+  return masterGain
 }
 
-function createWarningBeep(
+function createEmergencySiren(
   context: AudioContext,
+  output: AudioNode,
+  startTime: number,
+  duration: number,
+) {
+  /*
+   * Lapisan pertama:
+   * suara sirene utama naik dan turun.
+   */
+  const mainOscillator =
+    context.createOscillator()
+  const mainGain = context.createGain()
+
+  mainOscillator.type = "sawtooth"
+
+  mainOscillator.frequency.setValueAtTime(
+    650,
+    startTime,
+  )
+  mainOscillator.frequency.exponentialRampToValueAtTime(
+    1550,
+    startTime + duration / 2,
+  )
+  mainOscillator.frequency.exponentialRampToValueAtTime(
+    650,
+    startTime + duration,
+  )
+
+  mainGain.gain.setValueAtTime(
+    0.0001,
+    startTime,
+  )
+  mainGain.gain.exponentialRampToValueAtTime(
+    0.55,
+    startTime + 0.03,
+  )
+  mainGain.gain.setValueAtTime(
+    0.55,
+    startTime + duration - 0.05,
+  )
+  mainGain.gain.exponentialRampToValueAtTime(
+    0.0001,
+    startTime + duration,
+  )
+
+  mainOscillator.connect(mainGain)
+  mainGain.connect(output)
+
+  /*
+   * Lapisan kedua:
+   * frekuensi tambahan agar sirene terdengar
+   * lebih tajam dan mendesak.
+   */
+  const highOscillator =
+    context.createOscillator()
+  const highGain = context.createGain()
+
+  highOscillator.type = "square"
+
+  highOscillator.frequency.setValueAtTime(
+    900,
+    startTime,
+  )
+  highOscillator.frequency.exponentialRampToValueAtTime(
+    1900,
+    startTime + duration / 2,
+  )
+  highOscillator.frequency.exponentialRampToValueAtTime(
+    900,
+    startTime + duration,
+  )
+
+  highGain.gain.setValueAtTime(
+    0.0001,
+    startTime,
+  )
+  highGain.gain.exponentialRampToValueAtTime(
+    0.22,
+    startTime + 0.03,
+  )
+  highGain.gain.setValueAtTime(
+    0.22,
+    startTime + duration - 0.05,
+  )
+  highGain.gain.exponentialRampToValueAtTime(
+    0.0001,
+    startTime + duration,
+  )
+
+  highOscillator.connect(highGain)
+  highGain.connect(output)
+
+  /*
+   * Lapisan ketiga:
+   * suara rendah supaya alarm terasa lebih berat.
+   */
+  const lowOscillator =
+    context.createOscillator()
+  const lowGain = context.createGain()
+
+  lowOscillator.type = "square"
+
+  lowOscillator.frequency.setValueAtTime(
+    320,
+    startTime,
+  )
+  lowOscillator.frequency.linearRampToValueAtTime(
+    520,
+    startTime + duration / 2,
+  )
+  lowOscillator.frequency.linearRampToValueAtTime(
+    320,
+    startTime + duration,
+  )
+
+  lowGain.gain.setValueAtTime(
+    0.0001,
+    startTime,
+  )
+  lowGain.gain.exponentialRampToValueAtTime(
+    0.18,
+    startTime + 0.03,
+  )
+  lowGain.gain.setValueAtTime(
+    0.18,
+    startTime + duration - 0.05,
+  )
+  lowGain.gain.exponentialRampToValueAtTime(
+    0.0001,
+    startTime + duration,
+  )
+
+  lowOscillator.connect(lowGain)
+  lowGain.connect(output)
+
+  mainOscillator.start(startTime)
+  highOscillator.start(startTime)
+  lowOscillator.start(startTime)
+
+  mainOscillator.stop(
+    startTime + duration + 0.03,
+  )
+  highOscillator.stop(
+    startTime + duration + 0.03,
+  )
+  lowOscillator.stop(
+    startTime + duration + 0.03,
+  )
+}
+
+function createEmergencyBeep(
+  context: AudioContext,
+  output: AudioNode,
   startTime: number,
   frequency: number,
+  duration = 0.22,
 ) {
   const oscillator =
     context.createOscillator()
@@ -120,22 +261,26 @@ function createWarningBeep(
     0.0001,
     startTime,
   )
-
   gain.gain.exponentialRampToValueAtTime(
-    0.08,
-    startTime + 0.02,
+    0.5,
+    startTime + 0.015,
   )
-
+  gain.gain.setValueAtTime(
+    0.5,
+    startTime + duration - 0.03,
+  )
   gain.gain.exponentialRampToValueAtTime(
     0.0001,
-    startTime + 0.18,
+    startTime + duration,
   )
 
   oscillator.connect(gain)
-  gain.connect(context.destination)
+  gain.connect(output)
 
   oscillator.start(startTime)
-  oscillator.stop(startTime + 0.2)
+  oscillator.stop(
+    startTime + duration + 0.02,
+  )
 }
 
 export async function playAlertSound(
@@ -148,62 +293,92 @@ export async function playAlertSound(
     context.currentTime + 0.05
 
   if (mode === "preview") {
-    // Tes singkat saat toggle suara diaktifkan.
-    createSirenBurst(
+    /*
+     * Tes suara saat toggle diaktifkan.
+     * Dibuat cukup keras tetapi lebih singkat.
+     */
+    const output = createMasterOutput(
       context,
-      startTime,
-      0.7,
-      0.1,
+      0.8,
     )
 
-    createWarningBeep(
+    createEmergencySiren(
       context,
-      startTime + 0.8,
-      1200,
+      output,
+      startTime,
+      1.5,
+    )
+
+    createEmergencyBeep(
+      context,
+      output,
+      startTime + 1.65,
+      1450,
+    )
+
+    createEmergencyBeep(
+      context,
+      output,
+      startTime + 1.95,
+      1450,
     )
 
     return
   }
 
-  // Sirene bahaya selama sekitar 4 detik.
-  const sirenDuration = 0.75
-  const sirenCount = 5
+  /*
+   * Alarm Bahaya:
+   * sekitar 9 detik dengan pola sirene
+   * naik-turun yang berulang.
+   */
+  const output = createMasterOutput(
+    context,
+    0.95,
+  )
+
+  const sirenDuration = 1.15
+  const pauseDuration = 0.08
+  const sirenCount = 7
 
   for (
     let index = 0;
     index < sirenCount;
     index += 1
   ) {
-    createSirenBurst(
-      context,
+    const sirenStart =
       startTime +
-        index * sirenDuration,
+      index *
+        (sirenDuration + pauseDuration)
+
+    createEmergencySiren(
+      context,
+      output,
+      sirenStart,
       sirenDuration,
-      0.14,
     )
   }
 
-  // Bunyi penutup sebagai penegasan bahaya.
-  const warningStart =
+  /*
+   * Bunyi penutup cepat untuk menegaskan
+   * keadaan darurat.
+   */
+  const beepStart =
     startTime +
-    sirenCount * sirenDuration +
+    sirenCount *
+      (sirenDuration + pauseDuration) +
     0.1
 
-  createWarningBeep(
-    context,
-    warningStart,
-    1350,
-  )
-
-  createWarningBeep(
-    context,
-    warningStart + 0.25,
-    1350,
-  )
-
-  createWarningBeep(
-    context,
-    warningStart + 0.5,
-    1350,
-  )
+  for (
+    let index = 0;
+    index < 5;
+    index += 1
+  ) {
+    createEmergencyBeep(
+      context,
+      output,
+      beepStart + index * 0.3,
+      index % 2 === 0 ? 1500 : 1100,
+      0.22,
+    )
+  }
 }
