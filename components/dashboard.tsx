@@ -282,45 +282,57 @@ const toggleSidebar = () => {
       : "lg:px-8"
   }`}
 >
-        {/* Header */}
         <header className="flex min-h-20 items-center gap-3">
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button size="icon" variant="outline" className="lg:hidden">
-                <Menu />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-64 p-0">
-              <SheetTitle className="sr-only">Navigasi</SheetTitle>
-              <AppSidebar />
-            </SheetContent>
-          </Sheet>
-
-          {sidebarReady && !sidebarOpen && (
-      <button
-        type="button"
-        onClick={openSidebar}
-        aria-label="Buka sidebar"
-        title="Buka sidebar"
-        className="fixed left-4 top-4 z-50 hidden size-11 place-items-center rounded-full border border-slate-200 bg-white text-[#005a9c] shadow-lg transition hover:bg-slate-50 lg:grid"
+  {/* Tombol menu untuk HP */}
+  <Sheet>
+    <SheetTrigger asChild>
+      <Button
+        size="icon"
+        variant="outline"
+        className="lg:hidden"
       >
-        <Menu className="size-5" />
-      </button>
-    )}
-          
-          
-          <div>
-            <h1 className="text-xl font-semibold sm:text-2xl text-slate-800">Monitoring Dashboard</h1>
-          </div>
-          <div className="ml-auto flex items-center gap-2">
-            <span className="hidden items-center gap-2 text-sm text-slate-500 xl:flex">
-              <CalendarDays className="size-4" />
-              {now ? `${fullDate(now)}, ${clock(now.toISOString(), true)} WIB` : "Memuat waktu..."}
-            </span>
-            <AlertHeaderButton />
-            <ProfilePanel />
-          </div>
-        </header>
+        <Menu />
+      </Button>
+    </SheetTrigger>
+
+    <SheetContent
+      side="left"
+      className="w-64 p-0"
+    >
+      <SheetTitle className="sr-only">
+        Navigasi
+      </SheetTitle>
+
+      <AppSidebar />
+    </SheetContent>
+  </Sheet>
+
+  {/* Tombol membuka sidebar desktop */}
+  {sidebarReady && !sidebarOpen && (
+    <Button
+      type="button"
+      size="icon"
+      variant="outline"
+      onClick={openSidebar}
+      aria-label="Buka sidebar"
+      title="Buka sidebar"
+      className="hidden shrink-0 rounded-full text-[#005a9c] shadow-sm lg:inline-flex"
+    >
+      <Menu className="size-5" />
+    </Button>
+  )}
+
+  {/* Judul */}
+  <div className="min-w-0">
+    <h1 className="truncate text-xl font-semibold text-slate-800 sm:text-2xl">
+      Monitoring Dashboard
+    </h1>
+</div>
+  {/* Bagian kanan header */}
+  <div className="ml-auto flex items-center gap-2">
+    {/* jam, peringatan, profil */}
+  </div>
+</header>
 
         {/* Menu Pilihan Lantai (Tabs) */}
         <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
