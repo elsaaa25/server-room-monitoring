@@ -273,18 +273,15 @@ const toggleSidebar = () => {
       </aside>
     )}
 
-    {sidebarReady && !sidebarOpen && (
-      <button
-        type="button"
-        onClick={openSidebar}
-        aria-label="Buka sidebar"
-        title="Buka sidebar"
-        className="fixed left-4 top-4 z-50 hidden size-11 place-items-center rounded-full border border-slate-200 bg-white text-[#005a9c] shadow-lg transition hover:bg-slate-50 lg:grid"
-      >
-        <Menu className="size-5" />
-      </button>
-    )}
-      <main className="min-w-0 flex-1 px-2 pb-6 lg:px-6">
+    
+
+      <main
+  className={`min-w-0 flex-1 px-2 pb-6 transition-all duration-300 ${
+    sidebarOpen
+      ? "lg:px-6"
+      : "lg:px-8"
+  }`}
+>
         {/* Header */}
         <header className="flex min-h-20 items-center gap-3">
           <Sheet>
@@ -298,6 +295,18 @@ const toggleSidebar = () => {
               <AppSidebar />
             </SheetContent>
           </Sheet>
+
+          {sidebarReady && !sidebarOpen && (
+      <button
+        type="button"
+        onClick={openSidebar}
+        aria-label="Buka sidebar"
+        title="Buka sidebar"
+        className="fixed left-4 top-4 z-50 hidden size-11 place-items-center rounded-full border border-slate-200 bg-white text-[#005a9c] shadow-lg transition hover:bg-slate-50 lg:grid"
+      >
+        <Menu className="size-5" />
+      </button>
+    )}
           
           
           <div>
