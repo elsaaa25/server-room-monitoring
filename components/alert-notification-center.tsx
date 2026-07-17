@@ -72,7 +72,6 @@ function showBrowserNotification(alert: ActiveAlert) {
       alert.detail,
     icon: "/favicon.ico",
     tag: `temperature-alert-${alert.id}`,
-    renotify: true,
     requireInteraction: alert.level === "Bahaya",
   })
 
