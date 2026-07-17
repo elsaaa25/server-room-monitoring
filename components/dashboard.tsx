@@ -4,9 +4,9 @@ import { useEffect, useState, useCallback } from "react"
 import Link from "next/link"
 import { getSession, signOut } from "next-auth/react"
 import {
-  Activity, Bell, CalendarDays, CheckCircle2, ChevronDown, Clock3,
+  Activity, CalendarDays, CheckCircle2, ChevronDown,
   Database, Menu, Radio, ShieldCheck, Thermometer, TrendingDown,
-  TrendingUp, UserRound, Zap, PanelLeftClose, PanelLeftOpen,
+  TrendingUp, UserRound, Zap,
 } from "lucide-react"
 import {
   Area, AreaChart, CartesianGrid, ReferenceLine, ResponsiveContainer,
@@ -19,8 +19,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { defaultMonitoringSettings, readMonitoringSettings, type MonitoringSettings } from "@/lib/monitoring-settings"
-import { AlertHeaderButton,} from "@/components/alert-header-button"
+import { defaultMonitoringSettings, type MonitoringSettings } from "@/lib/monitoring-settings"
+import { AlertHeaderButton } from "@/components/alert-header-button"
 
 
 type RawReading = {
@@ -57,8 +57,7 @@ export function Dashboard() {
   const [settings, setSettings] = useState<MonitoringSettings>(defaultMonitoringSettings)
   const [loading, setLoading] = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(true)
-const [sidebarReady, setSidebarReady] =
-  useState(false)
+  const [sidebarReady, setSidebarReady] = useState(false)
 
   // Load Settings dari API database
   useEffect(() => {
@@ -83,59 +82,32 @@ const [sidebarReady, setSidebarReady] =
   }, [])
 
   useEffect(() => {
-  const storedValue =
-    localStorage.getItem(
+    const storedValue = localStorage.getItem(
       "monitoring-sidebar-open",
     )
 
-  if (storedValue !== null) {
-    setSidebarOpen(
-      storedValue === "true",
-    )
-  }
+    if (storedValue !== null) {
+      setSidebarOpen(storedValue === "true")
+    }
 
-  setSidebarReady(true)
-}, [])
+    setSidebarReady(true)
+  }, [])
 
-const openSidebar = () => {
-  setSidebarOpen(true)
-
-  localStorage.setItem(
-    "monitoring-sidebar-open",
-    "true",
-  )
-}
-
-const closeSidebar = () => {
-  setSidebarOpen(false)
-
-  localStorage.setItem(
-    "monitoring-sidebar-open",
-    "false",
-  )
-}
-
-  useEffect(() => {
-  const stored =
-    localStorage.getItem("sidebar-open")
-
-  if (stored !== null) {
-    setSidebarOpen(stored === "true")
-  }
-}, [])
-
-const toggleSidebar = () => {
-  setSidebarOpen(current => {
-    const next = !current
-
+  const openSidebar = () => {
+    setSidebarOpen(true)
     localStorage.setItem(
-      "sidebar-open",
-      String(next),
+      "monitoring-sidebar-open",
+      "true",
     )
+  }
 
-    return next
-  })
-}
+  const closeSidebar = () => {
+    setSidebarOpen(false)
+    localStorage.setItem(
+      "monitoring-sidebar-open",
+      "false",
+    )
+  }
 
   // Fetch Data dari API
   const fetchData = useCallback(async () => {
@@ -284,56 +256,73 @@ const toggleSidebar = () => {
   }`}
 >
         <header className="flex min-h-20 items-center gap-3">
-  {/* Tombol menu untuk HP */}
-  <Sheet>
-    <SheetTrigger asChild>
-      <Button
-        size="icon"
-        variant="outline"
-        className="lg:hidden"
-      >
-        <Menu />
-      </Button>
-    </SheetTrigger>
+          {/* Tombol menu untuk HP */}
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button
+                size="icon"
+                variant="outline"
+                className="lg:hidden"
+                aria-label="Buka navigasi"
+              >
+                <Menu />
+              </Button>
+            </SheetTrigger>
 
-    <SheetContent
-      side="left"
-      className="w-64 p-0"
-    >
-      <SheetTitle className="sr-only">
-        Navigasi
-      </SheetTitle>
+            <SheetContent
+              side="left"
+              className="w-64 p-0"
+            >
+              <SheetTitle className="sr-only">
+                Navigasi
+              </SheetTitle>
 
-      <AppSidebar />
-    </SheetContent>
-  </Sheet>
+              <AppSidebar />
+            </SheetContent>
+          </Sheet>
 
-  {/* Tombol membuka sidebar desktop */}
-  {sidebarReady && !sidebarOpen && (
-    <Button
-      type="button"
-      size="icon"
-      variant="outline"
-      onClick={openSidebar}
-      aria-label="Buka sidebar"
-      title="Buka sidebar"
-      className="hidden shrink-0 rounded-full text-[#005a9c] shadow-sm lg:inline-flex"
-    >
-      <Menu className="size-5" />
-    </Button>
-  )}
+          {/* Tombol membuka sidebar desktop */}
+          {sidebarReady && !sidebarOpen && (
+            <Button
+              type="button"
+              size="icon"
+              variant="outline"
+              onClick={openSidebar}
+              aria-label="Buka sidebar"
+              title="Buka sidebar"
+              className="hidden shrink-0 rounded-full text-[#005a9c] shadow-sm lg:inline-flex"
+            >
+              <Menu className="size-5" />
+            </Button>
+          )}
 
-  {/* Judul */}
-  <div className="min-w-0">
-    <h1 className="truncate text-xl font-semibold text-slate-800 sm:text-2xl">
-      Monitoring Dashboard
-    </h1>
-</div>
-  {/* Bagian kanan header */}
-  <div className="ml-auto flex items-center gap-2">
-    {/* jam, peringatan, profil */}
-  </div>
-</header>
+          {/* Judul */}
+          <div className="min-w-0">
+            <h1 className="truncate text-xl font-semibold text-slate-800 sm:text-2xl">
+              Monitoring Dashboard
+            </h1>
+            <p className="hidden text-xs text-slate-500 sm:block">
+              Pemantauan Terpisah Suhu & Tegangan Gedung Kantor
+            </p>
+          </div>
+
+          {/* Bagian kanan header */}
+          <div className="ml-auto flex items-center gap-2">
+            <span className="hidden items-center gap-2 text-sm text-slate-500 xl:flex">
+              <CalendarDays className="size-4" />
+              {now
+                ? `${fullDate(now)}, ${clock(
+                    now.toISOString(),
+                    true,
+                  )} WIB`
+                : "Memuat waktu..."}
+            </span>
+
+            <AlertHeaderButton />
+
+            <ProfilePanel />
+          </div>
+        </header>
 
         {/* Menu Pilihan Lantai (Tabs) */}
         <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
