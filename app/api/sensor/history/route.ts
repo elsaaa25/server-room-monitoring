@@ -2,14 +2,20 @@ import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { auth } from "@/auth"
 
+export const runtime = "nodejs"
+
 export async function GET(request: Request) {
   try {
-    // Hanya pengguna yang sudah login yang dapat melihat riwayat
+    // Hanya pengguna yang sudah login
+    // yang dapat melihat riwayat.
     const session = await auth()
 
     if (!session?.user) {
       return NextResponse.json(
-        { error: "Unauthorized" },
+        {
+          success: false,
+          error: "Unauthorized",
+        },
         { status: 401 },
       )
     }
@@ -25,68 +31,138 @@ export async function GET(request: Request) {
       SELECT
         id,
         sensor_id AS "sensorId",
-        temperature,
-        voltage,
+        temperature::float8 AS temperature,
+        voltage::float8 AS voltage,
         recorded_at AS "recordedAt"
       FROM sensor_readings
       WHERE 1 = 1
     `
 
-    const params: unknown[] = []
+    const params: Array<string | number> = []
     let paramIndex = 1
 
-    // Filter berdasarkan sensor
+    // Filter berdasarkan sensor.
     if (sensorId) {
-      query += ` AND sensor_id = $${paramIndex}`
+      query += `
+        AND sensor_id = $${paramIndex}
+      `
+
       params.push(sensorId)
       paramIndex++
     }
 
-    // Filter berdasarkan tanggal tertentu
+    // Filter berdasarkan tanggal di zona waktu Jakarta.
     if (date) {
+      const isValidDate =
+        /^\d{4}-\d{2}-\d{2}$/.test(date)
+
+      if (!isValidDate) {
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              "Format tanggal harus YYYY-MM-DD",
+          },
+          { status: 400 },
+        )
+      }
+
       query += `
-        AND DATE(
+        AND (
           recorded_at
-          AT TIME ZONE 'UTC'
           AT TIME ZONE 'Asia/Jakarta'
-        ) = $${paramIndex}::date
+        )::date = $${paramIndex}::date
       `
 
       params.push(date)
       paramIndex++
     } else if (hoursStr) {
-      // Filter berdasarkan jumlah jam terakhir
-      const hours = Number.parseInt(hoursStr, 10)
+      // Filter berdasarkan jumlah jam terakhir.
+      const hours = Number.parseInt(
+        hoursStr,
+        10,
+      )
 
-      if (Number.isInteger(hours) && hours > 0) {
-        query += `
-          AND recorded_at >=
-            NOW() - ($${paramIndex}::int * INTERVAL '1 hour')
-        `
-
-        params.push(hours)
-        paramIndex++
+      if (
+        !Number.isInteger(hours) ||
+        hours <= 0
+      ) {
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              "Parameter hours tidak valid",
+          },
+          { status: 400 },
+        )
       }
+
+      query += `
+        AND recorded_at >=
+          NOW() - (
+            $${paramIndex}::int *
+            INTERVAL '1 hour'
+          )
+      `
+
+      params.push(hours)
+      paramIndex++
     }
 
-    query += ` ORDER BY recorded_at DESC`
+    query += `
+      ORDER BY recorded_at DESC
+    `
 
-    // Batasi jumlah hasil
+    // Batasi jumlah hasil.
     if (limitStr) {
-      const limit = Number.parseInt(limitStr, 10)
+      const limit = Number.parseInt(
+        limitStr,
+        10,
+      )
 
-      if (Number.isInteger(limit) && limit > 0) {
-        query += ` LIMIT $${paramIndex}::int`
-        params.push(limit)
+      if (
+        !Number.isInteger(limit) ||
+        limit <= 0
+      ) {
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              "Parameter limit tidak valid",
+          },
+          { status: 400 },
+        )
       }
+
+      // Mencegah permintaan data terlalu besar.
+      const safeLimit = Math.min(
+        limit,
+        5000,
+      )
+
+      query += `
+        LIMIT $${paramIndex}::int
+      `
+
+      params.push(safeLimit)
     }
 
-    const result = await db.query(query, params)
+    const result = await db.query(
+      query,
+      params,
+    )
 
-    return NextResponse.json({
-      success: true,
-      data: result.rows,
-    })
+    return NextResponse.json(
+      {
+        success: true,
+        data: result.rows,
+      },
+      {
+        headers: {
+          "Cache-Control": "no-store",
+        },
+      },
+    )
   } catch (error) {
     const message =
       error instanceof Error
@@ -100,6 +176,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(
       {
+        success: false,
         error: "Gagal mengambil data",
         details: message,
       },
