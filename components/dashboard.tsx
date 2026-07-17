@@ -301,10 +301,7 @@ export function Dashboard() {
             <h1 className="truncate text-xl font-semibold text-slate-800 sm:text-2xl">
               Monitoring Dashboard
             </h1>
-            <p className="hidden text-xs text-slate-500 sm:block">
-              Pemantauan Terpisah Suhu & Tegangan Gedung Kantor
-            </p>
-          </div>
+            </div>
 
           {/* Bagian kanan header */}
           <div className="ml-auto flex items-center gap-2">
