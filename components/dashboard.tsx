@@ -56,6 +56,8 @@ export function Dashboard() {
   const [settings, setSettings] = useState<MonitoringSettings>(defaultMonitoringSettings)
   const [loading, setLoading] = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(true)
+const [sidebarReady, setSidebarReady] =
+  useState(false)
 
   // Load Settings dari API database
   useEffect(() => {
@@ -78,6 +80,39 @@ export function Dashboard() {
       window.removeEventListener("monitoring-settings-changed", changed)
     }
   }, [])
+
+  useEffect(() => {
+  const storedValue =
+    localStorage.getItem(
+      "monitoring-sidebar-open",
+    )
+
+  if (storedValue !== null) {
+    setSidebarOpen(
+      storedValue === "true",
+    )
+  }
+
+  setSidebarReady(true)
+}, [])
+
+const openSidebar = () => {
+  setSidebarOpen(true)
+
+  localStorage.setItem(
+    "monitoring-sidebar-open",
+    "true",
+  )
+}
+
+const closeSidebar = () => {
+  setSidebarOpen(false)
+
+  localStorage.setItem(
+    "monitoring-sidebar-open",
+    "false",
+  )
+}
 
   useEffect(() => {
   const stored =
@@ -228,13 +263,27 @@ const toggleSidebar = () => {
       : null
 
   return (
-    <div className="min-h-screen p-2 lg:flex bg-slate-50/50">
-       {sidebarOpen && (
-  <aside className="sticky top-2 hidden h-[calc(100vh-1rem)] w-56 shrink-0 overflow-hidden rounded-3xl border bg-white shadow-sm lg:block">
-    <AppSidebar />
-  </aside>
-)}
+    <div className="min-h-screen bg-slate-50/50 p-2 lg:flex">
+    {sidebarReady && sidebarOpen && (
+      <aside className="sticky top-2 hidden h-[calc(100vh-1rem)] w-64 shrink-0 overflow-hidden rounded-3xl border bg-white shadow-sm lg:block">
+        <AppSidebar
+          showCloseButton
+          onClose={closeSidebar}
+        />
+      </aside>
+    )}
 
+    {sidebarReady && !sidebarOpen && (
+      <button
+        type="button"
+        onClick={openSidebar}
+        aria-label="Buka sidebar"
+        title="Buka sidebar"
+        className="fixed left-4 top-4 z-50 hidden size-11 place-items-center rounded-full border border-slate-200 bg-white text-[#005a9c] shadow-lg transition hover:bg-slate-50 lg:grid"
+      >
+        <Menu className="size-5" />
+      </button>
+    )}
       <main className="min-w-0 flex-1 px-2 pb-6 lg:px-6">
         {/* Header */}
         <header className="flex min-h-20 items-center gap-3">
@@ -249,24 +298,7 @@ const toggleSidebar = () => {
               <AppSidebar />
             </SheetContent>
           </Sheet>
-          <Button
-  type="button"
-  size="icon"
-  variant="outline"
-  className="hidden lg:inline-flex"
-  onClick={toggleSidebar}
-  title={
-    sidebarOpen
-      ? "Sembunyikan sidebar"
-      : "Tampilkan sidebar"
-  }
->
-  {sidebarOpen ? (
-    <PanelLeftClose className="size-4" />
-  ) : (
-    <PanelLeftOpen className="size-4" />
-  )}
-</Button>
+          
           
           <div>
             <h1 className="text-xl font-semibold sm:text-2xl text-slate-800">Monitoring Dashboard</h1>
