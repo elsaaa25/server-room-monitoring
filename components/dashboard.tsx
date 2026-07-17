@@ -35,7 +35,7 @@ type Status = "Normal" | "Waspada" | "Bahaya"
 
 const clock = (value: string, seconds = false) =>
   new Intl.DateTimeFormat("id-ID", {
-    timeZone: "Asia/Bangkok",
+    timeZone: "Asia/Jakarta",
     hour: "2-digit",
     minute: "2-digit",
     second: seconds ? "2-digit" : undefined
@@ -43,7 +43,7 @@ const clock = (value: string, seconds = false) =>
 
 const fullDate = (value: Date) =>
   new Intl.DateTimeFormat("id-ID", {
-    timeZone: "Asia/Bangkok",
+    timeZone: "Asia/Jakarta",
     day: "2-digit",
     month: "long",
     year: "numeric"
@@ -395,9 +395,27 @@ export function Dashboard() {
                   <Metric
                     icon={ShieldCheck}
                     label="Kondisi Ruangan L4"
-                    value={statusL4 === "Bahaya" ? "BAHAYA" : statusL4 === "Waspada" ? "PERHATIAN" : "AMAN"}
-                    detail={statusL4 === "Normal" ? "Suhu & Tegangan aman" : "Segera periksa AC server!"}
-                    valueClassName={statusColor(statusL4)}
+                    value={
+                      !onlineL4
+                        ? "-"
+                        : statusL4 === "Bahaya"
+                          ? "BAHAYA"
+                          : statusL4 === "Waspada"
+                            ? "WASPADA"
+                            : "AMAN"
+                    }
+                    detail={
+                      !onlineL4
+                        ? "Sensor terputus"
+                        : statusL4 === "Normal"
+                          ? "Suhu & Tegangan aman"
+                          : "Segera periksa AC server!"
+                    }
+                    valueClassName={
+                      !onlineL4
+                        ? "text-slate-400"
+                        : statusColor(statusL4)
+                    }
                     iconColor="bg-slate-50 text-slate-700"
                   />
                 </section>
@@ -580,9 +598,27 @@ export function Dashboard() {
                   <Metric
                     icon={ShieldCheck}
                     label="Kondisi Ruangan L5"
-                    value={statusL5 === "Bahaya" ? "BAHAYA" : statusL5 === "Waspada" ? "PERHATIAN" : "AMAN"}
-                    detail={statusL5 === "Normal" ? "Suhu ruangan normal" : "Periksa kondisi AC Lantai 5!"}
-                    valueClassName={statusColor(statusL5)}
+                    value={
+                      !onlineL5
+                        ? "-"
+                        : statusL5 === "Bahaya"
+                          ? "BAHAYA"
+                          : statusL5 === "Waspada"
+                            ? "WASPADA"
+                            : "AMAN"
+                    }
+                    detail={
+                      !onlineL5
+                        ? "Sensor terputus"
+                        : statusL5 === "Normal"
+                          ? "Suhu ruangan normal"
+                          : "Periksa kondisi AC Lantai 5!"
+                    }
+                    valueClassName={
+                      !onlineL5
+                        ? "text-slate-400"
+                        : statusColor(statusL5)
+                    }
                     iconColor="bg-slate-50 text-slate-700"
                   />
                 </section>
