@@ -6,7 +6,7 @@ import { getSession, signOut } from "next-auth/react"
 import {
   Activity, Bell, CalendarDays, CheckCircle2, ChevronDown, Clock3,
   Database, Menu, Radio, ShieldCheck, Thermometer, TrendingDown,
-  TrendingUp, UserRound, Zap
+  TrendingUp, UserRound, Zap, PanelLeftClose, PanelLeftOpen,
 } from "lucide-react"
 import {
   Area, AreaChart, CartesianGrid, ReferenceLine, ResponsiveContainer,
@@ -55,6 +55,7 @@ export function Dashboard() {
   const [now, setNow] = useState<Date | null>(null)
   const [settings, setSettings] = useState<MonitoringSettings>(defaultMonitoringSettings)
   const [loading, setLoading] = useState(true)
+  const [sidebarOpen, setSidebarOpen] = useState(true)
 
   // Load Settings dari API database
   useEffect(() => {
@@ -77,6 +78,28 @@ export function Dashboard() {
       window.removeEventListener("monitoring-settings-changed", changed)
     }
   }, [])
+
+  useEffect(() => {
+  const stored =
+    localStorage.getItem("sidebar-open")
+
+  if (stored !== null) {
+    setSidebarOpen(stored === "true")
+  }
+}, [])
+
+const toggleSidebar = () => {
+  setSidebarOpen(current => {
+    const next = !current
+
+    localStorage.setItem(
+      "sidebar-open",
+      String(next),
+    )
+
+    return next
+  })
+}
 
   // Fetch Data dari API
   const fetchData = useCallback(async () => {
@@ -206,9 +229,11 @@ export function Dashboard() {
 
   return (
     <div className="min-h-screen p-2 lg:flex bg-slate-50/50">
-      <aside className="sticky top-2 hidden h-[calc(100vh-1rem)] w-56 shrink-0 overflow-hidden rounded-3xl border bg-white shadow-sm lg:block">
-        <AppSidebar />
-      </aside>
+       {sidebarOpen && (
+  <aside className="sticky top-2 hidden h-[calc(100vh-1rem)] w-56 shrink-0 overflow-hidden rounded-3xl border bg-white shadow-sm lg:block">
+    <AppSidebar />
+  </aside>
+)}
 
       <main className="min-w-0 flex-1 px-2 pb-6 lg:px-6">
         {/* Header */}
@@ -224,6 +249,25 @@ export function Dashboard() {
               <AppSidebar />
             </SheetContent>
           </Sheet>
+          <Button
+  type="button"
+  size="icon"
+  variant="outline"
+  className="hidden lg:inline-flex"
+  onClick={toggleSidebar}
+  title={
+    sidebarOpen
+      ? "Sembunyikan sidebar"
+      : "Tampilkan sidebar"
+  }
+>
+  {sidebarOpen ? (
+    <PanelLeftClose className="size-4" />
+  ) : (
+    <PanelLeftOpen className="size-4" />
+  )}
+</Button>
+          
           <div>
             <h1 className="text-xl font-semibold sm:text-2xl text-slate-800">Monitoring Dashboard</h1>
           </div>
