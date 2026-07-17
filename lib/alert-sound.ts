@@ -381,4 +381,8 @@ export async function playAlertSound(
       0.22,
     )
   }
+  
+}
+export async function unlockAlertAudio() {
+  await prepareAudioContext()
 }
