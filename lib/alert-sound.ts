@@ -2,33 +2,40 @@
 
 let sharedAudioContext: AudioContext | null = null
 
-function getAudioContext() {
+type WindowWithWebkitAudio = Window &
+  typeof globalThis & {
+    webkitAudioContext?: typeof AudioContext
+  }
+
+function getAudioContext(): AudioContext | null {
   if (typeof window === "undefined") {
     return null
   }
 
   const AudioContextConstructor =
     window.AudioContext ??
-    (
-      window as typeof window & {
-        webkitAudioContext?: typeof AudioContext
-      }
-    ).webkitAudioContext
+    (window as WindowWithWebkitAudio)
+      .webkitAudioContext
 
   if (!AudioContextConstructor) {
     return null
   }
 
-  sharedAudioContext ??= new AudioContextConstructor()
+  if (!sharedAudioContext) {
+    sharedAudioContext =
+      new AudioContextConstructor()
+  }
 
   return sharedAudioContext
 }
 
-async function ensureAudioContext() {
+async function prepareAudioContext() {
   const context = getAudioContext()
 
   if (!context) {
-    throw new Error("Browser tidak mendukung Web Audio API.")
+    throw new Error(
+      "Browser tidak mendukung Web Audio API.",
+    )
   }
 
   if (context.state === "suspended") {
@@ -38,59 +45,165 @@ async function ensureAudioContext() {
   return context
 }
 
-function createTone(
+function createSirenBurst(
   context: AudioContext,
-  startAt: number,
+  startTime: number,
   duration: number,
-  frequency: number,
   volume: number,
 ) {
-  const oscillator = context.createOscillator()
+  const oscillator =
+    context.createOscillator()
   const gain = context.createGain()
 
-  oscillator.type = "square"
-  oscillator.frequency.setValueAtTime(frequency, startAt)
+  oscillator.type = "sawtooth"
 
-  gain.gain.setValueAtTime(0.0001, startAt)
-  gain.gain.exponentialRampToValueAtTime(volume, startAt + 0.02)
-  gain.gain.setValueAtTime(volume, startAt + Math.max(duration - 0.04, 0.03))
-  gain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration)
+  // Frekuensi sirene naik dan turun.
+  oscillator.frequency.setValueAtTime(
+    650,
+    startTime,
+  )
+
+  oscillator.frequency.exponentialRampToValueAtTime(
+    1450,
+    startTime + duration / 2,
+  )
+
+  oscillator.frequency.exponentialRampToValueAtTime(
+    650,
+    startTime + duration,
+  )
+
+  // Suara masuk dan keluar secara halus.
+  gain.gain.setValueAtTime(
+    0.0001,
+    startTime,
+  )
+
+  gain.gain.exponentialRampToValueAtTime(
+    volume,
+    startTime + 0.04,
+  )
+
+  gain.gain.setValueAtTime(
+    volume,
+    startTime + duration - 0.06,
+  )
+
+  gain.gain.exponentialRampToValueAtTime(
+    0.0001,
+    startTime + duration,
+  )
 
   oscillator.connect(gain)
   gain.connect(context.destination)
 
-  oscillator.start(startAt)
-  oscillator.stop(startAt + duration + 0.02)
+  oscillator.start(startTime)
+  oscillator.stop(startTime + duration + 0.05)
+}
+
+function createWarningBeep(
+  context: AudioContext,
+  startTime: number,
+  frequency: number,
+) {
+  const oscillator =
+    context.createOscillator()
+  const gain = context.createGain()
+
+  oscillator.type = "square"
+  oscillator.frequency.setValueAtTime(
+    frequency,
+    startTime,
+  )
+
+  gain.gain.setValueAtTime(
+    0.0001,
+    startTime,
+  )
+
+  gain.gain.exponentialRampToValueAtTime(
+    0.08,
+    startTime + 0.02,
+  )
+
+  gain.gain.exponentialRampToValueAtTime(
+    0.0001,
+    startTime + 0.18,
+  )
+
+  oscillator.connect(gain)
+  gain.connect(context.destination)
+
+  oscillator.start(startTime)
+  oscillator.stop(startTime + 0.2)
 }
 
 export async function playAlertSound(
   mode: "preview" | "danger" = "danger",
 ) {
-  const context = await ensureAudioContext()
-  const now = context.currentTime + 0.03
+  const context =
+    await prepareAudioContext()
+
+  const startTime =
+    context.currentTime + 0.05
 
   if (mode === "preview") {
-    createTone(context, now, 0.16, 880, 0.08)
-    createTone(context, now + 0.22, 0.16, 1175, 0.08)
+    // Tes singkat saat toggle suara diaktifkan.
+    createSirenBurst(
+      context,
+      startTime,
+      0.7,
+      0.1,
+    )
+
+    createWarningBeep(
+      context,
+      startTime + 0.8,
+      1200,
+    )
+
     return
   }
 
-  const pattern = [
-    { offset: 0, frequency: 880 },
-    { offset: 0.25, frequency: 1175 },
-    { offset: 0.5, frequency: 880 },
-    { offset: 0.75, frequency: 1175 },
-    { offset: 1.0, frequency: 880 },
-    { offset: 1.25, frequency: 1175 },
-  ]
+  // Sirene bahaya selama sekitar 4 detik.
+  const sirenDuration = 0.75
+  const sirenCount = 5
 
-  for (const tone of pattern) {
-    createTone(
+  for (
+    let index = 0;
+    index < sirenCount;
+    index += 1
+  ) {
+    createSirenBurst(
       context,
-      now + tone.offset,
-      0.18,
-      tone.frequency,
-      0.12,
+      startTime +
+        index * sirenDuration,
+      sirenDuration,
+      0.14,
     )
   }
+
+  // Bunyi penutup sebagai penegasan bahaya.
+  const warningStart =
+    startTime +
+    sirenCount * sirenDuration +
+    0.1
+
+  createWarningBeep(
+    context,
+    warningStart,
+    1350,
+  )
+
+  createWarningBeep(
+    context,
+    warningStart + 0.25,
+    1350,
+  )
+
+  createWarningBeep(
+    context,
+    warningStart + 0.5,
+    1350,
+  )
 }
