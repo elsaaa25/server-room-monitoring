@@ -12,14 +12,12 @@ import {
   Check,
   CheckCircle2,
   Clock3,
-  Menu,
   Radio,
   Search,
   ShieldAlert,
   Thermometer,
 } from "lucide-react"
 
-import { AppSidebar } from "@/components/app-sidebar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -29,15 +27,10 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import {
-  Sheet,
-  SheetContent,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet"
-import {
   defaultMonitoringSettings,
   type MonitoringSettings,
 } from "@/lib/monitoring-settings"
+import { AppShell } from "@/components/app-shell"
 
 type Level = "Waspada" | "Bahaya"
 type AlertStatus = "Aktif" | "Ditangani"
@@ -281,59 +274,24 @@ export function AlertsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50/50 p-2 lg:flex">
-      <aside className="sticky top-2 hidden h-[calc(100vh-1rem)] w-56 shrink-0 overflow-hidden rounded-3xl border bg-white shadow-sm lg:block">
-        <AppSidebar />
-      </aside>
-
-      <main className="min-w-0 flex-1 px-2 pb-6 lg:px-6">
-        <header className="flex min-h-20 items-center gap-3">
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button
-                size="icon"
-                variant="outline"
-                className="lg:hidden"
-              >
-                <Menu />
-              </Button>
-            </SheetTrigger>
-            <SheetContent
-              side="left"
-              className="w-64 p-0"
-            >
-              <SheetTitle className="sr-only">
-                Navigasi
-              </SheetTitle>
-              <AppSidebar />
-            </SheetContent>
-          </Sheet>
-
-          <div>
-            <h1 className="text-xl font-semibold text-slate-800 sm:text-2xl">
-              Peringatan
-            </h1>
-            <p className="text-xs text-slate-500">
-              Pantau dan tindak lanjuti kejadian
-              suhu ruang server
-            </p>
-          </div>
-
-          <Button
-            className="ml-auto"
-            variant="outline"
-            disabled={
-              active === 0 || actionId !== null
-            }
-            onClick={() => void acknowledgeAll()}
-          >
-            <Check />
-            {actionId === "all"
-              ? "Memproses..."
-              : "Tandai Semua Ditangani"}
-          </Button>
-        </header>
-
+    <AppShell
+      title="Peringatan"
+      description="Pantau dan tindak lanjuti kejadian suhu ruang server"
+      actions={
+        <Button
+          variant="outline"
+          disabled={
+            active === 0 || actionId !== null
+          }
+          onClick={() => void acknowledgeAll()}
+        >
+          <Check />
+          {actionId === "all"
+            ? "Memproses..."
+            : "Tandai Semua Ditangani"}
+        </Button>
+      }
+    >
         <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <Summary
             icon={Bell}
@@ -460,8 +418,7 @@ export function AlertsPage() {
             )}
           </CardContent>
         </Card>
-      </main>
-    </div>
+    </AppShell>
   )
 }
 
