@@ -337,9 +337,9 @@ export function Dashboard() {
               </TabsTrigger>
               <TabsTrigger
                 value="5"
-                className="px-4 py-2 text-sm font-semibold rounded-lg transition-all data-[state=active]:bg-purple-600 data-[state=active]:text-white"
+                className="px-4 py-2 text-sm font-semibold rounded-lg transition-all data-[state=active]:bg-[#005a9c] data-[state=active]:text-white"
               >
-                Lantai 5 - Ruangan ATC
+                Lantai 5 - Ruang ATC
               </TabsTrigger>
             </TabsList>
           </Tabs>
