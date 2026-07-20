@@ -67,7 +67,7 @@ export function AppShell({
     <div className="min-h-screen bg-slate-50/50 p-2 lg:flex">
       {/* Sidebar desktop */}
       {sidebarOpen && (
-        <aside className="sticky top-2 hidden h-[calc(100vh-1rem)] w-64 shrink-0 overflow-hidden rounded-3xl border bg-white shadow-sm lg:block">
+        <aside className="sticky top-2 hidden h-[calc(100vh-1rem)] w-56 shrink-0 overflow-hidden rounded-3xl border bg-white shadow-sm lg:block">
           <AppSidebar
             showCloseButton
             onClose={closeSidebar}
@@ -93,7 +93,7 @@ export function AppShell({
 
             <SheetContent
               side="left"
-              className="w-64 p-0"
+              className="w-56 p-0"
             >
               <SheetTitle className="sr-only">
                 Navigasi
