@@ -9,7 +9,6 @@ import {
   Bell,
   Check,
   Clock3,
-  Menu,
   Radio,
   RotateCcw,
   Save,
@@ -18,7 +17,6 @@ import {
   Volume2,
 } from "lucide-react"
 
-import { AppSidebar } from "@/components/app-sidebar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -29,17 +27,12 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import {
-  Sheet,
-  SheetContent,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet"
 import { playAlertSound } from "@/lib/alert-sound"
 import {
   defaultMonitoringSettings as defaults,
   type MonitoringSettings as Settings,
 } from "@/lib/monitoring-settings"
+import { AppShell } from "@/components/app-shell"
 
 type PermissionState =
   | NotificationPermission
@@ -345,77 +338,41 @@ export function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50/50 p-2 lg:flex">
-      <aside className="sticky top-2 hidden h-[calc(100vh-1rem)] w-56 shrink-0 overflow-hidden rounded-3xl border bg-white shadow-sm lg:block">
-        <AppSidebar />
-      </aside>
+    <AppShell
+      title="Pengaturan Sistem"
+      description="Konfigurasi batas alarm suhu, interval refresh, dan notifikasi"
+      actions={
+        <>
+          <Button
+            variant="outline"
+            onClick={reset}
+            disabled={loading || saving}
+          >
+            <RotateCcw className="mr-1 size-4" />
+            <span className="hidden sm:inline">
+              Reset
+            </span>
+          </Button>
 
-      <main className="min-w-0 flex-1 px-2 pb-8 lg:px-6">
-        <header className="flex min-h-20 items-center gap-3">
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button
-                size="icon"
-                variant="outline"
-                className="lg:hidden"
-              >
-                <Menu />
-              </Button>
-            </SheetTrigger>
-            <SheetContent
-              side="left"
-              className="w-64 p-0"
-            >
-              <SheetTitle className="sr-only">
-                Navigasi
-              </SheetTitle>
-              <AppSidebar />
-            </SheetContent>
-          </Sheet>
-
-          <div>
-            <h1 className="text-xl font-semibold text-slate-800 sm:text-2xl">
-              Pengaturan Sistem
-            </h1>
-            <p className="text-sm font-normal text-slate-500">
-              Konfigurasi batas alarm suhu,
-              interval refresh, dan notifikasi
-            </p>
-          </div>
-
-          <div className="ml-auto flex gap-2">
-            <Button
-              variant="outline"
-              onClick={reset}
-              disabled={loading || saving}
-            >
-              <RotateCcw className="mr-1 size-4" />
-              <span className="hidden sm:inline">
-                Reset
-              </span>
-            </Button>
-
-            <Button
-              onClick={() => void save()}
-              disabled={
-                !valid || loading || saving
-              }
-              className="bg-[#005a9c] hover:bg-[#004579]"
-            >
-              {saved ? (
-                <Check className="mr-1 size-4" />
-              ) : (
-                <Save className="mr-1 size-4" />
-              )}
-              {saving
-                ? "Menyimpan..."
-                : saved
-                  ? "Tersimpan"
-                  : "Simpan"}
-            </Button>
-          </div>
-        </header>
-
+          <Button
+            onClick={() => void save()}
+            disabled={!valid || loading || saving}
+            className="bg-[#005a9c] hover:bg-[#004579]"
+          >
+            {saved ? (
+              <Check className="mr-1 size-4" />
+            ) : (
+              <Save className="mr-1 size-4" />
+            )}
+            {saving
+              ? "Menyimpan..."
+              : saved
+                ? "Tersimpan"
+                : "Simpan"}
+          </Button>
+        </>
+      }
+    >
         {feedback && (
           <div
             className={`mb-4 rounded-xl border px-4 py-3 text-sm ${
@@ -680,8 +637,7 @@ export function SettingsPage() {
           selama website monitoring terbuka di
           browser.
         </p>
-      </main>
-    </div>
+    </AppShell>
   )
 }
 
