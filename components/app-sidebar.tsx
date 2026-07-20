@@ -111,7 +111,7 @@ export function AppSidebar({
       {/* Identitas monitor */}
       <div className="mt-auto flex items-center gap-2 px-3 py-2 text-xs text-slate-400">
         <Radio className="size-4 shrink-0 text-[#005a9c]" />
-        <span>ESP32 Monitor</span>
+        <span>AirNav Banyuwangi</span>
       </div>
     </div>
   )
