@@ -1,14 +1,13 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
-import { CalendarDays, ChevronLeft, ChevronRight, Download, Filter, History, Menu, Search, Thermometer } from "lucide-react"
-import { AppSidebar } from "@/components/app-sidebar"
+import { CalendarDays, ChevronLeft, ChevronRight, Download, Filter, History, Search, Thermometer } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { defaultMonitoringSettings, readMonitoringSettings, type MonitoringSettings } from "@/lib/monitoring-settings"
+import { defaultMonitoringSettings, type MonitoringSettings } from "@/lib/monitoring-settings"
+import { AppShell } from "@/components/app-shell"
 
 type Status = "Normal" | "Waspada" | "Bahaya"
 type Reading = { 
@@ -137,34 +136,20 @@ export function HistoryPage() {
   }
 
   return (
-    <div className="min-h-screen p-2 lg:flex bg-slate-50/50">
-      <aside className="sticky top-2 hidden h-[calc(100vh-1rem)] w-56 shrink-0 overflow-hidden rounded-3xl border bg-white shadow-sm lg:block">
-        <AppSidebar />
-      </aside>
-      
-      <main className="min-w-0 flex-1 px-2 pb-8 lg:px-6">
-        <header className="flex min-h-20 items-center gap-3">
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button size="icon" variant="outline" className="lg:hidden">
-                <Menu />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-64 p-0">
-              <SheetTitle className="sr-only">Navigasi</SheetTitle>
-              <AppSidebar />
-            </SheetContent>
-          </Sheet>
-          <div>
-            <h1 className="text-xl font-semibold sm:text-2xl text-slate-800">Riwayat Pengukuran</h1>
-            <p className="text-sm text-slate-500 font-normal">Telusuri seluruh data log sensor dari database</p>
-          </div>
-          <Button onClick={exportCsv} variant="outline" className="ml-auto" disabled={!filtered.length}>
-            <Download className="mr-2 size-4" />
-            <span className="hidden sm:inline">Export CSV</span>
-          </Button>
-        </header>
-
+    <AppShell
+      title="Riwayat Pengukuran"
+      description="Telusuri seluruh data log sensor dari database"
+      actions={
+        <Button
+          onClick={exportCsv}
+          variant="outline"
+          disabled={!filtered.length}
+        >
+          <Download className="mr-2 size-4" />
+          <span className="hidden sm:inline">Export CSV</span>
+        </Button>
+      }
+    >
         {/* Ringkasan Jumlah Data */}
         <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <Summary icon={History} label="Total Data Terfilter" value={counts.total} color="slate" />
@@ -307,8 +292,7 @@ export function HistoryPage() {
             )}
           </CardContent>
         </Card>
-      </main>
-    </div>
+    </AppShell>
   )
 }
 
