@@ -83,10 +83,10 @@ export function AlertHeaderButton() {
       variant="outline"
       className={
         hasDanger
-          ? "border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100"
+          ? "border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-400 dark:hover:bg-rose-950/60"
           : hasActive
-            ? "border-amber-200 bg-amber-50 text-amber-600 hover:bg-amber-100"
-            : "border-slate-200 bg-white text-slate-600"
+            ? "border-amber-200 bg-amber-50 text-amber-600 hover:bg-amber-100 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-400 dark:hover:bg-amber-950/60"
+            : "border-border bg-card text-muted-foreground"
       }
     >
       <Link href="/peringatan">

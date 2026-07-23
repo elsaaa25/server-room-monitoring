@@ -7,7 +7,7 @@ const Dashboard = dynamic(
   {
     ssr: false,
     loading: () => (
-      <main className="grid min-h-screen place-items-center text-sm text-slate-500">
+      <main className="grid min-h-screen place-items-center text-sm text-muted-foreground">
         Memuat dashboard monitoring…
       </main>
     ),

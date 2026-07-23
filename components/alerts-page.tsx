@@ -329,14 +329,14 @@ export function AlertsPage() {
               <CardTitle className="text-sm font-semibold">
                 Daftar Peringatan
               </CardTitle>
-              <span className="text-xs text-slate-500">
+              <span className="text-xs text-muted-foreground">
                 {filtered.length} kejadian
               </span>
             </div>
 
             <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
               <div className="flex min-w-0 flex-1 items-center rounded-xl border bg-white px-3">
-                <Search className="size-4 text-slate-400" />
+                <Search className="size-4 text-muted-foreground" />
                 <input
                   value={search}
                   onChange={event =>
@@ -382,7 +382,7 @@ export function AlertsPage() {
 
           <CardContent className="space-y-3">
             {error && (
-              <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300">
                 <span>{error}</span>
                 <Button
                   size="sm"
@@ -397,7 +397,7 @@ export function AlertsPage() {
             )}
 
             {loading ? (
-              <div className="grid min-h-48 place-items-center text-sm text-slate-500">
+              <div className="grid min-h-48 place-items-center text-sm text-muted-foreground">
                 Mengambil data peringatan...
               </div>
             ) : filtered.length > 0 ? (
@@ -412,7 +412,7 @@ export function AlertsPage() {
                 />
               ))
             ) : (
-              <div className="grid min-h-48 place-items-center rounded-xl border border-dashed text-center text-sm text-slate-400">
+              <div className="grid min-h-48 place-items-center rounded-xl border border-dashed text-center text-sm text-muted-foreground">
                 Tidak ada peringatan yang sesuai.
               </div>
             )}
@@ -434,15 +434,15 @@ function AlertRow({
   const visual = {
     Bahaya: {
       icon: ShieldAlert,
-      box: "border-rose-200 bg-rose-50/40",
-      bubble: "bg-rose-100 text-rose-600",
-      badge: "bg-rose-100 text-rose-700",
+      box: "border-rose-200 bg-rose-50/40 dark:border-rose-900/60 dark:bg-rose-950/20",
+      bubble: "bg-rose-100 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400",
+      badge: "bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300",
     },
     Waspada: {
       icon: AlertTriangle,
-      box: "border-amber-200 bg-amber-50/40",
-      bubble: "bg-amber-100 text-amber-600",
-      badge: "bg-amber-100 text-amber-700",
+      box: "border-amber-200 bg-amber-50/40 dark:border-amber-900/60 dark:bg-amber-950/20",
+      bubble: "bg-amber-100 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400",
+      badge: "bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300",
     },
   }[item.level]
 
@@ -461,7 +461,7 @@ function AlertRow({
 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="font-semibold text-slate-800">
+            <h3 className="font-semibold text-foreground">
               {item.title}
             </h3>
             <Badge
@@ -473,18 +473,18 @@ function AlertRow({
             {item.status === "Ditangani" && (
               <Badge
                 variant="secondary"
-                className="bg-emerald-100 text-emerald-700"
+                className="bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300"
               >
                 Ditangani
               </Badge>
             )}
           </div>
 
-          <p className="mt-1 text-sm text-slate-600">
+          <p className="mt-1 text-sm text-muted-foreground">
             {item.detail}
           </p>
 
-          <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-xs text-slate-500">
+          <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-xs text-muted-foreground">
             <span className="flex items-center gap-1.5">
               <Thermometer className="size-3.5" />
               {item.temperature.toFixed(2)}°C
@@ -501,13 +501,13 @@ function AlertRow({
 
           {item.status === "Ditangani" &&
             item.handledByName && (
-              <p className="mt-2 text-xs text-slate-400">
+              <p className="mt-2 text-xs text-muted-foreground">
                 Ditangani oleh {item.handledByName}
               </p>
             )}
 
           {item.resolvedAt && (
-            <p className="mt-1 text-xs text-emerald-600">
+            <p className="mt-1 text-xs text-emerald-600 dark:text-emerald-400">
               Suhu kembali normal pada{" "}
               {dateTime(item.resolvedAt)} WIB
             </p>
@@ -547,10 +547,10 @@ function Summary({
     | "blue"
 }) {
   const styles = {
-    amber: "bg-amber-50 text-amber-600",
-    rose: "bg-rose-50 text-rose-600",
-    green: "bg-emerald-50 text-emerald-600",
-    blue: "bg-blue-50 text-blue-600",
+    amber: "bg-amber-50 text-amber-600 dark:bg-amber-950/50 dark:text-amber-400",
+    rose: "bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400",
+    green: "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400",
+    blue: "bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400",
   }
 
   return (
@@ -562,10 +562,10 @@ function Summary({
           <Icon className="size-5" />
         </span>
         <span>
-          <small className="block text-xs text-slate-500">
+          <small className="block text-xs text-muted-foreground">
             {label}
           </small>
-          <b className="text-xl text-slate-800">
+          <b className="text-xl text-foreground">
             {value}
           </b>
         </span>
@@ -592,8 +592,8 @@ function FilterGroup({
           onClick={() => onChange(value)}
           className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-xs transition ${
             active === value
-              ? "bg-emerald-50 font-medium text-emerald-700"
-              : "text-slate-500 hover:bg-slate-50"
+              ? "bg-emerald-50 font-medium text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
+              : "text-muted-foreground hover:bg-muted"
           }`}
         >
           {value}
