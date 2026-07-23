@@ -1259,7 +1259,7 @@ export function Dashboard() {
             )}
 
           <div className="min-w-0">
-            <h1 className="truncate text-xl font-semibold text-slate-800 sm:text-2xl">
+            <h1 className="truncate text-xl font-semibold text-slate-800 dark:text-slate-100 sm:text-2xl">
               Monitoring Dashboard
             </h1>
           </div>
@@ -1486,7 +1486,7 @@ export function Dashboard() {
                 <section className="mt-6 grid gap-6 xl:grid-cols-2">
                   <Card className="overflow-hidden border-slate-200/80 shadow-sm">
                     <CardHeader>
-                      <CardTitle className="text-md font-semibold text-slate-700">
+                      <CardTitle className="text-md font-semibold text-slate-700 dark:text-slate-100">
                         Grafik Tren Suhu Lantai 4
                       </CardTitle>
 
@@ -1500,7 +1500,7 @@ export function Dashboard() {
                       </p>
                     </CardHeader>
 
-                    <CardContent className="h-72 pl-1">
+                    <CardContent className="h-72 pl-1 pr-4 pb-4">
                       {loadingHistory &&
                       chartData.length ===
                         0 ? (
@@ -1693,7 +1693,7 @@ export function Dashboard() {
 
                   <Card className="overflow-hidden border-slate-200/80 shadow-sm">
                     <CardHeader>
-                      <CardTitle className="text-md font-semibold text-slate-700">
+                      <CardTitle className="text-md font-semibold text-slate-700 dark:text-slate-100">
                         Grafik Tegangan AC Lantai 4
                       </CardTitle>
 
@@ -1707,7 +1707,7 @@ export function Dashboard() {
                       </p>
                     </CardHeader>
 
-                    <CardContent className="h-72 pl-1">
+                    <CardContent className="h-72 pl-1 pr-4 pb-4">
                       {loadingHistory &&
                       chartData.length ===
                         0 ? (
@@ -1920,7 +1920,7 @@ export function Dashboard() {
                           )
                         : "text-slate-400"
                     }
-                    iconColor="bg-purple-50 text-purple-600"
+                    iconColor="bg-purple-500/10 text-purple-600 dark:text-purple-400"
                   />
 
                   <Metric
@@ -1944,7 +1944,7 @@ export function Dashboard() {
                         ? "text-emerald-600"
                         : "text-rose-600"
                     }
-                    iconColor="bg-blue-50 text-blue-500"
+                    iconColor="bg-blue-500/10 text-blue-600 dark:text-blue-400"
                   />
 
                   <Metric
@@ -1976,14 +1976,14 @@ export function Dashboard() {
                             statusL5,
                           )
                     }
-                    iconColor="bg-slate-50 text-slate-700"
+                    iconColor="bg-slate-500/10 text-slate-600 dark:text-slate-400"
                   />
                 </section>
 
                 <section className="mt-6">
                   <Card className="overflow-hidden border-slate-200/80 shadow-sm">
                     <CardHeader>
-                      <CardTitle className="text-md font-semibold text-slate-700">
+                      <CardTitle className="text-md font-semibold text-slate-700 dark:text-slate-100">
                         Grafik Tren Suhu Lantai 5
                       </CardTitle>
 
@@ -2526,7 +2526,7 @@ function Limit({
         {label}
       </span>
 
-      <b className="ml-auto text-slate-700">
+      <b className="ml-auto text-slate-700 dark:text-slate-200">
         {value}
       </b>
     </div>
@@ -2559,7 +2559,7 @@ function SummaryRow({
           {label}
         </small>
 
-        <b className="block text-base font-bold text-slate-800">
+        <b className="block text-base font-bold text-slate-800 dark:text-slate-100">
           {value}
         </b>
       </span>

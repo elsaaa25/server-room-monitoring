@@ -120,7 +120,7 @@ export function AppShell({
 
           {/* Judul halaman */}
           <div className="min-w-0">
-            <h1 className="truncate text-xl font-semibold text-slate-800 sm:text-2xl">
+            <h1 className="truncate text-xl font-semibold text-slate-800 dark:text-slate-100 sm:text-2xl">
               {title}
             </h1>
 

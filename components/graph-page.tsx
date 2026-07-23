@@ -462,14 +462,18 @@ function calculateYAxisDomain(
     minimumPadding,
   )
 
-  return [
-    Number(
-      (minimum - padding).toFixed(2),
-    ),
-    Number(
-      (maximum + padding).toFixed(2),
-    ),
-  ]
+  let finalMin = minimum - padding
+  let finalMax = maximum + padding
+
+  if (key !== "current") {
+    finalMin = Math.floor(finalMin)
+    finalMax = Math.ceil(finalMax)
+  } else {
+    finalMin = Number(finalMin.toFixed(2))
+    finalMax = Number(finalMax.toFixed(2))
+  }
+
+  return [finalMin, finalMax]
 }
 
 function downsampleData(
@@ -1339,7 +1343,7 @@ function MetricChart({
         </div>
       </CardHeader>
 
-      <CardContent>
+      <CardContent className="pb-4">
         {loading ? (
           <div className="flex h-[330px] items-center justify-center">
             <div className="flex flex-col items-center gap-3 text-slate-500">
@@ -1426,11 +1430,12 @@ function MetricChart({
                   tickLine={false}
                   fontSize={11}
                   width={55}
-                  tickFormatter={value =>
-                    Number(
-                      value,
-                    ).toFixed(decimals)
-                  }
+                  tickFormatter={value => {
+                    const num = Number(value)
+                    return dataKey === "current"
+                      ? num.toFixed(decimals)
+                      : num.toFixed(0)
+                  }}
                 />
 
                 <Tooltip
@@ -1522,7 +1527,7 @@ function MetricInformation({
         {label}
       </small>
 
-      <strong className="whitespace-nowrap text-slate-700">
+      <strong className="whitespace-nowrap text-slate-700 dark:text-slate-200">
         {value}
       </strong>
     </span>
