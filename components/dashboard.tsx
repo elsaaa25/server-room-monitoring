@@ -1582,9 +1582,18 @@ export function Dashboard() {
                               }
                             />
 
-                           <YAxis
+                            <YAxis
   domain={[16, 30]}
-  ticks={[16, 18, 20, 22, 24, 26, 28, 30]}
+  ticks={[
+    16,
+    18,
+    20,
+    22,
+    24,
+    26,
+    28,
+    30,
+  ]}
   axisLine={false}
   tickLine={false}
   fontSize={11}
@@ -1593,7 +1602,6 @@ export function Dashboard() {
     String(Number(value))
   }
 />
-
                             <Tooltip
                               labelFormatter={value =>
                                 fullDateTime(
@@ -1891,7 +1899,9 @@ export function Dashboard() {
                     label="Suhu Ruangan L5"
                     value={
                       readingL5
-                        ? `${Number(Number(readingL5.temperature).toFixed(1))}°C`
+                        ? `${readingL5.temperature.toFixed(
+                            1,
+                          )}°C`
                         : "--°C"
                     }
                     detail={
@@ -1904,9 +1914,9 @@ export function Dashboard() {
                         ? getStatusColor(
                             statusL5,
                           )
-                        : "text-muted-foreground"
+                        : "text-slate-400"
                     }
-                    iconColor="bg-purple-500/10 text-purple-600 dark:text-purple-400"
+                    iconColor="bg-purple-50 text-purple-600"
                   />
 
                   <Metric
@@ -1927,10 +1937,10 @@ export function Dashboard() {
                     }
                     valueClassName={
                       onlineL5
-                        ? "text-emerald-600 dark:text-emerald-400"
-                        : "text-rose-600 dark:text-rose-400"
+                        ? "text-emerald-600"
+                        : "text-rose-600"
                     }
-                    iconColor="bg-blue-500/10 text-blue-600 dark:text-blue-400"
+                    iconColor="bg-blue-50 text-blue-500"
                   />
 
                   <Metric
@@ -1957,12 +1967,12 @@ export function Dashboard() {
                     }
                     valueClassName={
                       !onlineL5
-                        ? "text-muted-foreground"
+                        ? "text-slate-400"
                         : getStatusColor(
                             statusL5,
                           )
                     }
-                    iconColor="bg-muted text-muted-foreground"
+                    iconColor="bg-slate-50 text-slate-700"
                   />
                 </section>
 
