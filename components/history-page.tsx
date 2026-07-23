@@ -167,35 +167,35 @@ export function HistoryPage() {
             </div>
             <div className="grid gap-3 md:grid-cols-[1fr_auto_auto]">
               {/* Input Pencarian Sensor ID */}
-              <label className="flex h-10 items-center gap-2 rounded-xl border bg-white px-3 focus-within:ring-2 focus-within:ring-emerald-500/30">
-                <Search className="size-4 text-slate-400" />
+              <label className="flex h-10 items-center gap-2 rounded-xl border border-border bg-card px-3 focus-within:ring-2 focus-within:ring-primary/20">
+                <Search className="size-4 text-muted-foreground" />
                 <input 
                   value={search} 
                   onChange={event => setSearch(event.target.value)} 
                   placeholder="Cari ID sensor (misal: esp32-lantai4)..." 
-                  className="min-w-0 flex-1 bg-transparent text-sm outline-none text-slate-700" 
+                  className="min-w-0 flex-1 bg-transparent text-sm outline-none text-foreground" 
                 />
               </label>
 
               {/* Input Tanggal */}
-              <label className="flex h-10 items-center gap-2 rounded-xl border bg-white px-3 focus-within:ring-2 focus-within:ring-emerald-500/30">
-                <CalendarDays className="size-4 text-slate-400" />
+              <label className="flex h-10 items-center gap-2 rounded-xl border border-border bg-card px-3 focus-within:ring-2 focus-within:ring-primary/20">
+                <CalendarDays className="size-4 text-muted-foreground" />
                 <input 
                   type="date" 
                   value={date} 
                   onChange={event => setDate(event.target.value)} 
-                  className="bg-transparent text-sm outline-none text-slate-700" 
+                  className="bg-transparent text-sm outline-none text-foreground [color-scheme:light] dark:[color-scheme:dark]" 
                 />
               </label>
 
               {/* Filter Tombol Status */}
-              <div className="flex items-center gap-1 rounded-xl border bg-white p-1">
-                <Filter className="mx-2 size-4 text-slate-400" />
+              <div className="flex items-center gap-1 rounded-xl border border-border bg-card p-1">
+                <Filter className="mx-2 size-4 text-muted-foreground" />
                 {(["Semua", "Normal", "Waspada", "Bahaya"] as const).map(value => (
                   <button 
                     key={value} 
                     onClick={() => setFilter(value)} 
-                    className={`rounded-lg px-3 py-1.5 text-xs transition-colors ${statusFilter === value ? "bg-emerald-50 font-semibold text-[#005a9c]" : "text-slate-500 hover:bg-slate-50"}`}
+                    className={`rounded-lg px-3 py-1.5 text-xs transition-colors ${statusFilter === value ? "bg-primary text-primary-foreground font-semibold" : "text-muted-foreground hover:bg-muted"}`}
                   >
                     {value}
                   </button>
@@ -205,7 +205,7 @@ export function HistoryPage() {
           </CardHeader>
           <CardContent className="p-0">
             {loading ? (
-              <div className="h-60 grid place-items-center text-sm text-slate-400">
+              <div className="h-60 grid place-items-center text-sm text-muted-foreground">
                 Memuat data dari database...
               </div>
             ) : (
@@ -229,20 +229,20 @@ export function HistoryPage() {
                           return (
                             <TableRow key={item.id}>
                               <TableCell className="pl-6">
-                                <b className="block text-sm font-semibold text-slate-800">{formatTime(item.recordedAt)}</b>
-                                <span className="text-xs text-slate-400">{formatDate(item.recordedAt)}</span>
+                                <b className="block text-sm font-semibold text-foreground">{formatTime(item.recordedAt)}</b>
+                                <span className="text-xs text-muted-foreground">{formatDate(item.recordedAt)}</span>
                               </TableCell>
                               <TableCell>
-                                <code className="rounded bg-slate-100 px-2 py-1 text-xs font-mono text-slate-600">
+                                <code className="rounded bg-muted px-2 py-1 text-xs font-mono text-muted-foreground">
                                   {item.sensorId}
                                 </code>
                               </TableCell>
-                              <TableCell className="font-semibold text-slate-800">{Number(item.temperature)}°C</TableCell>
-                              <TableCell className="text-slate-700">{item.voltage !== null && item.voltage !== undefined ? `${Number(item.voltage).toFixed(1)} V` : "-- V"}</TableCell>
+                              <TableCell className="font-semibold text-foreground">{Number(item.temperature)}°C</TableCell>
+                              <TableCell className="text-muted-foreground">{item.voltage !== null && item.voltage !== undefined ? `${Number(Number(item.voltage).toFixed(1))} V` : "-- V"}</TableCell>
                               <TableCell>
                                 <StatusBadge status={status} />
                               </TableCell>
-                              <TableCell className="pr-6 text-xs text-slate-500">
+                              <TableCell className="pr-6 text-xs text-muted-foreground">
                                 {status === "Normal" ? "Kondisi stabil & aman" : status === "Waspada" ? "Suhu mendekati batas kritis" : "Suhu berbahaya, periksa AC!"}
                               </TableCell>
                             </TableRow>
@@ -250,7 +250,7 @@ export function HistoryPage() {
                         })
                       ) : (
                         <TableRow>
-                          <TableCell colSpan={6} className="h-40 text-center text-slate-400">
+                          <TableCell colSpan={6} className="h-40 text-center text-muted-foreground">
                             Tidak ada data untuk tanggal ini atau filter yang dipilih.
                           </TableCell>
                         </TableRow>
@@ -260,8 +260,8 @@ export function HistoryPage() {
                 </div>
                 
                 {/* Pagination Controls */}
-                <div className="flex flex-col items-center justify-between gap-3 border-t px-5 py-4 sm:flex-row bg-slate-50/50">
-                  <p className="text-xs text-slate-500 font-medium">
+                <div className="flex flex-col items-center justify-between gap-3 border-t border-border px-5 py-4 sm:flex-row bg-muted/10">
+                  <p className="text-xs text-muted-foreground font-medium">
                     Menampilkan {visible.length ? ((safePage - 1) * pageSize) + 1 : 0}–{Math.min(safePage * pageSize, filtered.length)} dari {filtered.length} data
                   </p>
                   <div className="flex items-center gap-2">
@@ -274,7 +274,7 @@ export function HistoryPage() {
                       <ChevronLeft className="size-4 mr-1" />
                       Sebelumnya
                     </Button>
-                    <span className="min-w-20 text-center text-xs text-slate-600 font-medium">
+                    <span className="min-w-20 text-center text-xs text-muted-foreground font-medium">
                       Halaman {safePage} / {pageCount}
                     </span>
                     <Button 
@@ -298,20 +298,20 @@ export function HistoryPage() {
 
 function Summary({ icon: Icon, label, value, color }: { icon: any, label: string, value: number, color: "slate" | "green" | "amber" | "rose" }) {
   const styles = {
-    slate: "bg-slate-100 text-slate-600",
-    green: "bg-emerald-50 text-emerald-600",
-    amber: "bg-amber-50 text-amber-500",
-    rose: "bg-rose-50 text-rose-500"
+    slate: "bg-muted text-muted-foreground",
+    green: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+    amber: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+    rose: "bg-rose-500/10 text-rose-600 dark:text-rose-400"
   }
   return (
-    <Card className="border-slate-200/80 shadow-sm">
+    <Card className="border-border/60 bg-card shadow-sm">
       <CardContent className="flex items-center gap-4 p-4">
         <span className={`grid size-10 place-items-center rounded-full ${styles[color]}`}>
           <Icon className="size-5" />
         </span>
         <span>
-          <small className="text-slate-500 block text-[11px] leading-tight font-medium">{label}</small>
-          <b className="block text-xl font-bold text-slate-800">{value}</b>
+          <small className="text-muted-foreground block text-[11px] leading-tight font-medium">{label}</small>
+          <b className="block text-xl font-bold text-foreground">{value}</b>
         </span>
       </CardContent>
     </Card>
@@ -320,9 +320,9 @@ function Summary({ icon: Icon, label, value, color }: { icon: any, label: string
 
 function StatusBadge({ status }: { status: Status }) {
   const styles = {
-    Normal: "bg-emerald-50 text-emerald-700 hover:bg-emerald-50",
-    Waspada: "bg-amber-50 text-amber-700 hover:bg-amber-50",
-    Bahaya: "bg-rose-50 text-rose-700 hover:bg-rose-50"
+    Normal: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/15",
+    Waspada: "bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/15",
+    Bahaya: "bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-500/15"
   }
   return <Badge variant="secondary" className={`${styles[status]} font-semibold`}>● {status}</Badge>
 }

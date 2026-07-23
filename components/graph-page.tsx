@@ -1130,31 +1130,31 @@ export function GraphPage() {
               }
               className="w-full sm:w-auto"
             >
-              <TabsList className="grid h-auto w-full grid-cols-2 gap-1 rounded-xl bg-slate-100 p-1 sm:grid-cols-4">
+              <TabsList className="grid h-auto w-full grid-cols-2 gap-1 rounded-xl bg-muted p-1 sm:grid-cols-4">
                 <TabsTrigger
                   value="1"
-                  className="whitespace-nowrap rounded-lg px-3 py-2"
+                  className="whitespace-nowrap rounded-lg px-3 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
                 >
                   1 Jam
                 </TabsTrigger>
 
                 <TabsTrigger
                   value="6"
-                  className="whitespace-nowrap rounded-lg px-3 py-2"
+                  className="whitespace-nowrap rounded-lg px-3 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
                 >
                   6 Jam
                 </TabsTrigger>
 
                 <TabsTrigger
                   value="24"
-                  className="whitespace-nowrap rounded-lg px-3 py-2"
+                  className="whitespace-nowrap rounded-lg px-3 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
                 >
                   24 Jam
                 </TabsTrigger>
 
                 <TabsTrigger
                   value="168"
-                  className="whitespace-nowrap rounded-lg px-3 py-2"
+                  className="whitespace-nowrap rounded-lg px-3 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
                 >
                   7 Hari
                 </TabsTrigger>
@@ -1351,15 +1351,15 @@ function MetricChart({
             </div>
           </div>
         ) : !stats.hasData ? (
-          <div className="flex h-[330px] items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/70">
+          <div className="flex h-[330px] items-center justify-center rounded-xl border border-dashed border-border bg-muted/20">
             <div className="max-w-xs px-6 text-center">
-              <Activity className="mx-auto size-8 text-slate-300" />
+              <Activity className="mx-auto size-8 text-muted-foreground/30" />
 
-              <p className="mt-3 text-sm font-medium text-slate-600">
+              <p className="mt-3 text-sm font-medium text-muted-foreground">
                 Belum ada data
               </p>
 
-              <p className="mt-1 text-xs leading-5 text-slate-400">
+              <p className="mt-1 text-xs leading-5 text-muted-foreground/80">
                 {emptyMessage}
               </p>
             </div>
@@ -1539,21 +1539,21 @@ function SummaryCard({
 }: SummaryCardProps) {
   const styles = {
     emerald:
-      "bg-emerald-50 text-emerald-600",
+      "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
     blue:
-      "bg-blue-50 text-blue-600",
+      "bg-blue-500/10 text-blue-600 dark:text-blue-400",
     amber:
-      "bg-amber-50 text-amber-600",
+      "bg-amber-500/10 text-amber-600 dark:text-amber-400",
     violet:
-      "bg-violet-50 text-violet-600",
+      "bg-violet-500/10 text-violet-600 dark:text-violet-400",
   }
 
   return (
     <Card
       className={
         available
-          ? ""
-          : "border-dashed bg-slate-50/50"
+          ? "border-border/60 bg-card"
+          : "border-dashed border-border bg-muted/10"
       }
     >
       <CardContent className="flex items-center gap-4 p-5">
@@ -1564,15 +1564,15 @@ function SummaryCard({
         </span>
 
         <span className="min-w-0">
-          <small className="block truncate text-slate-500">
+          <small className="block truncate text-muted-foreground">
             {label}
           </small>
 
-          <b className="block text-2xl">
+          <b className="block text-2xl font-bold tracking-tight">
             {value}
           </b>
 
-          <span className="block truncate text-xs text-slate-400">
+          <span className="block truncate text-xs text-muted-foreground/80">
             {description}
           </span>
         </span>

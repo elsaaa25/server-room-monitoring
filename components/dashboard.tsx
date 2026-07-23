@@ -1556,7 +1556,7 @@ export function Dashboard() {
                               vertical={
                                 false
                               }
-                              stroke="#edf1ef"
+                              stroke="var(--border)"
                             />
 
                             <XAxis
@@ -1580,44 +1580,48 @@ export function Dashboard() {
                               fontSize={
                                 11
                               }
+                              tick={{ fill: "var(--muted-foreground)" }}
                             />
 
                             <YAxis
-  domain={[16, 30]}
-  ticks={[
-    16,
-    18,
-    20,
-    22,
-    24,
-    26,
-    28,
-    30,
-  ]}
-  axisLine={false}
-  tickLine={false}
-  fontSize={11}
-  width={40}
-  tickFormatter={value =>
-    String(Number(value))
-  }
-/>
-                            <Tooltip
-                              labelFormatter={value =>
-                                fullDateTime(
-                                  String(
-                                    value,
-                                  ),
-                                )
-                              }
-                              formatter={value => [
-                                `${Number(
-                                  value,
-                                ).toFixed(
-                                  1,
-                                )}°C`,
-                                "Suhu",
+                              domain={[16, 30]}
+                              ticks={[
+                                16,
+                                18,
+                                20,
+                                22,
+                                24,
+                                26,
+                                28,
+                                30,
                               ]}
+                              axisLine={false}
+                              tickLine={false}
+                              fontSize={11}
+                              width={40}
+                              tickFormatter={value =>
+                                String(Number(value))
+                              }
+                              tick={{ fill: "var(--muted-foreground)" }}
+                            />
+                            <Tooltip
+                              content={({ active, payload, label }) => {
+                                if (active && payload && payload.length) {
+                                  return (
+                                    <div className="rounded-xl border border-border bg-popover p-2.5 shadow-md text-popover-foreground text-xs font-semibold">
+                                      <p className="font-mono text-muted-foreground mb-1">{fullDateTime(String(label))}</p>
+                                      {payload.map((p, idx) => (
+                                        <p key={idx} className="flex items-center gap-1.5 text-xs">
+                                          <span className="size-1.5 rounded-full" style={{ backgroundColor: p.color || p.stroke }} />
+                                          <span className="text-muted-foreground font-medium">Suhu:</span>
+                                          <span className="font-bold">{Number(Number(p.value).toFixed(1))}°C</span>
+                                        </p>
+                                      ))}
+                                    </div>
+                                  )
+                                }
+                                return null
+                              }}
                             />
 
                             <ReferenceLine
@@ -1783,6 +1787,7 @@ export function Dashboard() {
                               fontSize={
                                 11
                               }
+                              tick={{ fill: "var(--muted-foreground)" }}
                             />
 
                             <YAxis
@@ -1800,30 +1805,29 @@ export function Dashboard() {
                               }
                               width={48}
                               tickFormatter={value =>
-                                Number(
-                                  value,
-                                ).toFixed(
-                                  0,
-                                )
+                                String(Number(Number(value).toFixed(0)))
                               }
+                              tick={{ fill: "var(--muted-foreground)" }}
                             />
 
                             <Tooltip
-                              labelFormatter={value =>
-                                fullDateTime(
-                                  String(
-                                    value,
-                                  ),
-                                )
-                              }
-                              formatter={value => [
-                                `${Number(
-                                  value,
-                                ).toFixed(
-                                  1,
-                                )} V`,
-                                "Tegangan",
-                              ]}
+                              content={({ active, payload, label }) => {
+                                if (active && payload && payload.length) {
+                                  return (
+                                    <div className="rounded-xl border border-border bg-popover p-2.5 shadow-md text-popover-foreground text-xs font-semibold">
+                                      <p className="font-mono text-muted-foreground mb-1">{fullDateTime(String(label))}</p>
+                                      {payload.map((p, idx) => (
+                                        <p key={idx} className="flex items-center gap-1.5 text-xs">
+                                          <span className="size-1.5 rounded-full" style={{ backgroundColor: p.color || p.stroke }} />
+                                          <span className="text-muted-foreground font-medium">Tegangan:</span>
+                                          <span className="font-bold">{Number(Number(p.value).toFixed(1))} V</span>
+                                        </p>
+                                      ))}
+                                    </div>
+                                  )
+                                }
+                                return null
+                              }}
                             />
 
                             <ReferenceLine
@@ -2073,6 +2077,7 @@ export function Dashboard() {
                               fontSize={
                                 11
                               }
+                              tick={{ fill: "var(--muted-foreground)" }}
                             />
 
                             <YAxis
@@ -2090,30 +2095,29 @@ export function Dashboard() {
                               }
                               width={48}
                               tickFormatter={value =>
-                                Number(
-                                  value,
-                                ).toFixed(
-                                  1,
-                                )
+                                String(Number(Number(value).toFixed(1)))
                               }
+                              tick={{ fill: "var(--muted-foreground)" }}
                             />
 
                             <Tooltip
-                              labelFormatter={value =>
-                                fullDateTime(
-                                  String(
-                                    value,
-                                  ),
-                                )
-                              }
-                              formatter={value => [
-                                `${Number(
-                                  value,
-                                ).toFixed(
-                                  1,
-                                )}°C`,
-                                "Suhu",
-                              ]}
+                              content={({ active, payload, label }) => {
+                                if (active && payload && payload.length) {
+                                  return (
+                                    <div className="rounded-xl border border-border bg-popover p-2.5 shadow-md text-popover-foreground text-xs font-semibold">
+                                      <p className="font-mono text-muted-foreground mb-1">{fullDateTime(String(label))}</p>
+                                      {payload.map((p, idx) => (
+                                        <p key={idx} className="flex items-center gap-1.5 text-xs">
+                                          <span className="size-1.5 rounded-full" style={{ backgroundColor: p.color || p.stroke }} />
+                                          <span className="text-muted-foreground font-medium">Suhu:</span>
+                                          <span className="font-bold">{Number(Number(p.value).toFixed(1))}°C</span>
+                                        </p>
+                                      ))}
+                                    </div>
+                                  )
+                                }
+                                return null
+                              }}
                             />
 
                             <ReferenceLine
@@ -2254,12 +2258,10 @@ export function Dashboard() {
                     label="Suhu Tertinggi"
                     value={
                       maxTemp !== null
-                        ? `${maxTemp.toFixed(
-                            2,
-                          )}°C`
+                        ? `${Number(Number(maxTemp).toFixed(1))}°C`
                         : "--°C"
                     }
-                    color="bg-rose-50 text-rose-500"
+                    color="bg-rose-500/10 text-rose-600 dark:text-rose-400"
                   />
 
                   <SummaryRow
@@ -2267,12 +2269,10 @@ export function Dashboard() {
                     label="Suhu Terendah"
                     value={
                       minTemp !== null
-                        ? `${minTemp.toFixed(
-                            2,
-                          )}°C`
+                        ? `${Number(Number(minTemp).toFixed(1))}°C`
                         : "--°C"
                     }
-                    color="bg-blue-50 text-blue-500"
+                    color="bg-blue-500/10 text-blue-600 dark:text-blue-400"
                   />
 
                   <SummaryRow
@@ -2280,12 +2280,10 @@ export function Dashboard() {
                     label="Rata-rata Suhu"
                     value={
                       avgTemp !== null
-                        ? `${avgTemp.toFixed(
-                            2,
-                          )}°C`
+                        ? `${Number(Number(avgTemp).toFixed(1))}°C`
                         : "--°C"
                     }
-                    color="bg-emerald-50 text-emerald-600"
+                    color="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
                   />
                 </CardContent>
               </Card>
@@ -2353,26 +2351,22 @@ export function Dashboard() {
                                 </TableCell>
 
                                 <TableCell>
-                                  <code className="rounded bg-slate-100 px-2 py-1 font-mono text-xs font-medium">
+                                  <code className="rounded bg-muted px-2 py-1 font-mono text-xs font-medium text-foreground/80">
                                     {getSensorLabel(
                                       row.sensorId,
                                     )}
                                   </code>
                                 </TableCell>
 
-                                <TableCell className="font-semibold text-slate-800">
-                                  {row.temperature.toFixed(
-                                    1,
-                                  )}
+                                <TableCell className="font-semibold text-foreground">
+                                  {Number(Number(row.temperature).toFixed(1))}
                                   °C
                                 </TableCell>
 
-                                <TableCell className="text-slate-600">
+                                <TableCell className="text-muted-foreground">
                                   {row.voltage !==
                                   null
-                                    ? `${row.voltage.toFixed(
-                                        1,
-                                      )} V`
+                                    ? `${Number(Number(row.voltage).toFixed(1))} V`
                                     : "-- V"}
                                 </TableCell>
 
@@ -2451,15 +2445,15 @@ function ChartMessage({
   message: string
 }) {
   return (
-    <div className="flex h-full items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/70">
+    <div className="flex h-full items-center justify-center rounded-xl border border-dashed border-border bg-muted/20">
       <div className="flex max-w-xs flex-col items-center gap-3 px-6 text-center">
         {loading ? (
-          <LoaderCircle className="size-7 animate-spin text-[#005a9c]" />
+          <LoaderCircle className="size-7 animate-spin text-primary" />
         ) : (
-          <Activity className="size-8 text-slate-300" />
+          <Activity className="size-8 text-muted-foreground/30" />
         )}
 
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-muted-foreground">
           {message}
         </p>
       </div>
@@ -2667,22 +2661,22 @@ function ProfilePanel() {
           Profil Pengguna
         </SheetTitle>
 
-        <div className="mt-6 flex items-center gap-4 rounded-2xl bg-emerald-50 p-4">
-          <div className="grid size-12 place-items-center rounded-full bg-[#005a9c] text-white">
+        <div className="mt-6 flex items-center gap-4 rounded-2xl bg-muted p-4">
+          <div className="grid size-12 place-items-center rounded-full bg-primary text-primary-foreground">
             <UserRound />
           </div>
 
           <div className="min-w-0">
-            <b className="block truncate text-slate-800">
+            <b className="block truncate text-foreground">
               {profile?.name ??
                 "Memuat..."}
             </b>
 
-            <span className="block truncate text-xs text-slate-500">
+            <span className="block truncate text-xs text-muted-foreground">
               {profile?.email}
             </span>
 
-            <Badge className="mt-1 bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
+            <Badge className="mt-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10">
               {profile?.role ?? "-"}
             </Badge>
           </div>
@@ -2694,7 +2688,7 @@ function ProfilePanel() {
             <Button
               asChild
               variant="ghost"
-              className="w-full justify-start text-slate-600"
+              className="w-full justify-start text-muted-foreground hover:text-foreground"
             >
               <Link href="/pengaturan">
                 Pengaturan sistem
@@ -2705,7 +2699,7 @@ function ProfilePanel() {
           <Button
             asChild
             variant="ghost"
-            className="w-full justify-start text-slate-600"
+            className="w-full justify-start text-muted-foreground hover:text-foreground"
           >
             <Link href="/riwayat">
               Riwayat monitoring
@@ -2715,7 +2709,7 @@ function ProfilePanel() {
           <Button
             asChild
             variant="ghost"
-            className="w-full justify-start text-slate-600"
+            className="w-full justify-start text-muted-foreground hover:text-foreground"
           >
             <Link href="/peringatan">
               Pusat peringatan
@@ -2724,7 +2718,7 @@ function ProfilePanel() {
 
           <Button
             variant="outline"
-            className="mt-4 w-full border-rose-200 text-rose-600 hover:bg-rose-50"
+            className="mt-4 w-full border-destructive/30 text-destructive hover:bg-destructive/10"
             onClick={() =>
               signOut({
                 callbackUrl:

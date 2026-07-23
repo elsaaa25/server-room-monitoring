@@ -653,10 +653,10 @@ function SettingsCard({
   children: React.ReactNode
 }) {
   return (
-    <Card className="border-slate-200/80 shadow-sm">
+    <Card className="border-border/60 bg-card shadow-sm">
       <CardHeader>
         <div className="flex items-start gap-3">
-          <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-emerald-50 text-[#005a9c]">
+          <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
             <Icon className="size-5" />
           </div>
           <div>
@@ -683,12 +683,12 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-sm font-semibold text-slate-700">
+      <span className="mb-2 block text-sm font-semibold text-foreground">
         {label}
       </span>
       {children}
       {hint && (
-        <span className="mt-1.5 block text-[11px] leading-tight text-slate-400">
+        <span className="mt-1.5 block text-[11px] leading-tight text-muted-foreground/80">
           {hint}
         </span>
       )}
@@ -710,7 +710,7 @@ function NumberInput({
   max: number
 }) {
   return (
-    <div className="flex h-10 overflow-hidden rounded-xl border bg-white focus-within:ring-2 focus-within:ring-emerald-500/30">
+    <div className="flex h-10 overflow-hidden rounded-xl border border-border bg-card focus-within:ring-2 focus-within:ring-primary/20">
       <input
         type="number"
         value={value}
@@ -719,9 +719,9 @@ function NumberInput({
         onChange={event =>
           onChange(Number(event.target.value))
         }
-        className="min-w-0 flex-1 bg-transparent px-3 font-medium text-slate-700 outline-none"
+        className="min-w-0 flex-1 bg-transparent px-3 font-medium text-foreground outline-none"
       />
-      <span className="grid place-items-center border-l bg-slate-50 px-3 text-xs font-medium text-slate-500">
+      <span className="grid place-items-center border-l border-border bg-muted px-3 text-xs font-medium text-muted-foreground">
         {suffix}
       </span>
     </div>
@@ -743,7 +743,7 @@ function TextInput({
       onChange={event =>
         onChange(event.target.value)
       }
-      className={`h-10 w-full rounded-xl border bg-white px-3 font-medium text-slate-700 outline-none focus:ring-2 focus:ring-emerald-500/30 ${
+      className={`h-10 w-full rounded-xl border border-border bg-card px-3 font-medium text-foreground outline-none focus:ring-2 focus:ring-primary/20 ${
         mono ? "font-mono text-sm" : ""
       }`}
     />
@@ -776,14 +776,14 @@ function Toggle({
         aria-label={label}
         disabled={disabled}
         onClick={() => onChange(!checked)}
-        className={`relative h-6 w-11 shrink-0 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#005a9c]/40 disabled:cursor-not-allowed disabled:opacity-50 ${
+        className={`relative h-6 w-11 shrink-0 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-50 ${
           checked
-            ? "bg-[#005a9c]"
-            : "bg-slate-200"
+            ? "bg-primary"
+            : "bg-muted"
         }`}
       >
         <span
-          className={`absolute top-1 size-4 rounded-full bg-white shadow transition-all ${
+          className={`absolute top-1 size-4 rounded-full bg-background dark:bg-foreground shadow transition-all ${
             checked ? "left-6" : "left-1"
           }`}
         />
