@@ -2488,9 +2488,9 @@ function Metric({
     <Card className="border-border/60 bg-card shadow-sm transition-all hover:shadow-md">
       <CardContent className="flex min-h-32 items-center gap-4 p-5">
         <div
-          className={`grid size-12 shrink-0 place-items-center rounded-full transition-colors ${iconColor}`}
+          className={`grid size-14 shrink-0 place-items-center rounded-full transition-colors ${iconColor}`}
         >
-          <Icon className="size-5" />
+          <Icon className="size-6" />
         </div>
 
         <div className="min-w-0">
