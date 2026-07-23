@@ -12,6 +12,7 @@ import {
   Check,
   CheckCircle2,
   Clock3,
+  Filter,
   Radio,
   Search,
   ShieldAlert,
@@ -154,8 +155,17 @@ export function AlertsPage() {
   )
 
   useEffect(() => {
-    void fetchSettings()
-    void fetchAlerts()
+    const timerId = window.setTimeout(
+      () => {
+        void fetchSettings()
+        void fetchAlerts()
+      },
+      0,
+    )
+
+    return () => {
+      window.clearTimeout(timerId)
+    }
   }, [fetchAlerts, fetchSettings])
 
   useEffect(() => {
@@ -334,8 +344,8 @@ export function AlertsPage() {
               </span>
             </div>
 
-            <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
-              <div className="flex min-w-0 flex-1 items-center rounded-xl border bg-white px-3">
+            <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_auto_auto]">
+              <label className="flex h-10 min-w-0 items-center gap-2 rounded-xl border border-border bg-card px-3 transition-shadow focus-within:ring-2 focus-within:ring-primary/20">
                 <Search className="size-4 text-muted-foreground" />
                 <input
                   value={search}
@@ -343,40 +353,39 @@ export function AlertsPage() {
                     setSearch(event.target.value)
                   }
                   placeholder="Cari peringatan atau sensor..."
-                  className="min-w-0 flex-1 bg-transparent px-3 py-2.5 text-sm outline-none"
+                  className="min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
                 />
-              </div>
+              </label>
 
-              <div className="flex flex-wrap gap-2">
-                <FilterGroup
-                  values={[
-                    "Semua",
-                    "Aktif",
-                    "Ditangani",
-                  ]}
-                  active={status}
-                  onChange={value =>
-                    setStatus(
-                      value as
-                        | "Semua"
-                        | AlertStatus,
-                    )
-                  }
-                />
-                <FilterGroup
-                  values={[
-                    "Semua",
-                    "Waspada",
-                    "Bahaya",
-                  ]}
-                  active={level}
-                  onChange={value =>
-                    setLevel(
-                      value as "Semua" | Level,
-                    )
-                  }
-                />
-              </div>
+              <FilterGroup
+                showIcon
+                values={[
+                  "Semua",
+                  "Aktif",
+                  "Ditangani",
+                ]}
+                active={status}
+                onChange={value =>
+                  setStatus(
+                    value as
+                      | "Semua"
+                      | AlertStatus,
+                  )
+                }
+              />
+              <FilterGroup
+                values={[
+                  "Semua",
+                  "Waspada",
+                  "Bahaya",
+                ]}
+                active={level}
+                onChange={value =>
+                  setLevel(
+                    value as "Semua" | Level,
+                  )
+                }
+              />
             </div>
           </CardHeader>
 
@@ -578,21 +587,27 @@ function FilterGroup({
   values,
   active,
   onChange,
+  showIcon = false,
 }: {
   values: string[]
   active: string
   onChange: (value: string) => void
+  showIcon?: boolean
 }) {
   return (
-    <div className="flex rounded-xl border bg-white p-1">
+    <div className="flex h-10 max-w-full items-center overflow-x-auto rounded-xl border border-border bg-card p-1">
+      {showIcon && (
+        <Filter className="mx-2 size-4 shrink-0 text-muted-foreground" />
+      )}
+
       {values.map(value => (
         <button
           key={value}
           type="button"
           onClick={() => onChange(value)}
-          className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-xs transition ${
+          className={`h-full whitespace-nowrap rounded-lg px-3 text-xs transition-colors ${
             active === value
-              ? "bg-emerald-50 font-medium text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
+              ? "bg-primary font-semibold text-primary-foreground"
               : "text-muted-foreground hover:bg-muted"
           }`}
         >
