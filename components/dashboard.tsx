@@ -504,14 +504,14 @@ function getStatusColor(
   status: Status,
 ): string {
   if (status === "Bahaya") {
-    return "text-rose-600"
+    return "text-rose-600 dark:text-rose-400"
   }
 
   if (status === "Waspada") {
-    return "text-amber-500"
+    return "text-amber-500 dark:text-amber-400"
   }
 
-  return "text-emerald-600"
+  return "text-emerald-600 dark:text-emerald-400"
 }
 
 function getStatusBackground(
@@ -519,21 +519,21 @@ function getStatusBackground(
 ): string {
   if (status === "Bahaya") {
     return (
-      "bg-rose-50 text-rose-700 " +
-      "hover:bg-rose-50"
+      "bg-rose-500/10 text-rose-600 dark:text-rose-400 " +
+      "hover:bg-rose-500/15"
     )
   }
 
   if (status === "Waspada") {
     return (
-      "bg-amber-50 text-amber-700 " +
-      "hover:bg-amber-50"
+      "bg-amber-500/10 text-amber-600 dark:text-amber-400 " +
+      "hover:bg-amber-500/15"
     )
   }
 
   return (
-    "bg-emerald-50 text-emerald-700 " +
-    "hover:bg-emerald-50"
+    "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 " +
+    "hover:bg-emerald-500/15"
   )
 }
 
@@ -1200,10 +1200,10 @@ export function Dashboard() {
     historyReadings.length === 0
 
   return (
-    <div className="min-h-screen bg-slate-50/50 p-2 lg:flex">
+    <div className="min-h-screen bg-transparent p-2 lg:flex">
       {sidebarReady &&
         sidebarOpen && (
-          <aside className="sticky top-2 hidden h-[calc(100vh-1rem)] w-56 shrink-0 overflow-hidden rounded-3xl border bg-white shadow-sm lg:block">
+          <aside className="sticky top-2 hidden h-[calc(100vh-1rem)] w-56 shrink-0 overflow-hidden rounded-3xl border border-border bg-card shadow-sm lg:block">
             <AppSidebar
               showCloseButton
               onClose={closeSidebar}
@@ -1273,7 +1273,7 @@ export function Dashboard() {
           </div>
         </header>
 
-        <div className="mb-6 flex flex-col gap-4 border-b border-slate-200 pb-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mb-6 flex flex-col gap-4 border-b border-border pb-4 sm:flex-row sm:items-center sm:justify-between">
           <Tabs
             value={activeFloor}
             onValueChange={value =>
@@ -1283,17 +1283,17 @@ export function Dashboard() {
             }
             className="w-full sm:w-auto"
           >
-            <TabsList className="grid h-auto w-full grid-cols-1 gap-1 rounded-xl bg-slate-100 p-1 min-[500px]:grid-cols-2 sm:w-auto">
+            <TabsList className="grid h-auto w-full grid-cols-1 gap-1 rounded-xl bg-muted p-1 min-[500px]:grid-cols-2 sm:w-auto">
               <TabsTrigger
                 value="4"
-                className="whitespace-nowrap rounded-lg px-4 py-2 text-sm font-semibold transition-all data-[state=active]:bg-[#005a9c] data-[state=active]:text-white"
+                className="whitespace-nowrap rounded-lg px-4 py-2 text-sm font-semibold transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
               >
                 Lantai 4 - Ruang Server
               </TabsTrigger>
 
               <TabsTrigger
                 value="5"
-                className="whitespace-nowrap rounded-lg px-4 py-2 text-sm font-semibold transition-all data-[state=active]:bg-[#005a9c] data-[state=active]:text-white"
+                className="whitespace-nowrap rounded-lg px-4 py-2 text-sm font-semibold transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
               >
                 Lantai 5 - Ruang ATC
               </TabsTrigger>
@@ -1309,24 +1309,24 @@ export function Dashboard() {
             }
             className="w-full sm:w-auto"
           >
-            <TabsList className="grid h-auto w-full grid-cols-3 gap-1 rounded-xl bg-slate-100 p-1 sm:w-auto">
+            <TabsList className="grid h-auto w-full grid-cols-3 gap-1 rounded-xl bg-muted p-1 sm:w-auto">
               <TabsTrigger
                 value="1"
-                className="whitespace-nowrap rounded-lg px-3 py-2"
+                className="whitespace-nowrap rounded-lg px-3 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
               >
                 1 Jam
               </TabsTrigger>
 
               <TabsTrigger
                 value="6"
-                className="whitespace-nowrap rounded-lg px-3 py-2"
+                className="whitespace-nowrap rounded-lg px-3 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
               >
                 6 Jam
               </TabsTrigger>
 
               <TabsTrigger
                 value="24"
-                className="whitespace-nowrap rounded-lg px-3 py-2"
+                className="whitespace-nowrap rounded-lg px-3 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
               >
                 24 Jam
               </TabsTrigger>
@@ -1368,9 +1368,7 @@ export function Dashboard() {
                     label="Suhu Ruang Server"
                     value={
                       readingL4
-                        ? `${readingL4.temperature.toFixed(
-                            1,
-                          )}°C`
+                        ? `${Number(Number(readingL4.temperature).toFixed(1))}°C`
                         : "--°C"
                     }
                     detail={
@@ -1383,9 +1381,9 @@ export function Dashboard() {
                         ? getStatusColor(
                             statusL4,
                           )
-                        : "text-slate-400"
+                        : "text-muted-foreground"
                     }
-                    iconColor="bg-emerald-50 text-[#005a9c]"
+                    iconColor="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
                   />
 
                   <Metric
@@ -1396,9 +1394,7 @@ export function Dashboard() {
                         null &&
                       readingL4?.voltage !==
                         undefined
-                        ? `${readingL4.voltage.toFixed(
-                            1,
-                          )} V`
+                        ? `${Number(Number(readingL4.voltage).toFixed(1))} V`
                         : "-- V"
                     }
                     detail={
@@ -1423,11 +1419,11 @@ export function Dashboard() {
                             200 &&
                           readingL4.voltage <=
                             240
-                          ? "text-emerald-600"
-                          : "text-rose-600"
-                        : "text-slate-400"
+                          ? "text-emerald-600 dark:text-emerald-400"
+                          : "text-rose-600 dark:text-rose-400"
+                        : "text-muted-foreground"
                     }
-                    iconColor="bg-amber-50 text-amber-500"
+                    iconColor="bg-amber-500/10 text-amber-500"
                   />
 
                   <Metric
@@ -1448,10 +1444,10 @@ export function Dashboard() {
                     }
                     valueClassName={
                       onlineL4
-                        ? "text-emerald-600"
-                        : "text-rose-600"
+                        ? "text-emerald-600 dark:text-emerald-400"
+                        : "text-rose-600 dark:text-rose-400"
                     }
-                    iconColor="bg-blue-50 text-blue-500"
+                    iconColor="bg-blue-500/10 text-blue-600 dark:text-blue-400"
                   />
 
                   <Metric
@@ -1478,12 +1474,12 @@ export function Dashboard() {
                     }
                     valueClassName={
                       !onlineL4
-                        ? "text-slate-400"
+                        ? "text-muted-foreground"
                         : getStatusColor(
                             statusL4,
                           )
                     }
-                    iconColor="bg-slate-50 text-slate-700"
+                    iconColor="bg-muted text-muted-foreground"
                   />
                 </section>
 
@@ -1586,28 +1582,17 @@ export function Dashboard() {
                               }
                             />
 
-                            <YAxis
-                              domain={
-                                temperatureDomain
-                              }
-                              axisLine={
-                                false
-                              }
-                              tickLine={
-                                false
-                              }
-                              fontSize={
-                                11
-                              }
-                              width={48}
-                              tickFormatter={value =>
-                                Number(
-                                  value,
-                                ).toFixed(
-                                  1,
-                                )
-                              }
-                            />
+                           <YAxis
+  domain={[16, 30]}
+  ticks={[16, 18, 20, 22, 24, 26, 28, 30]}
+  axisLine={false}
+  tickLine={false}
+  fontSize={11}
+  width={40}
+  tickFormatter={value =>
+    String(Number(value))
+  }
+/>
 
                             <Tooltip
                               labelFormatter={value =>
@@ -1906,9 +1891,7 @@ export function Dashboard() {
                     label="Suhu Ruangan L5"
                     value={
                       readingL5
-                        ? `${readingL5.temperature.toFixed(
-                            1,
-                          )}°C`
+                        ? `${Number(Number(readingL5.temperature).toFixed(1))}°C`
                         : "--°C"
                     }
                     detail={
@@ -1921,9 +1904,9 @@ export function Dashboard() {
                         ? getStatusColor(
                             statusL5,
                           )
-                        : "text-slate-400"
+                        : "text-muted-foreground"
                     }
-                    iconColor="bg-purple-50 text-purple-600"
+                    iconColor="bg-purple-500/10 text-purple-600 dark:text-purple-400"
                   />
 
                   <Metric
@@ -1944,10 +1927,10 @@ export function Dashboard() {
                     }
                     valueClassName={
                       onlineL5
-                        ? "text-emerald-600"
-                        : "text-rose-600"
+                        ? "text-emerald-600 dark:text-emerald-400"
+                        : "text-rose-600 dark:text-rose-400"
                     }
-                    iconColor="bg-blue-50 text-blue-500"
+                    iconColor="bg-blue-500/10 text-blue-600 dark:text-blue-400"
                   />
 
                   <Metric
@@ -1974,12 +1957,12 @@ export function Dashboard() {
                     }
                     valueClassName={
                       !onlineL5
-                        ? "text-slate-400"
+                        ? "text-muted-foreground"
                         : getStatusColor(
                             statusL5,
                           )
                     }
-                    iconColor="bg-slate-50 text-slate-700"
+                    iconColor="bg-muted text-muted-foreground"
                   />
                 </section>
 
@@ -2492,26 +2475,26 @@ function Metric({
   iconColor?: string
 }) {
   return (
-    <Card className="border-slate-200/80 shadow-sm">
+    <Card className="border-border/60 bg-card shadow-sm transition-all hover:shadow-md">
       <CardContent className="flex min-h-32 items-center gap-4 p-5">
         <div
-          className={`grid size-14 shrink-0 place-items-center rounded-full ${iconColor}`}
+          className={`grid size-14 shrink-0 place-items-center rounded-full transition-colors ${iconColor}`}
         >
-          <Icon className="size-7" />
+          <Icon className="size-6" />
         </div>
 
         <div className="min-w-0">
-          <p className="text-xs font-semibold text-slate-500">
+          <p className="text-xs font-semibold text-muted-foreground">
             {label}
           </p>
 
           <p
-            className={`truncate text-2xl font-bold ${valueClassName}`}
+            className={`truncate text-2xl font-bold tracking-tight ${valueClassName}`}
           >
             {value}
           </p>
 
-          <p className="mt-0.5 text-[11px] font-medium text-slate-400">
+          <p className="mt-0.5 text-[11px] font-medium text-muted-foreground/80">
             {detail}
           </p>
         </div>

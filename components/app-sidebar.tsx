@@ -1,117 +1,98 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import {
-  Activity,
-  Bell,
-  History,
-  House,
-  Radio,
-  Server,
-  Settings,
-  X,
-} from "lucide-react"
-
+import { Activity, Bell, History, House, Radio, Server, Settings, Sun, Moon } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 
-type AppSidebarProps = {
-  showCloseButton?: boolean
-  onClose?: () => void
-}
-
 const navigation = [
-  {
-    label: "Dashboard",
-    icon: House,
-    href: "/",
-  },
-  {
-    label: "Grafik",
-    icon: Activity,
-    href: "/grafik",
-  },
-  {
-    label: "Riwayat",
-    icon: History,
-    href: "/riwayat",
-  },
-  {
-    label: "Peringatan",
-    icon: Bell,
-    href: "/peringatan",
-  },
-  {
-    label: "Pengaturan",
-    icon: Settings,
-    href: "/pengaturan",
-  },
+  { label: "Dashboard", icon: House, href: "/" },
+  { label: "Grafik", icon: Activity, href: "/grafik" },
+  { label: "Riwayat", icon: History, href: "/riwayat" },
+  { label: "Peringatan", icon: Bell, href: "/peringatan" },
+  { label: "Pengaturan", icon: Settings, href: "/pengaturan" },
 ]
 
-export function AppSidebar({
-  showCloseButton = false,
-  onClose,
-}: AppSidebarProps) {
+export function AppSidebar() {
   const pathname = usePathname()
+  const [theme, setTheme] = useState<"light" | "dark">("light")
+
+  // Sinkronisasi tema awal dengan kelas HTML
+  useEffect(() => {
+    const isDark = document.documentElement.classList.contains("dark")
+    setTheme(isDark ? "dark" : "light")
+  }, [])
+
+  const toggleTheme = () => {
+    const nextTheme = theme === "light" ? "dark" : "light"
+    setTheme(nextTheme)
+    if (nextTheme === "dark") {
+      document.documentElement.classList.add("dark")
+      localStorage.setItem("theme", "dark")
+    } else {
+      document.documentElement.classList.remove("dark")
+      localStorage.setItem("theme", "light")
+    }
+  }
 
   return (
-    <div className="relative flex h-full flex-col bg-white p-4">
-      {/* Tombol tutup sidebar desktop */}
-      {showCloseButton && onClose && (
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Tutup sidebar"
-          title="Tutup sidebar"
-          className="absolute right-4 top-4 z-20 grid size-9 place-items-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:bg-slate-100 hover:text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#005a9c]/40"
-        >
-          <X className="size-5" />
-        </button>
-      )}
-
-      {/* Logo */}
-      <Link
-        href="/"
-        aria-label="Buka Dashboard"
-        className="mb-10 grid size-12 place-items-center rounded-2xl bg-[#005a9c] text-white shadow-lg shadow-blue-200 transition hover:bg-[#004579]"
+    <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border p-4">
+      {/* Logo Brand */}
+      <Link 
+        href="/" 
+        className="mb-8 flex items-center justify-center size-11 rounded-xl bg-primary text-primary-foreground shadow-md shadow-primary/20 transition-transform hover:scale-105" 
+        aria-label="Dashboard"
       >
-        <Server className="size-6" />
+        <Server className="size-5" />
       </Link>
-
-      {/* Navigasi */}
-      <nav className="space-y-2">
-        {navigation.map(
-          ({ label, icon: Icon, href }) => {
-            const active =
-              href === "/"
-                ? pathname === "/"
-                : pathname.startsWith(href)
-
-            return (
-              <Button
-                key={href}
-                asChild
-                variant="ghost"
-                className={`w-full justify-start gap-3 rounded-xl ${
-                  active
-                    ? "bg-blue-50 font-medium text-[#005a9c] hover:bg-blue-100 hover:text-[#005a9c]"
-                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
-                }`}
-              >
-                <Link href={href}>
-                  <Icon className="size-5 shrink-0" />
-                  <span>{label}</span>
-                </Link>
-              </Button>
-            )
-          },
-        )}
+      
+      {/* Menu Navigasi */}
+      <nav className="space-y-1">
+        {navigation.map(({ label, icon: Icon, href }) => {
+          const active = pathname === href
+          return (
+            <Button 
+              key={label} 
+              asChild 
+              variant="ghost" 
+              className={`w-full justify-start gap-3 transition-colors ${
+                active 
+                  ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold" 
+                  : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+              }`}
+            >
+              <Link href={href}>
+                <Icon className="size-4 shrink-0" />
+                <span className="text-xs">{label}</span>
+                {label === "Peringatan" && (
+                  <Badge className="ml-auto rounded-full bg-emerald-600 dark:bg-emerald-500 text-[10px] text-white">2</Badge>
+                )}
+              </Link>
+            </Button>
+          )
+        })}
       </nav>
 
-      {/* Identitas monitor */}
-      <div className="mt-auto flex items-center gap-2 px-3 py-2 text-xs text-slate-400">
-        <Radio className="size-4 shrink-0 text-[#005a9c]" />
-        <span>AirNav Banyuwangi</span>
+      {/* Bagian Bawah: Sakelar Tema & Status */}
+      <div className="mt-auto pt-4 border-t border-sidebar-border flex flex-col gap-3">
+        {/* Tombol Toggle Tema */}
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={toggleTheme} 
+          className="w-full justify-start gap-3 text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+        >
+          {theme === "light" ? <Moon className="size-4" /> : <Sun className="size-4" />}
+          <span className="text-[11px] font-medium">{theme === "light" ? "Mode Gelap" : "Mode Terang"}</span>
+        </Button>
+
+        {/* Status Perangkat */}
+        <div className="flex items-center gap-2 px-3 text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider">
+          <Radio className="size-3.5 text-primary animate-pulse" />
+          <span>ESP32 Monitor</span>
+        </div>
       </div>
     </div>
   )
