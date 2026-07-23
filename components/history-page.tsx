@@ -163,7 +163,7 @@ export function HistoryPage() {
           <CardHeader className="gap-4">
             <div className="flex items-center justify-between">
               <CardTitle>Data Log Sensor</CardTitle>
-              <span className="text-xs text-slate-500 font-medium">Batas Alert: {settings.warningTemperature}°C / {settings.dangerTemperature}°C</span>
+              <span className="text-xs font-medium text-muted-foreground">Batas Alert: {settings.warningTemperature}°C / {settings.dangerTemperature}°C</span>
             </div>
             <div className="grid gap-3 md:grid-cols-[1fr_auto_auto]">
               {/* Input Pencarian Sensor ID */}

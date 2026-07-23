@@ -78,6 +78,7 @@ type SettingsResponse = {
 type GraphPoint = {
   id: string
   time: string
+  timestamp: number
   temperatureL4: number | null
   temperatureL5: number | null
   voltage: number | null
@@ -166,6 +167,91 @@ const periodConfigs: Record<
   },
 }
 
+const previewPeriodConfigs: Record<
+  Period,
+  {
+    points: number
+    step: number
+  }
+> = {
+  "1": {
+    points: 61,
+    step: 60_000,
+  },
+  "6": {
+    points: 73,
+    step: 5 * 60_000,
+  },
+  "24": {
+    points: 97,
+    step: 15 * 60_000,
+  },
+  "168": {
+    points: 85,
+    step: 2 * 60 * 60_000,
+  },
+}
+
+function createPreviewData(
+  period: Period,
+): GraphPoint[] {
+  const { points, step } =
+    previewPeriodConfigs[period]
+
+  const end = Date.now()
+
+  return Array.from(
+    {
+      length: points,
+    },
+    (_, index) => {
+      const time =
+        end -
+        (points - 1 - index) * step
+
+      const temperatureL4 =
+        23.5 +
+        Math.sin(index / 5) * 0.8 +
+        Math.sin(index / 2.4) * 0.25 +
+        (index % 29 === 0 ? 0.9 : 0)
+
+      const temperatureL5 =
+        24.1 +
+        Math.sin(index / 6) * 0.7 +
+        Math.cos(index / 3.2) * 0.2 +
+        (index % 31 === 0 ? 0.7 : 0)
+
+      const voltage =
+        220 +
+        Math.sin(index / 4.5) * 1.4 +
+        Math.cos(index / 8) * 0.6
+
+      const current =
+        1.85 +
+        Math.sin(index / 4) * 0.22 +
+        Math.cos(index / 7) * 0.08
+
+      return {
+        id: `preview-${period}-${index}`,
+        time: new Date(time).toISOString(),
+        timestamp: time,
+        temperatureL4: Number(
+          temperatureL4.toFixed(2),
+        ),
+        temperatureL5: Number(
+          temperatureL5.toFixed(2),
+        ),
+        voltage: Number(
+          voltage.toFixed(2),
+        ),
+        current: Number(
+          current.toFixed(2),
+        ),
+      }
+    },
+  )
+}
+
 function parseFiniteNumber(
   value: unknown,
 ): number | null {
@@ -185,7 +271,7 @@ function parseFiniteNumber(
 }
 
 function formatAxisTime(
-  value: string,
+  value: string | number,
   period: Period,
 ): string {
   const date = new Date(value)
@@ -194,7 +280,10 @@ function formatAxisTime(
     return "-"
   }
 
-  if (period === "168") {
+  if (
+    period === "24" ||
+    period === "168"
+  ) {
     return new Intl.DateTimeFormat(
       "id-ID",
       {
@@ -202,6 +291,11 @@ function formatAxisTime(
         day: "2-digit",
         month: "short",
         hour: "2-digit",
+        minute:
+          period === "24"
+            ? "2-digit"
+            : undefined,
+        hourCycle: "h23",
       },
     ).format(date)
   }
@@ -237,7 +331,7 @@ function formatFullDate(
 }
 
 function formatDateTime(
-  value: string | Date,
+  value: string | number | Date,
 ): string {
   const date = new Date(value)
 
@@ -314,6 +408,7 @@ function mapHistoryReading(
   return {
     id: String(reading.id),
     time: date.toISOString(),
+    timestamp: date.getTime(),
 
     // Data asli yang sudah tersedia.
     temperatureL4: temperature,
@@ -575,6 +670,9 @@ export function GraphPage() {
   const [error, setError] =
     useState<string | null>(null)
 
+  const [isPreviewMode, setIsPreviewMode] =
+    useState(false)
+
   const [lastUpdated, setLastUpdated] =
     useState<Date | null>(null)
 
@@ -691,9 +789,24 @@ export function GraphPage() {
               ? result.data
               : []
 
-          setData(
-            mapHistoryData(readings),
-          )
+          const mappedData =
+            mapHistoryData(readings)
+
+          if (
+            mappedData.length === 0 &&
+            process.env.NODE_ENV ===
+              "development"
+          ) {
+            setData(
+              createPreviewData(
+                selectedPeriod,
+              ),
+            )
+            setIsPreviewMode(true)
+          } else {
+            setData(mappedData)
+            setIsPreviewMode(false)
+          }
 
           setLastUpdated(new Date())
         } catch (historyError) {
@@ -711,11 +824,25 @@ export function GraphPage() {
             historyError,
           )
 
-          setError(
-            historyError instanceof Error
-              ? historyError.message
-              : "Gagal mengambil data grafik",
-          )
+          if (
+            process.env.NODE_ENV ===
+            "development"
+          ) {
+            setData(
+              createPreviewData(
+                selectedPeriod,
+              ),
+            )
+            setIsPreviewMode(true)
+            setError(null)
+            setLastUpdated(new Date())
+          } else {
+            setError(
+              historyError instanceof Error
+                ? historyError.message
+                : "Gagal mengambil data grafik",
+            )
+          }
         } finally {
           setLoading(false)
         }
@@ -843,19 +970,34 @@ export function GraphPage() {
     }, [loadHistory, period])
 
   useEffect(() => {
-    void loadSettings()
+    const timerId = window.setTimeout(
+      () => {
+        void loadSettings()
+      },
+      0,
+    )
+
+    return () => {
+      window.clearTimeout(timerId)
+    }
   }, [loadSettings])
 
   useEffect(() => {
     const controller =
       new AbortController()
 
-    void loadHistory(
-      period,
-      controller.signal,
+    const timerId = window.setTimeout(
+      () => {
+        void loadHistory(
+          period,
+          controller.signal,
+        )
+      },
+      0,
     )
 
     return () => {
+      window.clearTimeout(timerId)
       controller.abort()
     }
   }, [loadHistory, period])
@@ -1023,7 +1165,9 @@ export function GraphPage() {
             "°C",
           )}
           description={
-            temperatureL4Stats.hasData
+            isPreviewMode
+              ? "Data simulasi untuk preview UI"
+              : temperatureL4Stats.hasData
               ? `Rata-rata ${getMetricValue(
                   temperatureL4Stats.average,
                   1,
@@ -1045,7 +1189,11 @@ export function GraphPage() {
             1,
             "°C",
           )}
-          description="Sensor belum tersedia"
+          description={
+            isPreviewMode
+              ? "Data simulasi untuk preview UI"
+              : "Sensor belum tersedia"
+          }
           color="blue"
           available={
             temperatureL5Stats.hasData
@@ -1060,7 +1208,11 @@ export function GraphPage() {
             1,
             " V",
           )}
-          description="Sensor belum tersedia"
+          description={
+            isPreviewMode
+              ? "Data simulasi untuk preview UI"
+              : "Sensor belum tersedia"
+          }
           color="amber"
           available={
             voltageStats.hasData
@@ -1075,7 +1227,11 @@ export function GraphPage() {
             2,
             " A",
           )}
-          description="Sensor belum tersedia"
+          description={
+            isPreviewMode
+              ? "Data simulasi untuk preview UI"
+              : "Sensor belum tersedia"
+          }
           color="violet"
           available={
             currentStats.hasData
@@ -1086,14 +1242,16 @@ export function GraphPage() {
       <Card className="mt-4 shadow-sm">
         <CardContent className="flex flex-col gap-4 p-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex min-w-0 flex-col gap-1">
-            <div className="flex items-center gap-2 text-sm text-slate-600">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <CalendarDays className="size-4 shrink-0" />
 
               <span>{selectedDate}</span>
             </div>
 
-            <span className="text-xs text-slate-400">
-              {lastUpdated
+            <span className="text-xs text-muted-foreground">
+              {isPreviewMode
+                ? "Data simulasi untuk pengembangan UI"
+                : lastUpdated
                 ? `Pembaruan terakhir ${formatDateTime(
                     lastUpdated,
                   )}`
@@ -1168,17 +1326,37 @@ export function GraphPage() {
         </CardContent>
       </Card>
 
-      {error && (
-        <Card className="mt-4 border-rose-200 bg-rose-50 shadow-sm">
+      {isPreviewMode && (
+        <Card className="mt-4 border-amber-200 bg-amber-50 shadow-sm dark:border-amber-900/60 dark:bg-amber-950/30">
           <CardContent className="flex items-start gap-3 p-4">
-            <TriangleAlert className="mt-0.5 size-5 shrink-0 text-rose-600" />
+            <TriangleAlert className="mt-0.5 size-5 shrink-0 text-amber-600 dark:text-amber-400" />
 
             <div>
-              <p className="font-medium text-rose-700">
+              <p className="font-medium text-amber-800 dark:text-amber-300">
+                Mode preview UI
+              </p>
+
+              <p className="mt-1 text-sm text-amber-700 dark:text-amber-400">
+                API database tidak tersedia.
+                Grafik menampilkan data simulasi
+                dan tidak mengubah data project.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {error && (
+        <Card className="mt-4 border-rose-200 bg-rose-50 shadow-sm dark:border-rose-900/60 dark:bg-rose-950/30">
+          <CardContent className="flex items-start gap-3 p-4">
+            <TriangleAlert className="mt-0.5 size-5 shrink-0 text-rose-600 dark:text-rose-400" />
+
+            <div>
+              <p className="font-medium text-rose-700 dark:text-rose-300">
                 Gagal memuat data grafik
               </p>
 
-              <p className="mt-1 text-sm text-rose-600">
+              <p className="mt-1 text-sm text-rose-600 dark:text-rose-400">
                 {error}
               </p>
             </div>
@@ -1192,10 +1370,17 @@ export function GraphPage() {
           period={period}
           dataKey="temperatureL4"
           title="Suhu Lantai 4"
-          description={`Data realtime TEMP-L4 • ${
-            periodConfigs[period]
-              .label
-          }`}
+          description={
+            isPreviewMode
+              ? `Data simulasi • ${
+                  periodConfigs[period]
+                    .label
+                }`
+              : `Data realtime TEMP-L4 • ${
+                  periodConfigs[period]
+                    .label
+                }`
+          }
           unit="°C"
           decimals={1}
           stroke="#10b981"
@@ -1215,7 +1400,14 @@ export function GraphPage() {
           period={period}
           dataKey="temperatureL5"
           title="Suhu Lantai 5"
-          description="Sensor suhu Lantai 5 belum terpasang"
+          description={
+            isPreviewMode
+              ? `Data simulasi • ${
+                  periodConfigs[period]
+                    .label
+                }`
+              : "Sensor suhu Lantai 5 belum terpasang"
+          }
           unit="°C"
           decimals={1}
           stroke="#3b82f6"
@@ -1229,7 +1421,14 @@ export function GraphPage() {
           period={period}
           dataKey="voltage"
           title="Tegangan"
-          description="Sensor tegangan belum terpasang"
+          description={
+            isPreviewMode
+              ? `Data simulasi • ${
+                  periodConfigs[period]
+                    .label
+                }`
+              : "Sensor tegangan belum terpasang"
+          }
           unit=" V"
           decimals={1}
           stroke="#f59e0b"
@@ -1243,7 +1442,14 @@ export function GraphPage() {
           period={period}
           dataKey="current"
           title="Arus"
-          description="Sensor arus belum terpasang"
+          description={
+            isPreviewMode
+              ? `Data simulasi • ${
+                  periodConfigs[period]
+                    .label
+                }`
+              : "Sensor arus belum terpasang"
+          }
           unit=" A"
           decimals={2}
           stroke="#8b5cf6"
@@ -1305,7 +1511,7 @@ function MetricChart({
               {title}
             </CardTitle>
 
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-muted-foreground">
               {description}
             </p>
           </div>
@@ -1346,7 +1552,7 @@ function MetricChart({
       <CardContent className="pb-4">
         {loading ? (
           <div className="flex h-[330px] items-center justify-center">
-            <div className="flex flex-col items-center gap-3 text-slate-500">
+            <div className="flex flex-col items-center gap-3 text-muted-foreground">
               <LoaderCircle className="size-7 animate-spin" />
 
               <span className="text-sm">
@@ -1407,14 +1613,21 @@ function MetricChart({
 
                 <CartesianGrid
                   vertical={false}
-                  stroke="#edf1ef"
+                  stroke="var(--border)"
                 />
 
                 <XAxis
-                  dataKey="time"
+                  dataKey="timestamp"
+                  type="number"
+                  scale="time"
+                  domain={[
+                    "dataMin",
+                    "dataMax",
+                  ]}
+                  tickCount={6}
                   tickFormatter={value =>
                     formatAxisTime(
-                      String(value),
+                      Number(value),
                       period,
                     )
                   }
@@ -1441,7 +1654,7 @@ function MetricChart({
                 <Tooltip
                   labelFormatter={value =>
                     formatDateTime(
-                      String(value),
+                      Number(value),
                     )
                   }
                   formatter={value => [
@@ -1523,11 +1736,11 @@ function MetricInformation({
 }) {
   return (
     <span>
-      <small className="block text-slate-400">
+      <small className="block text-muted-foreground">
         {label}
       </small>
 
-      <strong className="whitespace-nowrap text-slate-700 dark:text-slate-200">
+      <strong className="whitespace-nowrap text-foreground">
         {value}
       </strong>
     </span>
