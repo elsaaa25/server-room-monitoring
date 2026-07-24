@@ -1,9 +1,7 @@
 "use client"
 
-import {
-  useEffect,
-  useState,
-} from "react"
+import * as React from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
@@ -16,16 +14,18 @@ import {
   Server,
   Settings,
   Sun,
-  X,
 } from "lucide-react"
 
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-
-type AppSidebarProps = {
-  showCloseButton?: boolean
-  onClose?: () => void
-}
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from "@/components/ui/sidebar"
 
 const navigation = [
   {
@@ -55,142 +55,88 @@ const navigation = [
   },
 ]
 
-export function AppSidebar({
-  showCloseButton = false,
-  onClose,
-}: AppSidebarProps) {
+export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
-
-  const [theme, setTheme] =
-    useState<"light" | "dark">(
-      "light",
-    )
+  const [theme, setTheme] = useState<"light" | "dark">("light")
 
   useEffect(() => {
-    const isDark =
-      document.documentElement.classList.contains(
-        "dark",
-      )
-
-    setTheme(
-      isDark ? "dark" : "light",
-    )
+    const isDark = document.documentElement.classList.contains("dark")
+    setTheme(isDark ? "dark" : "light")
   }, [])
 
   const toggleTheme = () => {
-    const nextTheme =
-      theme === "light"
-        ? "dark"
-        : "light"
-
+    const nextTheme = theme === "light" ? "dark" : "light"
     setTheme(nextTheme)
 
     if (nextTheme === "dark") {
-      document.documentElement.classList.add(
-        "dark",
-      )
-
-      localStorage.setItem(
-        "theme",
-        "dark",
-      )
+      document.documentElement.classList.add("dark")
+      localStorage.setItem("theme", "dark")
     } else {
-      document.documentElement.classList.remove(
-        "dark",
-      )
-
-      localStorage.setItem(
-        "theme",
-        "light",
-      )
+      document.documentElement.classList.remove("dark")
+      localStorage.setItem("theme", "light")
     }
   }
 
   return (
-    <div className="relative flex h-full flex-col border-r border-sidebar-border bg-sidebar p-4 text-sidebar-foreground">
-      {showCloseButton && (
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={onClose}
-          aria-label="Tutup sidebar"
-          title="Tutup sidebar"
-          className="absolute right-3 top-3 z-10 hidden rounded-full text-muted-foreground hover:text-sidebar-foreground lg:inline-flex"
-        >
-          <X className="size-5" />
-        </Button>
-      )}
+    <Sidebar variant="floating" collapsible="icon" {...props}>
+      <SidebarHeader>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton size="lg" asChild>
+              <Link href="/">
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                  <Server className="size-4" />
+                </div>
+                <div className="flex flex-col gap-0.5 leading-none group-data-[collapsible=icon]:hidden">
+                  <span className="font-semibold text-foreground">Server Room</span>
+                  <span className="text-[10px] text-muted-foreground font-medium">Monitoring</span>
+                </div>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarHeader>
 
-      <Link
-        href="/"
-        className="mb-8 flex size-11 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md shadow-primary/20 transition-transform hover:scale-105"
-        aria-label="Dashboard"
-      >
-        <Server className="size-5" />
-      </Link>
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarMenu className="gap-1">
+            {navigation.map((item) => {
+              const active = pathname === item.href
+              const Icon = item.icon
+              return (
+                <SidebarMenuItem key={item.label}>
+                  <SidebarMenuButton asChild isActive={active} tooltip={item.label}>
+                    <Link href={item.href}>
+                      <Icon className="size-4 shrink-0" />
+                      <span>{item.label}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )
+            })}
+          </SidebarMenu>
+        </SidebarGroup>
+      </SidebarContent>
 
-      <nav className="space-y-1">
-        {navigation.map(
-          ({
-            label,
-            icon: Icon,
-            href,
-          }) => {
-            const active =
-              pathname === href
+      <SidebarFooter className="gap-3">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton onClick={toggleTheme} tooltip={theme === "light" ? "Mode Gelap" : "Mode Terang"}>
+              {theme === "light" ? (
+                <Moon className="size-4 shrink-0" />
+              ) : (
+                <Sun className="size-4 shrink-0" />
+              )}
+              <span>{theme === "light" ? "Mode Gelap" : "Mode Terang"}</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
 
-            return (
-              <Button
-                key={label}
-                asChild
-                variant="ghost"
-                className={`w-full justify-start gap-3 transition-colors ${
-                  active
-                    ? "bg-sidebar-accent font-semibold text-sidebar-accent-foreground"
-                    : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
-                }`}
-              >
-                <Link href={href}>
-                  <Icon className="size-4 shrink-0" />
-
-                  <span className="text-xs">
-                    {label}
-                  </span>
-                </Link>
-              </Button>
-            )
-          },
-        )}
-      </nav>
-
-      <div className="mt-auto flex flex-col gap-3 border-t border-sidebar-border pt-4">
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={toggleTheme}
-          className="w-full justify-start gap-3 text-muted-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
-        >
-          {theme === "light" ? (
-            <Moon className="size-4" />
-          ) : (
-            <Sun className="size-4" />
-          )}
-
-          <span className="text-[11px] font-medium">
-            {theme === "light"
-              ? "Mode Gelap"
-              : "Mode Terang"}
-          </span>
-        </Button>
-
-        <div className="flex items-center gap-2 px-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          <Radio className="size-3.5 animate-pulse text-primary" />
-
-          <span> AirNav Banyuwangi </span>
+        <div className="flex items-center gap-2 px-2 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground group-data-[collapsible=icon]:hidden">
+          <Radio className="size-3.5 animate-pulse text-primary shrink-0" />
+          <span className="truncate">AirNav Banyuwangi</span>
         </div>
-      </div>
-    </div>
+      </SidebarFooter>
+    </Sidebar>
   )
 }

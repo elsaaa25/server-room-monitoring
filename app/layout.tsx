@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 
 import { AlertNotificationCenter } from "@/components/alert-notification-center"
+import { TooltipProvider } from "@/components/ui/tooltip"
 
 import "./globals.css"
 
@@ -46,8 +47,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}
       >
-        <AlertNotificationCenter />
-        {children}
+        <TooltipProvider>
+          <AlertNotificationCenter />
+          {children}
+        </TooltipProvider>
       </body>
     </html>
   )

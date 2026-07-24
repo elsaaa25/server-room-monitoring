@@ -41,7 +41,7 @@ import {
 } from "recharts"
 
 import { AlertHeaderButton } from "@/components/alert-header-button"
-import { AppSidebar } from "@/components/app-sidebar"
+import { AppShell } from "@/components/app-shell"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -621,15 +621,7 @@ export function Dashboard() {
   const [error, setError] =
     useState<string | null>(null)
 
-  const [
-    sidebarOpen,
-    setSidebarOpen,
-  ] = useState(true)
 
-  const [
-    sidebarReady,
-    setSidebarReady,
-  ] = useState(false)
 
   const latestRequestRunning =
     useRef(false)
@@ -739,38 +731,7 @@ export function Dashboard() {
     }
   }, [])
 
-  useEffect(() => {
-    const storedValue =
-      localStorage.getItem(
-        "monitoring-sidebar-open",
-      )
 
-    if (storedValue !== null) {
-      setSidebarOpen(
-        storedValue === "true",
-      )
-    }
-
-    setSidebarReady(true)
-  }, [])
-
-  const openSidebar = () => {
-    setSidebarOpen(true)
-
-    localStorage.setItem(
-      "monitoring-sidebar-open",
-      "true",
-    )
-  }
-
-  const closeSidebar = () => {
-    setSidebarOpen(false)
-
-    localStorage.setItem(
-      "monitoring-sidebar-open",
-      "false",
-    )
-  }
 
   /*
    * Riwayat penuh hanya dimuat saat:
@@ -1231,74 +1192,16 @@ export function Dashboard() {
     historyReadings.length === 0
 
   return (
-    <div className="min-h-screen bg-background flex">
-      {sidebarReady &&
-        sidebarOpen && (
-          <aside className="sticky top-0 hidden h-screen w-60 shrink-0 lg:block z-10">
-            <AppSidebar
-              showCloseButton
-              onClose={closeSidebar}
-            />
-          </aside>
-        )}
-
-      <main
-        className="min-w-0 flex-1 p-6 md:p-8 transition-all duration-300"
-      >
-        <header className="flex min-h-20 items-center gap-3">
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button
-                size="icon"
-                variant="outline"
-                className="lg:hidden"
-                aria-label="Buka navigasi"
-              >
-                <Menu />
-              </Button>
-            </SheetTrigger>
-
-            <SheetContent
-              side="left"
-              className="w-64 p-0"
-            >
-              <SheetTitle className="sr-only">
-                Navigasi
-              </SheetTitle>
-
-              <AppSidebar />
-            </SheetContent>
-          </Sheet>
-
-          {sidebarReady &&
-            !sidebarOpen && (
-              <Button
-                type="button"
-                size="icon"
-                variant="outline"
-                onClick={openSidebar}
-                aria-label="Buka sidebar"
-                title="Buka sidebar"
-                className="hidden shrink-0 rounded-full text-[#005a9c] shadow-sm lg:inline-flex"
-              >
-                <Menu className="size-5" />
-              </Button>
-            )}
-
-          <div className="min-w-0">
-            <h1 className="truncate text-xl font-semibold text-foreground sm:text-2xl">
-              Monitoring Dashboard
-            </h1>
-          </div>
-
-          <div className="ml-auto flex items-center gap-2">
-            <HeaderClock />
-
-            <AlertHeaderButton />
-
-            <ProfilePanel />
-          </div>
-        </header>
+    <AppShell
+      title="Monitoring Dashboard"
+      actions={
+        <>
+          <HeaderClock />
+          <AlertHeaderButton />
+          <ProfilePanel />
+        </>
+      }
+    >
 
         <div className="mb-6 flex flex-col gap-4 border-b border-border pb-4 sm:flex-row sm:items-center sm:justify-between">
           <Tabs
@@ -2444,10 +2347,9 @@ export function Dashboard() {
             </section>
           </>
         )}
-      </main>
-    </div>
-  )
-}
+      </AppShell>
+    )
+  }
 
 function HeaderClock() {
   const [now, setNow] =
