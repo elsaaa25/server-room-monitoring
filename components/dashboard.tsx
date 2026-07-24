@@ -87,7 +87,6 @@ type RawReading = {
 
 type ChartReading = {
   time: string
-  timestamp: number
   temperature: number
   voltage: number | null
 }
@@ -167,7 +166,7 @@ function getNumberSetting(
 }
 
 function clock(
-  value: string | number | Date,
+  value: string | Date,
   seconds = false,
 ): string {
   const date = new Date(value)
@@ -188,33 +187,6 @@ function clock(
       hourCycle: "h23",
     },
   ).format(date)
-}
-
-function chartAxisTime(
-  value: string | number | Date,
-  period: Period,
-): string {
-  const date = new Date(value)
-
-  if (Number.isNaN(date.getTime())) {
-    return "-"
-  }
-
-  if (period === "24") {
-    return new Intl.DateTimeFormat(
-      "id-ID",
-      {
-        timeZone: "Asia/Jakarta",
-        day: "2-digit",
-        month: "short",
-        hour: "2-digit",
-        minute: "2-digit",
-        hourCycle: "h23",
-      },
-    ).format(date)
-  }
-
-  return clock(date)
 }
 
 function fullDate(
@@ -238,7 +210,7 @@ function fullDate(
 }
 
 function fullDateTime(
-  value: string | number | Date,
+  value: string | Date,
 ): string {
   const date = new Date(value)
 
@@ -1091,9 +1063,6 @@ export function Dashboard() {
             ({
               time:
                 reading.recordedAt,
-              timestamp: new Date(
-                reading.recordedAt,
-              ).getTime(),
               temperature:
                 Number(
                   reading.temperature,
@@ -1290,7 +1259,7 @@ export function Dashboard() {
             )}
 
           <div className="min-w-0">
-            <h1 className="truncate text-xl font-semibold text-foreground sm:text-2xl">
+            <h1 className="truncate text-xl font-semibold text-slate-800 dark:text-slate-100 sm:text-2xl">
               Monitoring Dashboard
             </h1>
           </div>
@@ -1366,13 +1335,13 @@ export function Dashboard() {
         </div>
 
         {error && (
-          <Card className="mb-4 border-rose-200 bg-rose-50 shadow-sm dark:border-rose-900/60 dark:bg-rose-950/30">
+          <Card className="mb-4 border-rose-200 bg-rose-50 shadow-sm">
             <CardContent className="p-4">
-              <p className="font-medium text-rose-700 dark:text-rose-300">
+              <p className="font-medium text-rose-700">
                 Gagal memuat data sensor
               </p>
 
-              <p className="mt-1 text-sm text-rose-600 dark:text-rose-400">
+              <p className="mt-1 text-sm text-rose-600">
                 {error}
               </p>
             </CardContent>
@@ -1381,7 +1350,7 @@ export function Dashboard() {
 
         {initialLoading ? (
           <div className="grid min-h-[50vh] place-items-center">
-            <div className="flex flex-col items-center gap-3 text-sm text-muted-foreground">
+            <div className="flex flex-col items-center gap-3 text-sm text-slate-500">
               <LoaderCircle className="size-7 animate-spin" />
 
               <span>
@@ -1454,7 +1423,7 @@ export function Dashboard() {
                           : "text-rose-600 dark:text-rose-400"
                         : "text-muted-foreground"
                     }
-                    iconColor="bg-amber-500/10 text-amber-500 dark:text-amber-400"
+                    iconColor="bg-amber-500/10 text-amber-500"
                   />
 
                   <Metric
@@ -1515,13 +1484,13 @@ export function Dashboard() {
                 </section>
 
                 <section className="mt-6 grid gap-6 xl:grid-cols-2">
-                  <Card className="overflow-hidden border-border shadow-sm">
+                  <Card className="overflow-hidden border-slate-200/80 shadow-sm">
                     <CardHeader>
-                      <CardTitle className="text-md font-semibold text-foreground">
+                      <CardTitle className="text-md font-semibold text-slate-700 dark:text-slate-100">
                         Grafik Tren Suhu Lantai 4
                       </CardTitle>
 
-                      <p className="text-[11px] text-muted-foreground">
+                      <p className="text-[11px] text-slate-400">
                         Suhu ruang server •{" "}
                         {
                           periodConfigs[
@@ -1591,18 +1560,12 @@ export function Dashboard() {
                             />
 
                             <XAxis
-                              dataKey="timestamp"
-                              type="number"
-                              scale="time"
-                              domain={[
-                                "dataMin",
-                                "dataMax",
-                              ]}
-                              tickCount={6}
+                              dataKey="time"
                               tickFormatter={value =>
-                                chartAxisTime(
-                                  Number(value),
-                                  period,
+                                clock(
+                                  String(
+                                    value,
+                                  ),
                                 )
                               }
                               axisLine={
@@ -1646,7 +1609,7 @@ export function Dashboard() {
                                 if (active && payload && payload.length) {
                                   return (
                                     <div className="rounded-xl border border-border bg-popover p-2.5 shadow-md text-popover-foreground text-xs font-semibold">
-                                      <p className="font-mono text-muted-foreground mb-1">{fullDateTime(Number(label))}</p>
+                                      <p className="font-mono text-muted-foreground mb-1">{fullDateTime(String(label))}</p>
                                       {payload.map((p, idx) => (
                                         <p key={idx} className="flex items-center gap-1.5 text-xs">
                                           <span className="size-1.5 rounded-full" style={{ backgroundColor: p.color || p.stroke }} />
@@ -1728,13 +1691,13 @@ export function Dashboard() {
                     </CardContent>
                   </Card>
 
-                  <Card className="overflow-hidden border-border shadow-sm">
+                  <Card className="overflow-hidden border-slate-200/80 shadow-sm">
                     <CardHeader>
-                      <CardTitle className="text-md font-semibold text-foreground">
+                      <CardTitle className="text-md font-semibold text-slate-700 dark:text-slate-100">
                         Grafik Tegangan AC Lantai 4
                       </CardTitle>
 
-                      <p className="text-[11px] text-muted-foreground">
+                      <p className="text-[11px] text-slate-400">
                         Tegangan listrik •{" "}
                         {
                           periodConfigs[
@@ -1800,22 +1763,16 @@ export function Dashboard() {
                               vertical={
                                 false
                               }
-                              stroke="var(--border)"
+                              stroke="#edf1ef"
                             />
 
                             <XAxis
-                              dataKey="timestamp"
-                              type="number"
-                              scale="time"
-                              domain={[
-                                "dataMin",
-                                "dataMax",
-                              ]}
-                              tickCount={6}
+                              dataKey="time"
                               tickFormatter={value =>
-                                chartAxisTime(
-                                  Number(value),
-                                  period,
+                                clock(
+                                  String(
+                                    value,
+                                  ),
                                 )
                               }
                               axisLine={
@@ -1858,7 +1815,7 @@ export function Dashboard() {
                                 if (active && payload && payload.length) {
                                   return (
                                     <div className="rounded-xl border border-border bg-popover p-2.5 shadow-md text-popover-foreground text-xs font-semibold">
-                                      <p className="font-mono text-muted-foreground mb-1">{fullDateTime(Number(label))}</p>
+                                      <p className="font-mono text-muted-foreground mb-1">{fullDateTime(String(label))}</p>
                                       {payload.map((p, idx) => (
                                         <p key={idx} className="flex items-center gap-1.5 text-xs">
                                           <span className="size-1.5 rounded-full" style={{ backgroundColor: p.color || p.stroke }} />
@@ -1961,7 +1918,7 @@ export function Dashboard() {
                         ? getStatusColor(
                             statusL5,
                           )
-                        : "text-muted-foreground"
+                        : "text-slate-400"
                     }
                     iconColor="bg-purple-500/10 text-purple-600 dark:text-purple-400"
                   />
@@ -1984,8 +1941,8 @@ export function Dashboard() {
                     }
                     valueClassName={
                       onlineL5
-                        ? "text-emerald-600 dark:text-emerald-400"
-                        : "text-rose-600 dark:text-rose-400"
+                        ? "text-emerald-600"
+                        : "text-rose-600"
                     }
                     iconColor="bg-blue-500/10 text-blue-600 dark:text-blue-400"
                   />
@@ -2014,7 +1971,7 @@ export function Dashboard() {
                     }
                     valueClassName={
                       !onlineL5
-                        ? "text-muted-foreground"
+                        ? "text-slate-400"
                         : getStatusColor(
                             statusL5,
                           )
@@ -2024,13 +1981,13 @@ export function Dashboard() {
                 </section>
 
                 <section className="mt-6">
-                  <Card className="overflow-hidden border-border shadow-sm">
+                  <Card className="overflow-hidden border-slate-200/80 shadow-sm">
                     <CardHeader>
-                      <CardTitle className="text-md font-semibold text-foreground">
+                      <CardTitle className="text-md font-semibold text-slate-700 dark:text-slate-100">
                         Grafik Tren Suhu Lantai 5
                       </CardTitle>
 
-                      <p className="text-[11px] text-muted-foreground">
+                      <p className="text-[11px] text-slate-400">
                         Suhu ruang kerja •{" "}
                         {
                           periodConfigs[
@@ -2096,22 +2053,16 @@ export function Dashboard() {
                               vertical={
                                 false
                               }
-                              stroke="var(--border)"
+                              stroke="#edf1ef"
                             />
 
                             <XAxis
-                              dataKey="timestamp"
-                              type="number"
-                              scale="time"
-                              domain={[
-                                "dataMin",
-                                "dataMax",
-                              ]}
-                              tickCount={6}
+                              dataKey="time"
                               tickFormatter={value =>
-                                chartAxisTime(
-                                  Number(value),
-                                  period,
+                                clock(
+                                  String(
+                                    value,
+                                  ),
                                 )
                               }
                               axisLine={
@@ -2154,7 +2105,7 @@ export function Dashboard() {
                                 if (active && payload && payload.length) {
                                   return (
                                     <div className="rounded-xl border border-border bg-popover p-2.5 shadow-md text-popover-foreground text-xs font-semibold">
-                                      <p className="font-mono text-muted-foreground mb-1">{fullDateTime(Number(label))}</p>
+                                      <p className="font-mono text-muted-foreground mb-1">{fullDateTime(String(label))}</p>
                                       {payload.map((p, idx) => (
                                         <p key={idx} className="flex items-center gap-1.5 text-xs">
                                           <span className="size-1.5 rounded-full" style={{ backgroundColor: p.color || p.stroke }} />
@@ -2347,7 +2298,7 @@ export function Dashboard() {
 
                   <Link
                     href="/riwayat"
-                    className="text-xs font-semibold text-emerald-600 hover:underline dark:text-emerald-400"
+                    className="text-xs font-semibold text-emerald-600 hover:underline"
                   >
                     Lihat Semua Riwayat
                   </Link>
@@ -2437,7 +2388,7 @@ export function Dashboard() {
                         <TableRow>
                           <TableCell
                             colSpan={5}
-                            className="h-20 text-center text-muted-foreground"
+                            className="h-20 text-center text-slate-400"
                           >
                             Menunggu pengiriman data dari sensor...
                           </TableCell>
@@ -2473,7 +2424,7 @@ function HeaderClock() {
   }, [])
 
   return (
-    <span className="hidden items-center gap-2 text-sm text-muted-foreground xl:flex">
+    <span className="hidden items-center gap-2 text-sm text-slate-500 xl:flex">
       <CalendarDays className="size-4" />
 
       {now
@@ -2515,8 +2466,8 @@ function Metric({
   label,
   value,
   detail,
-  valueClassName = "text-emerald-600 dark:text-emerald-400",
-  iconColor = "bg-primary/10 text-primary",
+  valueClassName = "text-emerald-600",
+  iconColor = "bg-emerald-50 text-[#005a9c]",
 }: {
   icon: ComponentType<{
     className?: string
@@ -2571,11 +2522,11 @@ function Limit({
         className={`mr-3 size-2 rounded-full ${color}`}
       />
 
-      <span className="text-muted-foreground">
+      <span className="text-slate-500">
         {label}
       </span>
 
-      <b className="ml-auto text-foreground">
+      <b className="ml-auto text-slate-700 dark:text-slate-200">
         {value}
       </b>
     </div>
@@ -2604,11 +2555,11 @@ function SummaryRow({
       </span>
 
       <span>
-        <small className="block text-[11px] font-medium leading-tight text-muted-foreground">
+        <small className="block text-[11px] font-medium leading-tight text-slate-500">
           {label}
         </small>
 
-        <b className="block text-base font-bold text-foreground">
+        <b className="block text-base font-bold text-slate-800 dark:text-slate-100">
           {value}
         </b>
       </span>
@@ -2632,20 +2583,20 @@ function SystemRow({
       <Icon
         className={`mr-2 size-4 ${
           online
-            ? "text-emerald-600 dark:text-emerald-400"
-            : "text-rose-600 dark:text-rose-400"
+            ? "text-emerald-600"
+            : "text-rose-600"
         }`}
       />
 
-      <span className="text-muted-foreground">
+      <span className="text-slate-500">
         {label}
       </span>
 
       <span
         className={`ml-auto ${
           online
-            ? "text-emerald-600 dark:text-emerald-400"
-            : "text-rose-600 dark:text-rose-400"
+            ? "text-emerald-600"
+            : "text-rose-600"
         }`}
       >
         {online

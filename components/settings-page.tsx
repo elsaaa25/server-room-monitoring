@@ -139,25 +139,25 @@ export function SettingsPage() {
         return {
           text: "Diizinkan browser",
           className:
-            "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300",
+            "bg-emerald-100 text-emerald-700",
         }
       case "denied":
         return {
           text: "Diblokir browser",
           className:
-            "bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300",
+            "bg-rose-100 text-rose-700",
         }
       case "unsupported":
         return {
           text: "Tidak didukung",
           className:
-            "bg-muted text-muted-foreground",
+            "bg-slate-100 text-slate-600",
         }
       default:
         return {
           text: "Belum diizinkan",
           className:
-            "bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300",
+            "bg-amber-100 text-amber-700",
         }
     }
   }, [permission])
@@ -377,10 +377,10 @@ export function SettingsPage() {
           <div
             className={`mb-4 rounded-xl border px-4 py-3 text-sm ${
               feedback.type === "success"
-                ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300"
+                ? "border-emerald-200 bg-emerald-50 text-emerald-700"
                 : feedback.type === "error"
-                  ? "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300"
-                  : "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/30 dark:text-blue-300"
+                  ? "border-rose-200 bg-rose-50 text-rose-700"
+                  : "border-blue-200 bg-blue-50 text-blue-700"
             }`}
           >
             {feedback.message}
@@ -388,7 +388,7 @@ export function SettingsPage() {
         )}
 
         {loading ? (
-          <div className="grid min-h-[50vh] place-items-center text-sm text-muted-foreground">
+          <div className="grid min-h-[50vh] place-items-center text-sm text-slate-500">
             Memuat konfigurasi sistem dari
             database...
           </div>
@@ -442,21 +442,21 @@ export function SettingsPage() {
               </div>
 
               {!valid && (
-                <p className="mt-3 text-sm text-rose-600 dark:text-rose-400">
+                <p className="mt-3 text-sm text-rose-600">
                   Batas bahaya harus lebih
                   tinggi dari batas waspada.
                 </p>
               )}
 
               <div className="mt-5 flex flex-wrap gap-3 text-xs">
-                <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:text-emerald-300 dark:hover:bg-emerald-950/60">
+                <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
                   Normal ≤{" "}
                   {Number(
                     settings.warningTemperature,
                   )}
                   °C
                 </Badge>
-                <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 dark:bg-amber-950/60 dark:text-amber-300 dark:hover:bg-amber-950/60">
+                <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100">
                   Waspada{" "}
                   {Number(
                     settings.warningTemperature,
@@ -467,7 +467,7 @@ export function SettingsPage() {
                   )}
                   °C
                 </Badge>
-                <Badge className="bg-rose-100 text-rose-700 hover:bg-rose-100 dark:bg-rose-950/60 dark:text-rose-300 dark:hover:bg-rose-950/60">
+                <Badge className="bg-rose-100 text-rose-700 hover:bg-rose-100">
                   Bahaya ≥{" "}
                   {Number(
                     settings.dangerTemperature,
@@ -553,19 +553,19 @@ export function SettingsPage() {
               <Separator className="my-5" />
 
               <div className="flex items-center">
-                <div className="grid size-10 place-items-center rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400">
+                <div className="grid size-10 place-items-center rounded-full bg-emerald-50 text-emerald-600">
                   <Server className="size-5" />
                 </div>
                 <div className="ml-3">
-                  <b className="block text-sm text-foreground">
+                  <b className="block text-sm text-slate-800">
                     Koneksi Database Cloud
                   </b>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-xs text-slate-500">
                     Penyimpanan Terpusat
                     Supabase
                   </span>
                 </div>
-                <Badge className="ml-auto bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:text-emerald-300 dark:hover:bg-emerald-950/60">
+                <Badge className="ml-auto bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
                   Aktif
                 </Badge>
               </div>
@@ -617,8 +617,8 @@ export function SettingsPage() {
                   <Badge
                     className={
                       settings.soundAlert
-                        ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300"
-                        : "bg-muted text-muted-foreground"
+                        ? "bg-emerald-100 text-emerald-700"
+                        : "bg-slate-100 text-slate-600"
                     }
                   >
                     {settings.soundAlert
@@ -631,7 +631,7 @@ export function SettingsPage() {
           </div>
         )}
 
-        <p className="mt-5 text-center text-xs text-muted-foreground">
+        <p className="mt-5 text-center text-xs text-slate-400">
           Setelah mengubah toggle, klik
           Simpan. Notifikasi dan suara bekerja
           selama website monitoring terbuka di
@@ -791,13 +791,13 @@ function Toggle({
 
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
-          <Icon className="size-4 text-muted-foreground" />
-          <b className="text-sm text-foreground">
+          <Icon className="size-4 text-slate-500" />
+          <b className="text-sm text-slate-800">
             {label}
           </b>
           {status}
         </div>
-        <p className="mt-0.5 text-xs text-muted-foreground">
+        <p className="mt-0.5 text-xs text-slate-500">
           {description}
         </p>
       </div>

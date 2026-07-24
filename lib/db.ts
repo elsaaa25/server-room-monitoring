@@ -1,45 +1,34 @@
 import "server-only"
 import { Pool } from "pg"
 
-let dbHost = process.env.DB_HOST
-let dbPort = process.env.DB_PORT
-let dbName = process.env.DB_NAME
-let dbUser = process.env.DB_USER
-let dbPassword = process.env.DB_PASSWORD
-
-if (process.env.DATABASE_URL) {
-  try {
-    const url = new URL(process.env.DATABASE_URL)
-    dbHost = url.hostname
-    dbPort = url.port || "5432"
-    dbName = url.pathname.split("?")[0].slice(1)
-    dbUser = url.username
-    dbPassword = decodeURIComponent(url.password)
-  } catch (error) {
-    console.error("Gagal mengurai DATABASE_URL:", error)
-  }
-}
+const {
+  DB_HOST,
+  DB_PORT,
+  DB_NAME,
+  DB_USER,
+  DB_PASSWORD,
+} = process.env
 
 if (
-  typeof dbHost !== "string" ||
-  typeof dbPort !== "string" ||
-  typeof dbName !== "string" ||
-  typeof dbUser !== "string" ||
-  typeof dbPassword !== "string" ||
-  dbHost.trim() === "" ||
-  dbPort.trim() === "" ||
-  dbName.trim() === "" ||
-  dbUser.trim() === "" ||
-  dbPassword.trim() === ""
+  typeof DB_HOST !== "string" ||
+  typeof DB_PORT !== "string" ||
+  typeof DB_NAME !== "string" ||
+  typeof DB_USER !== "string" ||
+  typeof DB_PASSWORD !== "string" ||
+  DB_HOST.trim() === "" ||
+  DB_PORT.trim() === "" ||
+  DB_NAME.trim() === "" ||
+  DB_USER.trim() === "" ||
+  DB_PASSWORD.trim() === ""
 ) {
   console.error("Status environment database:", {
-    dbHost: typeof dbHost === "string" && dbHost.length > 0,
-    dbPort: typeof dbPort === "string" && dbPort.length > 0,
-    dbName: typeof dbName === "string" && dbName.length > 0,
-    dbUser: typeof dbUser === "string" && dbUser.length > 0,
-    dbPassword:
-      typeof dbPassword === "string" &&
-      dbPassword.length > 0,
+    DB_HOST: typeof DB_HOST === "string" && DB_HOST.length > 0,
+    DB_PORT: typeof DB_PORT === "string" && DB_PORT.length > 0,
+    DB_NAME: typeof DB_NAME === "string" && DB_NAME.length > 0,
+    DB_USER: typeof DB_USER === "string" && DB_USER.length > 0,
+    DB_PASSWORD:
+      typeof DB_PASSWORD === "string" &&
+      DB_PASSWORD.length > 0,
   })
 
   throw new Error(
@@ -48,12 +37,12 @@ if (
 }
 
 console.log("db.ts berhasil dimuat:", {
-  host: dbHost,
-  port: dbPort,
-  database: dbName,
-  user: dbUser,
-  passwordType: typeof dbPassword,
-  passwordLoaded: dbPassword.length > 0,
+  host: DB_HOST,
+  port: DB_PORT,
+  database: DB_NAME,
+  user: DB_USER,
+  passwordType: typeof DB_PASSWORD,
+  passwordLoaded: DB_PASSWORD.length > 0,
 })
 
 const globalForDatabase = globalThis as unknown as {
@@ -63,11 +52,11 @@ const globalForDatabase = globalThis as unknown as {
 export const db =
   globalForDatabase.db ??
   new Pool({
-    host: dbHost,
-    port: Number(dbPort),
-    database: dbName,
-    user: dbUser,
-    password: dbPassword,
+    host: DB_HOST,
+    port: Number(DB_PORT),
+    database: DB_NAME,
+    user: DB_USER,
+    password: DB_PASSWORD,
     ssl: {
       rejectUnauthorized: false,
     },

@@ -192,7 +192,7 @@ export function AppSidebar({
           </span>
         </Button>
 
-        <div className="flex items-center gap-2 px-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <div className="flex items-center gap-2 px-3 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
           <Radio className="size-3.5 animate-pulse text-primary" />
 
           <span>ESP32 Monitor</span>

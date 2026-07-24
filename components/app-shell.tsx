@@ -64,7 +64,7 @@ export function AppShell({
   }
 
   return (
-    <div className="min-h-screen bg-background p-2 lg:flex">
+    <div className="min-h-screen bg-slate-50/50 p-2 lg:flex">
       {/* Sidebar desktop */}
       {sidebarOpen && (
         <aside className="sticky top-2 hidden h-[calc(100vh-1rem)] w-56 shrink-0 overflow-hidden rounded-3xl border bg-white shadow-sm lg:block">
@@ -120,12 +120,12 @@ export function AppShell({
 
           {/* Judul halaman */}
           <div className="min-w-0">
-            <h1 className="truncate text-xl font-semibold text-foreground sm:text-2xl">
+            <h1 className="truncate text-xl font-semibold text-slate-800 dark:text-slate-100 sm:text-2xl">
               {title}
             </h1>
 
             {description && (
-              <p className="hidden text-sm text-muted-foreground sm:block">
+              <p className="hidden text-sm text-slate-500 sm:block">
                 {description}
               </p>
             )}
