@@ -64,10 +64,10 @@ export function AppShell({
   }
 
   return (
-    <div className="min-h-screen bg-background p-2 lg:flex">
+    <div className="min-h-screen bg-background flex">
       {/* Sidebar desktop */}
       {sidebarOpen && (
-        <aside className="sticky top-2 hidden h-[calc(100vh-1rem)] w-56 shrink-0 overflow-hidden rounded-3xl border bg-white shadow-sm lg:block">
+        <aside className="sticky top-0 hidden h-screen w-60 shrink-0 lg:block z-10">
           <AppSidebar
             showCloseButton
             onClose={closeSidebar}
@@ -75,7 +75,7 @@ export function AppShell({
         </aside>
       )}
 
-      <main className="min-w-0 flex-1 px-2 pb-8 lg:px-6">
+      <main className="min-w-0 flex-1 p-6 md:p-8 transition-all duration-300">
         <header className="flex min-h-20 items-center gap-3">
           {/* Menu untuk tampilan HP */}
           <Sheet>
@@ -110,7 +110,7 @@ export function AppShell({
               size="icon"
               variant="outline"
               onClick={openSidebar}
-              className="hidden shrink-0 rounded-full text-[#005a9c] shadow-sm lg:inline-flex"
+              className="hidden shrink-0 rounded-md text-primary shadow-sm lg:inline-flex"
               aria-label="Tampilkan sidebar"
               title="Tampilkan sidebar"
             >
