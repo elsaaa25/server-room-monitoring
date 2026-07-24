@@ -1414,7 +1414,7 @@ export function Dashboard() {
 
                   <Metric
                     icon={Zap}
-                    label="Tegangan Server AC"
+                    label="Tegangan"
                     value={
                       readingL4?.voltage !==
                         null &&
