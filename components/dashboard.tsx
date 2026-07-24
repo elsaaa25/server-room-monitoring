@@ -1231,10 +1231,10 @@ export function Dashboard() {
     historyReadings.length === 0
 
   return (
-    <div className="min-h-screen bg-transparent p-2 lg:flex">
+    <div className="min-h-screen bg-background flex">
       {sidebarReady &&
         sidebarOpen && (
-          <aside className="sticky top-2 hidden h-[calc(100vh-1rem)] w-56 shrink-0 overflow-hidden rounded-3xl border border-border bg-card shadow-sm lg:block">
+          <aside className="sticky top-0 hidden h-screen w-60 shrink-0 lg:block z-10">
             <AppSidebar
               showCloseButton
               onClose={closeSidebar}
@@ -1243,11 +1243,7 @@ export function Dashboard() {
         )}
 
       <main
-        className={`min-w-0 flex-1 px-2 pb-6 transition-all duration-300 ${
-          sidebarOpen
-            ? "lg:px-6"
-            : "lg:px-8"
-        }`}
+        className="min-w-0 flex-1 p-6 md:p-8 transition-all duration-300"
       >
         <header className="flex min-h-20 items-center gap-3">
           <Sheet>
@@ -1314,21 +1310,21 @@ export function Dashboard() {
             }
             className="w-full sm:w-auto"
           >
-            <TabsList className="grid h-auto w-full grid-cols-1 gap-1 rounded-xl bg-muted p-1 min-[500px]:grid-cols-2 sm:w-auto">
-              <TabsTrigger
-                value="4"
-                className="whitespace-nowrap rounded-lg px-4 py-2 text-sm font-semibold transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-              >
-                Lantai 4 - Ruang Server
-              </TabsTrigger>
+           < TabsList className="grid h-12 w-full grid-cols-2 gap-1 rounded-full bg-muted p-1 sm:w-[590px]">
+  <TabsTrigger
+    value="4"
+    className="flex h-full items-center justify-center whitespace-nowrap rounded-full px-4 py-0 text-sm font-semibold leading-none transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+  >
+    Lantai 4 - Ruang Server
+  </TabsTrigger>
 
-              <TabsTrigger
-                value="5"
-                className="whitespace-nowrap rounded-lg px-4 py-2 text-sm font-semibold transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-              >
-                Lantai 5 - Ruang ATC
-              </TabsTrigger>
-            </TabsList>
+  <TabsTrigger
+    value="5"
+    className="flex h-full items-center justify-center whitespace-nowrap rounded-full px-4 py-0 text-sm font-semibold leading-none transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+  >
+    Lantai 5 - Ruang ATC
+  </TabsTrigger>
+</TabsList>
           </Tabs>
 
           <Tabs

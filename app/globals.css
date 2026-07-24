@@ -73,7 +73,7 @@
   --chart-3: #8b5cf6;
   --chart-4: #f59e0b;
   --chart-5: #64748b;
-  --radius: 0.75rem;
+  --radius: 0.5rem;
   --sidebar: #ffffff;
   --sidebar-foreground: #0f172a;
   --sidebar-primary: #005a9c;
@@ -82,10 +82,11 @@
   --sidebar-accent-foreground: #005a9c;
   --sidebar-border: #e2e8f0;
   --sidebar-ring: #005a9c;
-  --gradient-color: rgba(0, 90, 156, 0.04);
+  --gradient-color: transparent;
 }
 
 .dark {
+<<<<<<< HEAD
   --background: #0b1120;
   --foreground: #e5e7eb;
   --card: #111827;
@@ -118,6 +119,40 @@
   --sidebar-border: #334155;
   --sidebar-ring: #60a5fa;
   --gradient-color: rgba(96, 165, 250, 0.06);
+=======
+  --background: #09090b;
+  --foreground: #fafafa;
+  --card: #09090b;
+  --card-foreground: #fafafa;
+  --popover: #09090b;
+  --popover-foreground: #fafafa;
+  --primary: #fafafa;
+  --primary-foreground: #18181b;
+  --secondary: #27272a;
+  --secondary-foreground: #fafafa;
+  --muted: #27272a;
+  --muted-foreground: #a1a1aa;
+  --accent: #27272a;
+  --accent-foreground: #fafafa;
+  --destructive: #7f1d1d;
+  --border: #27272a;
+  --input: #27272a;
+  --ring: #d4d4d8;
+  --chart-1: #2563eb;
+  --chart-2: #10b981;
+  --chart-3: #8b5cf6;
+  --chart-4: #f59e0b;
+  --chart-5: #71717a;
+  --sidebar: #09090b;
+  --sidebar-foreground: #fafafa;
+  --sidebar-primary: #fafafa;
+  --sidebar-primary-foreground: #18181b;
+  --sidebar-accent: #27272a;
+  --sidebar-accent-foreground: #fafafa;
+  --sidebar-border: #27272a;
+  --sidebar-ring: #d4d4d8;
+  --gradient-color: transparent;
+>>>>>>> 3be9608 (Update sidebar)
 }
 
 @layer base {
@@ -126,7 +161,6 @@
   }
   body {
     @apply bg-background text-foreground transition-colors duration-300;
-    background-image: radial-gradient(circle at top right, var(--gradient-color), transparent 45rem);
   }
   html {
     @apply font-sans;
