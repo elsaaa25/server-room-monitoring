@@ -167,91 +167,6 @@ const periodConfigs: Record<
   },
 }
 
-const previewPeriodConfigs: Record<
-  Period,
-  {
-    points: number
-    step: number
-  }
-> = {
-  "1": {
-    points: 61,
-    step: 60_000,
-  },
-  "6": {
-    points: 73,
-    step: 5 * 60_000,
-  },
-  "24": {
-    points: 97,
-    step: 15 * 60_000,
-  },
-  "168": {
-    points: 85,
-    step: 2 * 60 * 60_000,
-  },
-}
-
-function createPreviewData(
-  period: Period,
-): GraphPoint[] {
-  const { points, step } =
-    previewPeriodConfigs[period]
-
-  const end = Date.now()
-
-  return Array.from(
-    {
-      length: points,
-    },
-    (_, index) => {
-      const time =
-        end -
-        (points - 1 - index) * step
-
-      const temperatureL4 =
-        23.5 +
-        Math.sin(index / 5) * 0.8 +
-        Math.sin(index / 2.4) * 0.25 +
-        (index % 29 === 0 ? 0.9 : 0)
-
-      const temperatureL5 =
-        24.1 +
-        Math.sin(index / 6) * 0.7 +
-        Math.cos(index / 3.2) * 0.2 +
-        (index % 31 === 0 ? 0.7 : 0)
-
-      const voltage =
-        220 +
-        Math.sin(index / 4.5) * 1.4 +
-        Math.cos(index / 8) * 0.6
-
-      const current =
-        1.85 +
-        Math.sin(index / 4) * 0.22 +
-        Math.cos(index / 7) * 0.08
-
-      return {
-        id: `preview-${period}-${index}`,
-        time: new Date(time).toISOString(),
-        timestamp: time,
-        temperatureL4: Number(
-          temperatureL4.toFixed(2),
-        ),
-        temperatureL5: Number(
-          temperatureL5.toFixed(2),
-        ),
-        voltage: Number(
-          voltage.toFixed(2),
-        ),
-        current: Number(
-          current.toFixed(2),
-        ),
-      }
-    },
-  )
-}
-
 function parseFiniteNumber(
   value: unknown,
 ): number | null {
@@ -670,9 +585,6 @@ export function GraphPage() {
   const [error, setError] =
     useState<string | null>(null)
 
-  const [isPreviewMode, setIsPreviewMode] =
-    useState(false)
-
   const [lastUpdated, setLastUpdated] =
     useState<Date | null>(null)
 
@@ -789,24 +701,7 @@ export function GraphPage() {
               ? result.data
               : []
 
-          const mappedData =
-            mapHistoryData(readings)
-
-          if (
-            mappedData.length === 0 &&
-            process.env.NODE_ENV ===
-              "development"
-          ) {
-            setData(
-              createPreviewData(
-                selectedPeriod,
-              ),
-            )
-            setIsPreviewMode(true)
-          } else {
-            setData(mappedData)
-            setIsPreviewMode(false)
-          }
+          setData(mapHistoryData(readings))
 
           setLastUpdated(new Date())
         } catch (historyError) {
@@ -824,25 +719,11 @@ export function GraphPage() {
             historyError,
           )
 
-          if (
-            process.env.NODE_ENV ===
-            "development"
-          ) {
-            setData(
-              createPreviewData(
-                selectedPeriod,
-              ),
-            )
-            setIsPreviewMode(true)
-            setError(null)
-            setLastUpdated(new Date())
-          } else {
-            setError(
-              historyError instanceof Error
-                ? historyError.message
-                : "Gagal mengambil data grafik",
-            )
-          }
+          setError(
+            historyError instanceof Error
+              ? historyError.message
+              : "Gagal mengambil data grafik",
+          )
         } finally {
           setLoading(false)
         }
@@ -1165,9 +1046,7 @@ export function GraphPage() {
             "°C",
           )}
           description={
-            isPreviewMode
-              ? "Data simulasi untuk preview UI"
-              : temperatureL4Stats.hasData
+            temperatureL4Stats.hasData
               ? `Rata-rata ${getMetricValue(
                   temperatureL4Stats.average,
                   1,
@@ -1189,11 +1068,7 @@ export function GraphPage() {
             1,
             "°C",
           )}
-          description={
-            isPreviewMode
-              ? "Data simulasi untuk preview UI"
-              : "Sensor belum tersedia"
-          }
+          description="Sensor belum tersedia"
           color="blue"
           available={
             temperatureL5Stats.hasData
@@ -1208,11 +1083,7 @@ export function GraphPage() {
             1,
             " V",
           )}
-          description={
-            isPreviewMode
-              ? "Data simulasi untuk preview UI"
-              : "Sensor belum tersedia"
-          }
+          description="Sensor belum tersedia"
           color="amber"
           available={
             voltageStats.hasData
@@ -1227,11 +1098,7 @@ export function GraphPage() {
             2,
             " A",
           )}
-          description={
-            isPreviewMode
-              ? "Data simulasi untuk preview UI"
-              : "Sensor belum tersedia"
-          }
+          description="Sensor belum tersedia"
           color="violet"
           available={
             currentStats.hasData
@@ -1249,9 +1116,7 @@ export function GraphPage() {
             </div>
 
             <span className="text-xs text-muted-foreground">
-              {isPreviewMode
-                ? "Data simulasi untuk pengembangan UI"
-                : lastUpdated
+              {lastUpdated
                 ? `Pembaruan terakhir ${formatDateTime(
                     lastUpdated,
                   )}`
@@ -1326,26 +1191,6 @@ export function GraphPage() {
         </CardContent>
       </Card>
 
-      {isPreviewMode && (
-        <Card className="mt-4 border-amber-200 bg-amber-50 shadow-sm dark:border-amber-900/60 dark:bg-amber-950/30">
-          <CardContent className="flex items-start gap-3 p-4">
-            <TriangleAlert className="mt-0.5 size-5 shrink-0 text-amber-600 dark:text-amber-400" />
-
-            <div>
-              <p className="font-medium text-amber-800 dark:text-amber-300">
-                Mode preview UI
-              </p>
-
-              <p className="mt-1 text-sm text-amber-700 dark:text-amber-400">
-                API database tidak tersedia.
-                Grafik menampilkan data simulasi
-                dan tidak mengubah data project.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       {error && (
         <Card className="mt-4 border-rose-200 bg-rose-50 shadow-sm dark:border-rose-900/60 dark:bg-rose-950/30">
           <CardContent className="flex items-start gap-3 p-4">
@@ -1370,17 +1215,9 @@ export function GraphPage() {
           period={period}
           dataKey="temperatureL4"
           title="Suhu Lantai 4"
-          description={
-            isPreviewMode
-              ? `Data simulasi • ${
-                  periodConfigs[period]
-                    .label
-                }`
-              : `Data realtime TEMP-L4 • ${
-                  periodConfigs[period]
-                    .label
-                }`
-          }
+          description={`Data realtime TEMP-L4 • ${
+            periodConfigs[period].label
+          }`}
           unit="°C"
           decimals={1}
           stroke="#10b981"
@@ -1400,14 +1237,7 @@ export function GraphPage() {
           period={period}
           dataKey="temperatureL5"
           title="Suhu Lantai 5"
-          description={
-            isPreviewMode
-              ? `Data simulasi • ${
-                  periodConfigs[period]
-                    .label
-                }`
-              : "Sensor suhu Lantai 5 belum terpasang"
-          }
+          description="Sensor suhu Lantai 5 belum terpasang"
           unit="°C"
           decimals={1}
           stroke="#3b82f6"
@@ -1421,14 +1251,7 @@ export function GraphPage() {
           period={period}
           dataKey="voltage"
           title="Tegangan"
-          description={
-            isPreviewMode
-              ? `Data simulasi • ${
-                  periodConfigs[period]
-                    .label
-                }`
-              : "Sensor tegangan belum terpasang"
-          }
+          description="Sensor tegangan belum terpasang"
           unit=" V"
           decimals={1}
           stroke="#f59e0b"
@@ -1442,14 +1265,7 @@ export function GraphPage() {
           period={period}
           dataKey="current"
           title="Arus"
-          description={
-            isPreviewMode
-              ? `Data simulasi • ${
-                  periodConfigs[period]
-                    .label
-                }`
-              : "Sensor arus belum terpasang"
-          }
+          description="Sensor arus belum terpasang"
           unit=" A"
           decimals={2}
           stroke="#8b5cf6"
