@@ -1531,6 +1531,7 @@ export function Dashboard() {
                               26,
                               28,
                               30,
+                              32,
                             ]}
                             axisLine={false}
                             tickLine={false}
@@ -2537,8 +2538,8 @@ function SystemRow({
     <div className="flex items-center py-3 text-xs font-semibold">
       <Icon
         className={`mr-2 size-4 ${online
-            ? "text-emerald-600 dark:text-emerald-400"
-            : "text-rose-600 dark:text-rose-400"
+          ? "text-emerald-600 dark:text-emerald-400"
+          : "text-rose-600 dark:text-rose-400"
           }`}
       />
 
@@ -2548,8 +2549,8 @@ function SystemRow({
 
       <span
         className={`ml-auto ${online
-            ? "text-emerald-600 dark:text-emerald-400"
-            : "text-rose-600 dark:text-rose-400"
+          ? "text-emerald-600 dark:text-emerald-400"
+          : "text-rose-600 dark:text-rose-400"
           }`}
       >
         {online

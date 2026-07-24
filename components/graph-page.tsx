@@ -117,10 +117,10 @@ type SummaryCardProps = {
   value: string
   description: string
   color:
-    | "emerald"
-    | "blue"
-    | "amber"
-    | "violet"
+  | "emerald"
+  | "blue"
+  | "amber"
+  | "violet"
   available?: boolean
 }
 
@@ -561,8 +561,8 @@ async function readHistoryResponse(
   if (!response.ok) {
     throw new Error(
       result.error ||
-        result.details ||
-        `Gagal mengambil data (${response.status})`,
+      result.details ||
+      `Gagal mengambil data (${response.status})`,
     )
   }
 
@@ -707,9 +707,9 @@ export function GraphPage() {
         } catch (historyError) {
           if (
             historyError instanceof
-              DOMException &&
+            DOMException &&
             historyError.name ===
-              "AbortError"
+            "AbortError"
           ) {
             return
           }
@@ -952,9 +952,9 @@ export function GraphPage() {
   const selectedDate =
     data.length > 0
       ? formatFullDate(
-          data[data.length - 1]
-            .time,
-        )
+        data[data.length - 1]
+          .time,
+      )
       : formatFullDate(new Date())
 
   const exportCsv = () => {
@@ -1002,9 +1002,8 @@ export function GraphPage() {
 
     link.href = url
     link.download =
-      `grafik-monitoring-${
-        periodConfigs[period]
-          .fileLabel
+      `grafik-monitoring-${periodConfigs[period]
+        .fileLabel
       }.csv`
 
     document.body.appendChild(link)
@@ -1048,10 +1047,10 @@ export function GraphPage() {
           description={
             temperatureL4Stats.hasData
               ? `Rata-rata ${getMetricValue(
-                  temperatureL4Stats.average,
-                  1,
-                  "°C",
-                )}`
+                temperatureL4Stats.average,
+                1,
+                "°C",
+              )}`
               : "Belum ada data"
           }
           color="emerald"
@@ -1118,8 +1117,8 @@ export function GraphPage() {
             <span className="text-xs text-muted-foreground">
               {lastUpdated
                 ? `Pembaruan terakhir ${formatDateTime(
-                    lastUpdated,
-                  )}`
+                  lastUpdated,
+                )}`
                 : "Menunggu pembaruan data"}
             </span>
           </div>
@@ -1138,11 +1137,10 @@ export function GraphPage() {
               className="w-full sm:w-auto"
             >
               <RefreshCw
-                className={`size-4 ${
-                  refreshing
+                className={`size-4 ${refreshing
                     ? "animate-spin"
                     : ""
-                }`}
+                  }`}
               />
 
               Perbarui
@@ -1215,9 +1213,8 @@ export function GraphPage() {
           period={period}
           dataKey="temperatureL4"
           title="Suhu Lantai 4"
-          description={`Data realtime TEMP-L4 • ${
-            periodConfigs[period].label
-          }`}
+          description={`Data realtime TEMP-L4 • ${periodConfigs[period].label
+            }`}
           unit="°C"
           decimals={1}
           stroke="#10b981"
@@ -1455,39 +1452,42 @@ function MetricChart({
 
                 <CartesianGrid
                   vertical={false}
+                  syncWithTicks
                   stroke="var(--border)"
+                  strokeOpacity={0.7}
+                  strokeDasharray="4 4"
                 />
 
- <XAxis
-  dataKey="timestamp"
-  type="number"
-  scale="time"
-  domain={[
-    "dataMin",
-    "dataMax",
-  ]}
-  tickCount={6}
-  tickFormatter={value =>
-    new Intl.DateTimeFormat(
-      "id-ID",
-      {
-        timeZone: "Asia/Jakarta",
-        hour: "2-digit",
-        minute: "2-digit",
-        hourCycle: "h23",
-      },
-    ).format(
-      new Date(Number(value)),
-    )
-  }
-  axisLine={false}
-  tickLine={false}
-  minTickGap={45}
-  fontSize={11}
-  tick={{
-    fill: "var(--muted-foreground)",
-  }}
-/>
+                <XAxis
+                  dataKey="timestamp"
+                  type="number"
+                  scale="time"
+                  domain={[
+                    "dataMin",
+                    "dataMax",
+                  ]}
+                  tickCount={6}
+                  tickFormatter={value =>
+                    new Intl.DateTimeFormat(
+                      "id-ID",
+                      {
+                        timeZone: "Asia/Jakarta",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        hourCycle: "h23",
+                      },
+                    ).format(
+                      new Date(Number(value)),
+                    )
+                  }
+                  axisLine={false}
+                  tickLine={false}
+                  minTickGap={45}
+                  fontSize={11}
+                  tick={{
+                    fill: "var(--muted-foreground)",
+                  }}
+                />
 
                 <YAxis
                   domain={chartDomain}
