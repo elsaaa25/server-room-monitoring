@@ -157,13 +157,6 @@ export function AppSidebar({
                   <span className="text-xs">
                     {label}
                   </span>
-
-                  {label ===
-                    "Peringatan" && (
-                    <Badge className="ml-auto rounded-full bg-emerald-600 text-[10px] text-white hover:bg-emerald-600 dark:bg-emerald-500">
-                      2
-                    </Badge>
-                  )}
                 </Link>
               </Button>
             )
