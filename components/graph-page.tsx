@@ -1333,7 +1333,7 @@ function MetricChart({
 
   const chartTicks = useMemo(() => {
     if (dataKey.startsWith("temperature")) {
-      return [16, 18, 20, 22, 24, 26, 28, 30]
+      return [16, 18, 20, 22, 24, 26, 28, 30, 32]
     }
     if (dataKey === "voltage") {
       return [200, 210, 220, 230, 240]
@@ -1458,26 +1458,36 @@ function MetricChart({
                   stroke="var(--border)"
                 />
 
-                <XAxis
-                  dataKey="timestamp"
-                  type="number"
-                  scale="time"
-                  domain={[
-                    "dataMin",
-                    "dataMax",
-                  ]}
-                  tickCount={6}
-                  tickFormatter={value =>
-                    formatAxisTime(
-                      Number(value),
-                      period,
-                    )
-                  }
-                  axisLine={false}
-                  tickLine={false}
-                  minTickGap={42}
-                  fontSize={11}
-                />
+ <XAxis
+  dataKey="timestamp"
+  type="number"
+  scale="time"
+  domain={[
+    "dataMin",
+    "dataMax",
+  ]}
+  tickCount={6}
+  tickFormatter={value =>
+    new Intl.DateTimeFormat(
+      "id-ID",
+      {
+        timeZone: "Asia/Jakarta",
+        hour: "2-digit",
+        minute: "2-digit",
+        hourCycle: "h23",
+      },
+    ).format(
+      new Date(Number(value)),
+    )
+  }
+  axisLine={false}
+  tickLine={false}
+  minTickGap={45}
+  fontSize={11}
+  tick={{
+    fill: "var(--muted-foreground)",
+  }}
+/>
 
                 <YAxis
                   domain={chartDomain}
