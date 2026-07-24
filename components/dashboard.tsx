@@ -1630,7 +1630,7 @@ export function Dashboard() {
                   <Card className="overflow-hidden border-border shadow-sm">
                     <CardHeader>
                       <CardTitle className="text-md font-semibold text-foreground">
-                        Grafik Tegangan AC Lantai 4
+                        Grafik Tegangan Lantai 4
                       </CardTitle>
 
                       <p className="text-[11px] text-muted-foreground">
