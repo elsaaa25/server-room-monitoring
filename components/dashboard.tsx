@@ -1313,11 +1313,12 @@ export function Dashboard() {
                           )
                         : "text-muted-foreground"
                     }
+                    iconColor="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
                   />
 
                   <Metric
                     icon={Zap}
-                    label="Tegangan"
+                    label="Tegangan Server AC"
                     value={
                       readingL4?.voltage !==
                         null &&
@@ -1352,6 +1353,7 @@ export function Dashboard() {
                           : "text-rose-600 dark:text-rose-400"
                         : "text-muted-foreground"
                     }
+                    iconColor="bg-amber-500/10 text-amber-500 dark:text-amber-400"
                   />
 
                   <Metric
@@ -1375,6 +1377,7 @@ export function Dashboard() {
                         ? "text-emerald-600 dark:text-emerald-400"
                         : "text-rose-600 dark:text-rose-400"
                     }
+                    iconColor="bg-blue-500/10 text-blue-600 dark:text-blue-400"
                   />
 
                   <Metric
@@ -1406,6 +1409,7 @@ export function Dashboard() {
                             statusL4,
                           )
                     }
+                    iconColor="bg-muted text-muted-foreground"
                   />
                 </section>
 
@@ -1855,6 +1859,7 @@ export function Dashboard() {
                           )
                         : "text-muted-foreground"
                     }
+                    iconColor="bg-purple-500/10 text-purple-600 dark:text-purple-400"
                   />
 
                   <Metric
@@ -1878,6 +1883,7 @@ export function Dashboard() {
                         ? "text-emerald-600 dark:text-emerald-400"
                         : "text-rose-600 dark:text-rose-400"
                     }
+                    iconColor="bg-blue-500/10 text-blue-600 dark:text-blue-400"
                   />
 
                   <Metric
@@ -1909,6 +1915,7 @@ export function Dashboard() {
                             statusL5,
                           )
                     }
+                    iconColor="bg-muted text-muted-foreground"
                   />
                 </section>
 
@@ -2412,6 +2419,7 @@ function Metric({
   value,
   detail,
   valueClassName = "text-emerald-600 dark:text-emerald-400",
+  iconColor = "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
 }: {
   icon: ComponentType<{
     className?: string
@@ -2420,22 +2428,32 @@ function Metric({
   value: string
   detail: string
   valueClassName?: string
+  iconColor?: string
 }) {
   return (
-    <Card className="border-border/60 bg-card shadow-xs transition-shadow hover:shadow-sm">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-          {label}
-        </CardTitle>
-        <Icon className="size-4 text-muted-foreground/75" />
-      </CardHeader>
-      <CardContent className="space-y-1">
-        <div className={`text-2xl font-bold tracking-tight ${valueClassName}`}>
-          {value}
+    <Card className="border-border/60 bg-card shadow-sm transition-all hover:shadow-md">
+      <CardContent className="flex min-h-32 items-center gap-4">
+        <div
+          className={`grid size-12 shrink-0 place-items-center rounded-full transition-colors ${iconColor}`}
+        >
+          <Icon className="size-5" />
         </div>
-        <p className="text-[11px] font-medium text-muted-foreground/80">
-          {detail}
-        </p>
+
+        <div className="min-w-0">
+          <p className="text-xs font-semibold text-muted-foreground">
+            {label}
+          </p>
+
+          <p
+            className={`truncate text-2xl font-bold tracking-tight ${valueClassName}`}
+          >
+            {value}
+          </p>
+
+          <p className="mt-0.5 text-[11px] font-medium text-muted-foreground/80">
+            {detail}
+          </p>
+        </div>
       </CardContent>
     </Card>
   )
