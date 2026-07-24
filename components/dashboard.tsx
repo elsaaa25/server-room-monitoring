@@ -1635,7 +1635,7 @@ export function Dashboard() {
                               axisLine={false}
                               tickLine={false}
                               fontSize={11}
-                              width={40}
+                              width={48}
                               tickFormatter={value =>
                                 String(Number(value))
                               }
@@ -1834,9 +1834,8 @@ export function Dashboard() {
                             />
 
                             <YAxis
-                              domain={
-                                voltageDomain
-                              }
+                              domain={[200, 240]}
+                              ticks={[200, 210, 220, 230, 240]}
                               axisLine={
                                 false
                               }
@@ -1848,7 +1847,7 @@ export function Dashboard() {
                               }
                               width={48}
                               tickFormatter={value =>
-                                String(Number(Number(value).toFixed(0)))
+                                String(Number(value))
                               }
                               tick={{ fill: "var(--muted-foreground)" }}
                             />
@@ -2130,9 +2129,17 @@ export function Dashboard() {
                             />
 
                             <YAxis
-                              domain={
-                                temperatureDomain
-                              }
+                              domain={[16, 30]}
+                              ticks={[
+                                16,
+                                18,
+                                20,
+                                22,
+                                24,
+                                26,
+                                28,
+                                30,
+                              ]}
                               axisLine={
                                 false
                               }
@@ -2144,7 +2151,7 @@ export function Dashboard() {
                               }
                               width={48}
                               tickFormatter={value =>
-                                String(Number(Number(value).toFixed(1)))
+                                String(Number(value))
                               }
                               tick={{ fill: "var(--muted-foreground)" }}
                             />

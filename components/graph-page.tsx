@@ -1318,6 +1318,32 @@ function MetricChart({
     ],
   )
 
+  const chartDomain = useMemo(() => {
+    if (dataKey.startsWith("temperature")) {
+      return [16, 30] as [number, number]
+    }
+    if (dataKey === "voltage") {
+      return [200, 240] as [number, number]
+    }
+    if (dataKey === "current") {
+      return [0, 3] as [number, number]
+    }
+    return domain
+  }, [dataKey, domain])
+
+  const chartTicks = useMemo(() => {
+    if (dataKey.startsWith("temperature")) {
+      return [16, 18, 20, 22, 24, 26, 28, 30]
+    }
+    if (dataKey === "voltage") {
+      return [200, 210, 220, 230, 240]
+    }
+    if (dataKey === "current") {
+      return [0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0]
+    }
+    return undefined
+  }, [dataKey])
+
   return (
     <Card className="overflow-hidden shadow-sm">
       <CardHeader className="gap-4">
@@ -1454,11 +1480,12 @@ function MetricChart({
                 />
 
                 <YAxis
-                  domain={domain}
+                  domain={chartDomain}
+                  ticks={chartTicks}
                   axisLine={false}
                   tickLine={false}
                   fontSize={11}
-                  width={55}
+                  width={48}
                   tickFormatter={value => {
                     const num = Number(value)
                     return dataKey === "current"
