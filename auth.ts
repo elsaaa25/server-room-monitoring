@@ -23,36 +23,86 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const parsed = credentialsSchema.safeParse(rawCredentials)
         if (!parsed.success) return null
         const result = await db.query(
-          `SELECT id::text, name, email, password_hash, role
-           FROM users WHERE LOWER(email) = LOWER($1) AND is_active = TRUE LIMIT 1`,
+          `
+    SELECT
+      id::text,
+      name,
+      email,
+      password_hash,
+      role,
+      email_verified_at,
+      must_change_password,
+      session_version
+    FROM users
+    WHERE LOWER(email) = LOWER($1)
+      AND is_active = TRUE
+      AND email_verified_at IS NOT NULL
+    LIMIT 1
+  `,
           [parsed.data.email],
         )
         const user = result.rows[0]
-        if (!user || !(await compare(parsed.data.password, user.password_hash))) return null
-        return { id: user.id, name: user.name, email: user.email, role: user.role }
-      },
+
+        if (
+          !user ||
+          !(await compare(
+            parsed.data.password,
+            user.password_hash,
+          ))
+        ) {
+          return null
+        }
+
+        return {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: "ADMIN" as const,
+          mustChangePassword: Boolean(
+            user.must_change_password,
+          ),
+          sessionVersion: Number(user.session_version),
+        }
+      }
     }),
   ],
   callbacks: {
     jwt({ token, user }) {
-      if (user) token.role = user.role
+      if (user) {
+        token.role = user.role
+        token.mustChangePassword =
+          user.mustChangePassword
+        token.sessionVersion =
+          user.sessionVersion
+      }
+
       return token
     },
+
     session({ session, token }) {
       if (session.user) {
         session.user.id = token.sub ?? ""
-        session.user.role = token.role as "OPERATOR" | "ADMIN"
+        session.user.role = "ADMIN"
+
+        session.user.mustChangePassword =
+          Boolean(token.mustChangePassword)
+
+        session.user.sessionVersion =
+          Number(token.sessionVersion ?? 0)
       }
+
       return session
     },
 authorized({ auth: session, request }) {
   const pathname = request.nextUrl.pathname
 
   const publicRoutes = [
-    "/login",
-    "/verifikasi-email",
-    "/api/account/verify-email",
-    "/api/auth",
+   "/login",
+  "/verifikasi-email",
+  "/konfirmasi-password",
+  "/api/account/verify-email",
+  "/api/account/confirm-password",
+  "/api/auth",
   ]
 
   const isPublicRoute = publicRoutes.some(
@@ -67,6 +117,39 @@ authorized({ auth: session, request }) {
 
   if (!session?.user) {
     return false
+  }
+
+  const passwordChangeRoutes = [
+    "/ganti-password-pertama",
+    "/api/account/change-first-password",
+  ]
+
+  const isPasswordChangeRoute =
+    passwordChangeRoutes.some(
+      route =>
+        pathname === route ||
+        pathname.startsWith(`${route}/`),
+    )
+
+  if (
+    session.user.mustChangePassword &&
+    !isPasswordChangeRoute
+  ) {
+    return Response.redirect(
+      new URL(
+        "/ganti-password-pertama",
+        request.nextUrl,
+      ),
+    )
+  }
+
+  if (
+    !session.user.mustChangePassword &&
+    isPasswordChangeRoute
+  ) {
+    return Response.redirect(
+      new URL("/", request.nextUrl),
+    )
   }
 
   return true

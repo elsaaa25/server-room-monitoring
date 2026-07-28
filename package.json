@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "user:create": "node scripts/create-user.mjs"
+    "user:create": "node scripts/create-user.mjs",
+    "user:resend-verification": "node --env-file=.env.local scripts/resend-verification.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
