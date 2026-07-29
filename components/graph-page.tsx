@@ -124,7 +124,13 @@ type SummaryCardProps = {
   available?: boolean
 }
 
-const SENSOR_ID = "TEMP-L4"
+const SENSOR_L4 = "TEMP-L4"
+const SENSOR_L5 = "TEMP-L5"
+
+const SENSOR_IDS = [
+  SENSOR_L4,
+  SENSOR_L5,
+] as const
 
 const DEFAULT_WARNING_TEMPERATURE = 27
 const DEFAULT_DANGER_TEMPERATURE = 30
@@ -311,6 +317,9 @@ function mapHistoryReading(
   const temperature =
     parseFiniteNumber(reading.temperature)
 
+  const voltage =
+    parseFiniteNumber(reading.voltage)
+
   const date = new Date(reading.recordedAt)
 
   if (
@@ -320,17 +329,30 @@ function mapHistoryReading(
     return null
   }
 
+  const isLantai4 =
+    reading.sensorId === SENSOR_L4
+
+  const isLantai5 =
+    reading.sensorId === SENSOR_L5
+
+  if (!isLantai4 && !isLantai5) {
+    return null
+  }
+
   return {
-    id: String(reading.id),
+    id: `${reading.sensorId}-${reading.id}`,
     time: date.toISOString(),
     timestamp: date.getTime(),
 
-    // Data asli yang sudah tersedia.
-    temperatureL4: temperature,
+    temperatureL4:
+      isLantai4 ? temperature : null,
 
-    // Sensor berikutnya belum tersedia.
-    temperatureL5: null,
-    voltage: null,
+    temperatureL5:
+      isLantai5 ? temperature : null,
+
+    voltage:
+      isLantai4 ? voltage : null,
+
     current: null,
   }
 }
@@ -351,6 +373,44 @@ function mapHistoryData(
         new Date(first.time).getTime() -
         new Date(second.time).getTime(),
     )
+}
+
+function mergeGraphData(
+  previousData: GraphPoint[],
+  incomingData: GraphPoint[],
+  period: Period,
+): GraphPoint[] {
+  const periodMilliseconds =
+    periodConfigs[period].hours *
+    60 *
+    60 *
+    1000
+
+  const cutoff =
+    Date.now() - periodMilliseconds
+
+  const readingsById =
+    new Map<string, GraphPoint>()
+
+  for (const item of previousData) {
+    if (item.timestamp >= cutoff) {
+      readingsById.set(item.id, item)
+    }
+  }
+
+  for (const item of incomingData) {
+    if (item.timestamp >= cutoff) {
+      readingsById.set(item.id, item)
+    }
+  }
+
+  return Array.from(
+    readingsById.values(),
+  ).sort(
+    (first, second) =>
+      first.timestamp -
+      second.timestamp,
+  )
 }
 
 function calculateMetricStats(
@@ -527,27 +587,27 @@ function getMetricValue(
 }
 
 function getHistoryUrl(
+  sensorId: string,
   period: Period,
 ): string {
-  const config =
-    periodConfigs[period]
+  const config = periodConfigs[period]
 
-  const searchParams =
-    new URLSearchParams({
-      sensorId: SENSOR_ID,
-      hours: String(config.hours),
-      limit: String(config.limit),
-    })
+  const searchParams = new URLSearchParams({
+    sensorId,
+    hours: String(config.hours),
+    limit: String(config.limit),
+  })
 
   return `/api/sensor/history?${searchParams.toString()}`
 }
 
-function getLatestReadingUrl(): string {
-  const searchParams =
-    new URLSearchParams({
-      sensorId: SENSOR_ID,
-      limit: "1",
-    })
+function getLatestReadingUrl(
+  sensorId: string,
+): string {
+  const searchParams = new URLSearchParams({
+    sensorId,
+    limit: "1",
+  })
 
   return `/api/sensor/history?${searchParams.toString()}`
 }
@@ -681,28 +741,40 @@ export function GraphPage() {
         setError(null)
 
         try {
-          const response = await fetch(
-            getHistoryUrl(
-              selectedPeriod,
-            ),
-            {
-              cache: "no-store",
-              signal,
-            },
-          )
+          const responses =
+            await Promise.all(
+              SENSOR_IDS.map(
+                sensorId =>
+                  fetch(
+                    getHistoryUrl(
+                      sensorId,
+                      selectedPeriod,
+                    ),
+                    {
+                      cache: "no-store",
+                      signal,
+                    },
+                  ),
+              ),
+            )
 
-          const result =
-            await readHistoryResponse(
-              response,
+          const results =
+            await Promise.all(
+              responses.map(
+                readHistoryResponse,
+              ),
             )
 
           const readings =
-            Array.isArray(result.data)
-              ? result.data
-              : []
+            results.flatMap(result =>
+              Array.isArray(result.data)
+                ? result.data
+                : [],
+            )
 
-          setData(mapHistoryData(readings))
-
+          setData(
+            mapHistoryData(readings),
+          )
           setLastUpdated(new Date())
         } catch (historyError) {
           if (
@@ -742,89 +814,55 @@ export function GraphPage() {
       latestRequestRunning.current = true
 
       try {
-        const response = await fetch(
-          getLatestReadingUrl(),
-          {
-            cache: "no-store",
-          },
+        const responses =
+          await Promise.all(
+            SENSOR_IDS.map(sensorId =>
+              fetch(
+                getLatestReadingUrl(
+                  sensorId,
+                ),
+                {
+                  cache: "no-store",
+                },
+              ),
+            ),
+          )
+
+        const results =
+          await Promise.all(
+            responses.map(
+              readHistoryResponse,
+            ),
+          )
+
+        const latestReadings =
+          results.flatMap(result =>
+            result.data?.[0]
+              ? [result.data[0]]
+              : [],
+          )
+
+        const mappedReadings =
+          latestReadings
+            .map(mapHistoryReading)
+            .filter(
+              (
+                reading,
+              ): reading is GraphPoint =>
+                reading !== null,
+            )
+
+        if (mappedReadings.length === 0) {
+          return
+        }
+
+        setData(previousData =>
+          mergeGraphData(
+            previousData,
+            mappedReadings,
+            period,
+          ),
         )
-
-        const result =
-          await readHistoryResponse(
-            response,
-          )
-
-        const reading =
-          result.data?.[0]
-
-        if (!reading) {
-          return
-        }
-
-        const mapped =
-          mapHistoryReading(reading)
-
-        if (!mapped) {
-          return
-        }
-
-        setData(previousData => {
-          const periodMilliseconds =
-            periodConfigs[period].hours *
-            60 *
-            60 *
-            1000
-
-          const cutoff =
-            Date.now() -
-            periodMilliseconds
-
-          const filtered =
-            previousData.filter(
-              item =>
-                new Date(
-                  item.time,
-                ).getTime() >= cutoff,
-            )
-
-          const existingIndex =
-            filtered.findIndex(
-              item =>
-                item.id === mapped.id,
-            )
-
-          if (existingIndex >= 0) {
-            const nextData = [
-              ...filtered,
-            ]
-
-            nextData[existingIndex] =
-              mapped
-
-            return nextData.sort(
-              (first, second) =>
-                new Date(
-                  first.time,
-                ).getTime() -
-                new Date(
-                  second.time,
-                ).getTime(),
-            )
-          }
-
-          return [
-            ...filtered,
-            mapped,
-          ].sort(
-            (first, second) =>
-              new Date(
-                first.time,
-              ).getTime() -
-              new Date(
-                second.time,
-              ).getTime(),
-          )
-        })
 
         setError(null)
         setLastUpdated(new Date())
@@ -900,14 +938,6 @@ export function GraphPage() {
     refreshSeconds,
   ])
 
-  const chartData = useMemo(
-    () =>
-      downsampleData(
-        data,
-        MAX_CHART_POINTS,
-      ),
-    [data],
-  )
 
   const temperatureL4Stats =
     useMemo(
@@ -964,6 +994,7 @@ export function GraphPage() {
 
     const header = [
       "Waktu WIB",
+      "Sensor ID",
       "Suhu Lantai 4 (C)",
       "Suhu Lantai 5 (C)",
       "Tegangan (V)",
@@ -975,6 +1006,11 @@ export function GraphPage() {
         `"${formatCsvDateTime(
           row.time,
         )}"`,
+        row.temperatureL4 !== null
+          ? SENSOR_L4
+          : row.temperatureL5 !== null
+            ? SENSOR_L5
+            : "",
         row.temperatureL4 ?? "",
         row.temperatureL5 ?? "",
         row.voltage ?? "",
@@ -1068,7 +1104,15 @@ export function GraphPage() {
             1,
             "°C",
           )}
-          description="Sensor belum tersedia"
+          description={
+            temperatureL5Stats.hasData
+              ? `Rata-rata ${getMetricValue(
+                  temperatureL5Stats.average,
+                  1,
+                  "°C",
+                )}`
+              : "Belum ada data"
+          }
           color="blue"
           available={
             temperatureL5Stats.hasData
@@ -1083,7 +1127,15 @@ export function GraphPage() {
             1,
             " V",
           )}
-          description="Sensor belum tersedia"
+          description={
+            voltageStats.hasData
+              ? `Rata-rata ${getMetricValue(
+                  voltageStats.average,
+                  1,
+                  " V",
+                )}`
+              : "Belum ada data"
+          }
           color="amber"
           available={
             voltageStats.hasData
@@ -1211,7 +1263,7 @@ export function GraphPage() {
 
       <section className="mt-4 grid gap-4 xl:grid-cols-2">
         <MetricChart
-          data={chartData}
+          data={data}
           period={period}
           dataKey="temperatureL4"
           title="Suhu Lantai 4"
@@ -1233,35 +1285,39 @@ export function GraphPage() {
         />
 
         <MetricChart
-          data={chartData}
+          data={data}
           period={period}
           dataKey="temperatureL5"
           title="Suhu Lantai 5"
-          description="Sensor suhu Lantai 5 belum terpasang"
+          description={`Data realtime TEMP-L5 • ${
+            periodConfigs[period].label
+          }`}
           unit="°C"
           decimals={1}
           stroke="#3b82f6"
           gradientId="temperature-l5-fill"
           loading={loading}
-          emptyMessage="Data akan tampil setelah sensor suhu Lantai 5 terhubung."
+          emptyMessage="Belum ada data suhu Lantai 5 pada periode ini."
         />
 
         <MetricChart
-          data={chartData}
+          data={data}
           period={period}
           dataKey="voltage"
           title="Tegangan"
-          description="Sensor tegangan belum terpasang"
+          description={`Data tegangan TEMP-L4 • ${
+            periodConfigs[period].label
+          }`}
           unit=" V"
           decimals={1}
           stroke="#f59e0b"
           gradientId="voltage-fill"
           loading={loading}
-          emptyMessage="Data akan tampil setelah sensor tegangan terhubung."
+          emptyMessage="Belum ada data tegangan pada periode ini."
         />
 
         <MetricChart
-          data={chartData}
+          data={data}
           period={period}
           dataKey="current"
           title="Arus"
@@ -1293,6 +1349,22 @@ function MetricChart({
   loading = false,
   emptyMessage = "Belum ada data.",
 }: MetricChartProps) {
+  const metricData = useMemo(
+    () =>
+      downsampleData(
+        data.filter(item => {
+          const value = item[dataKey]
+
+          return (
+            value !== null &&
+            Number.isFinite(value)
+          )
+        }),
+        MAX_CHART_POINTS,
+      ),
+    [data, dataKey],
+  )
+
   const stats = useMemo(
     () =>
       calculateMetricStats(
@@ -1320,29 +1392,28 @@ function MetricChart({
 
   const chartDomain = useMemo(() => {
     if (dataKey.startsWith("temperature")) {
-      return [16, 30] as [number, number]
+      return [
+        Math.min(16, domain[0]),
+        Math.max(32, domain[1]),
+      ] as [number, number]
     }
+
     if (dataKey === "voltage") {
-      return [200, 240] as [number, number]
+      return [
+        Math.min(200, domain[0]),
+        Math.max(240, domain[1]),
+      ] as [number, number]
     }
+
     if (dataKey === "current") {
-      return [0, 3] as [number, number]
+      return [
+        Math.min(0, domain[0]),
+        Math.max(3, domain[1]),
+      ] as [number, number]
     }
+
     return domain
   }, [dataKey, domain])
-
-  const chartTicks = useMemo(() => {
-    if (dataKey.startsWith("temperature")) {
-      return [16, 18, 20, 22, 24, 26, 28, 30, 32]
-    }
-    if (dataKey === "voltage") {
-      return [200, 210, 220, 230, 240]
-    }
-    if (dataKey === "current") {
-      return [0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0]
-    }
-    return undefined
-  }, [dataKey])
 
   return (
     <Card className="overflow-hidden shadow-sm">
@@ -1423,7 +1494,7 @@ function MetricChart({
               height="100%"
             >
               <AreaChart
-                data={data}
+                data={metricData}
                 margin={{
                   top: 22,
                   right: 18,
@@ -1454,47 +1525,40 @@ function MetricChart({
                 </defs>
 
                 <CartesianGrid
-  vertical={false}
-  syncWithTicks
-  stroke="var(--border)"
-  strokeOpacity={0.7}
-  strokeDasharray="4 4"
-/>
+                  vertical={false}
+                  syncWithTicks
+                  stroke="var(--border)"
+                  strokeOpacity={0.7}
+                  strokeDasharray="4 4"
+                />
 
- <XAxis
-  dataKey="timestamp"
-  type="number"
-  scale="time"
-  domain={[
-    "dataMin",
-    "dataMax",
-  ]}
-  tickCount={6}
-  tickFormatter={value =>
-    new Intl.DateTimeFormat(
-      "id-ID",
-      {
-        timeZone: "Asia/Jakarta",
-        hour: "2-digit",
-        minute: "2-digit",
-        hourCycle: "h23",
-      },
-    ).format(
-      new Date(Number(value)),
-    )
-  }
-  axisLine={false}
-  tickLine={false}
-  minTickGap={45}
-  fontSize={11}
-  tick={{
-    fill: "var(--muted-foreground)",
-  }}
-/>
+                <XAxis
+                  dataKey="timestamp"
+                  type="number"
+                  scale="time"
+                  domain={[
+                    "dataMin",
+                    "dataMax",
+                  ]}
+                  tickCount={6}
+                  tickFormatter={value =>
+                    formatAxisTime(
+                      Number(value),
+                      period,
+                    )
+                  }
+                  axisLine={false}
+                  tickLine={false}
+                  minTickGap={45}
+                  fontSize={11}
+                  tick={{
+                    fill:
+                      "var(--muted-foreground)",
+                  }}
+                />
 
                 <YAxis
                   domain={chartDomain}
-                  ticks={chartTicks}
                   axisLine={false}
                   tickLine={false}
                   fontSize={11}

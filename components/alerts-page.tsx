@@ -35,6 +35,7 @@ import { AppShell } from "@/components/app-shell"
 
 type Level = "Waspada" | "Bahaya"
 type AlertStatus = "Aktif" | "Ditangani"
+type SensorFilter = "Semua" | "Lantai 4" | "Lantai 5"
 
 type AlertItem = {
   id: number
@@ -50,8 +51,17 @@ type AlertItem = {
   detail: string
 }
 
-const dateTime = (value: string) =>
-  new Intl.DateTimeFormat("id-ID", {
+const SENSOR_L4 = "TEMP-L4"
+const SENSOR_L5 = "TEMP-L5"
+
+const dateTime = (value: string) => {
+  const date = new Date(value)
+
+  if (Number.isNaN(date.getTime())) {
+    return "-"
+  }
+
+  return new Intl.DateTimeFormat("id-ID", {
     timeZone: "Asia/Jakarta",
     day: "2-digit",
     month: "short",
@@ -59,12 +69,33 @@ const dateTime = (value: string) =>
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
-  }).format(new Date(value))
+    hourCycle: "h23",
+  }).format(date)
+}
 
-const sensorLabel = (sensorId: string) =>
-  sensorId === "TEMP-L4"
-    ? "Lantai 4 (Ruang Server)"
-    : sensorId
+const sensorLabel = (sensorId: string) => {
+  if (sensorId === SENSOR_L4) {
+    return "Lantai 4 (Ruang Server)"
+  }
+
+  if (sensorId === SENSOR_L5) {
+    return "Lantai 5"
+  }
+
+  return sensorId
+}
+
+const sensorShortLabel = (sensorId: string) => {
+  if (sensorId === SENSOR_L4) {
+    return "Lantai 4"
+  }
+
+  if (sensorId === SENSOR_L5) {
+    return "Lantai 5"
+  }
+
+  return sensorId
+}
 
 export function AlertsPage() {
   const [settings, setSettings] =
@@ -77,6 +108,8 @@ export function AlertsPage() {
     useState<"Semua" | Level>("Semua")
   const [status, setStatus] =
     useState<"Semua" | AlertStatus>("Semua")
+  const [sensor, setSensor] =
+    useState<SensorFilter>("Semua")
   const [search, setSearch] = useState("")
   const [loading, setLoading] = useState(true)
   const [error, setError] =
@@ -190,11 +223,18 @@ export function AlertsPage() {
       const matchesStatus =
         status === "Semua" ||
         item.status === status
+      const matchesSensor =
+        sensor === "Semua" ||
+        (sensor === "Lantai 4" &&
+          item.sensorId === SENSOR_L4) ||
+        (sensor === "Lantai 5" &&
+          item.sensorId === SENSOR_L5)
       const searchableText = [
         item.title,
         item.detail,
         item.sensorId,
         sensorLabel(item.sensorId),
+        sensorShortLabel(item.sensorId),
       ]
         .join(" ")
         .toLowerCase()
@@ -202,10 +242,11 @@ export function AlertsPage() {
       return (
         matchesLevel &&
         matchesStatus &&
+        matchesSensor &&
         searchableText.includes(keyword)
       )
     })
-  }, [alerts, level, search, status])
+  }, [alerts, level, search, sensor, status])
 
   const active = alerts.filter(
     item => item.status === "Aktif",
@@ -213,6 +254,16 @@ export function AlertsPage() {
   const danger = alerts.filter(
     item =>
       item.level === "Bahaya" &&
+      item.status === "Aktif",
+  ).length
+  const activeL4 = alerts.filter(
+    item =>
+      item.sensorId === SENSOR_L4 &&
+      item.status === "Aktif",
+  ).length
+  const activeL5 = alerts.filter(
+    item =>
+      item.sensorId === SENSOR_L5 &&
       item.status === "Aktif",
   ).length
   const handled = alerts.filter(
@@ -286,7 +337,7 @@ export function AlertsPage() {
   return (
     <AppShell
       title="Peringatan"
-      description="Pantau dan tindak lanjuti kejadian suhu ruang server"
+      description="Pantau dan tindak lanjuti peringatan suhu Lantai 4 dan Lantai 5"
       actions={
         <Button
           variant="outline"
@@ -302,7 +353,7 @@ export function AlertsPage() {
         </Button>
       }
     >
-        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
           <Summary
             icon={Bell}
             label="Peringatan Aktif"
@@ -314,6 +365,18 @@ export function AlertsPage() {
             label="Bahaya Aktif"
             value={danger}
             color="rose"
+          />
+          <Summary
+            icon={Radio}
+            label="Aktif Lantai 4"
+            value={activeL4}
+            color="green"
+          />
+          <Summary
+            icon={Radio}
+            label="Aktif Lantai 5"
+            value={activeL5}
+            color="blue"
           />
           <Summary
             icon={CheckCircle2}
@@ -344,7 +407,7 @@ export function AlertsPage() {
               </span>
             </div>
 
-            <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_auto_auto]">
+            <div className="grid gap-3 2xl:grid-cols-[minmax(0,1fr)_auto_auto_auto]">
               <label className="flex h-10 min-w-0 items-center gap-2 rounded-xl border border-border bg-card px-3 transition-shadow focus-within:ring-2 focus-within:ring-primary/20">
                 <Search className="size-4 text-muted-foreground" />
                 <input
@@ -383,6 +446,19 @@ export function AlertsPage() {
                 onChange={value =>
                   setLevel(
                     value as "Semua" | Level,
+                  )
+                }
+              />
+              <FilterGroup
+                values={[
+                  "Semua",
+                  "Lantai 4",
+                  "Lantai 5",
+                ]}
+                active={sensor}
+                onChange={value =>
+                  setSensor(
+                    value as SensorFilter,
                   )
                 }
               />
@@ -479,6 +555,16 @@ function AlertRow({
             >
               {item.level}
             </Badge>
+            <Badge
+              variant="secondary"
+              className={
+                item.sensorId === SENSOR_L5
+                  ? "bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300"
+                  : "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300"
+              }
+            >
+              {sensorShortLabel(item.sensorId)}
+            </Badge>
             {item.status === "Ditangani" && (
               <Badge
                 variant="secondary"
@@ -500,7 +586,7 @@ function AlertRow({
             </span>
             <span className="flex items-center gap-1.5">
               <Radio className="size-3.5" />
-              {sensorLabel(item.sensorId)}
+              {sensorLabel(item.sensorId)} ({item.sensorId})
             </span>
             <span className="flex items-center gap-1.5">
               <Clock3 className="size-3.5" />

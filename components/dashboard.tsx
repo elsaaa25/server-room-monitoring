@@ -110,7 +110,7 @@ type SettingsResponse = {
 }
 
 const SENSOR_L4 = "TEMP-L4"
-const SENSOR_L5 = "esp32-lantai5"
+const SENSOR_L5 = "TEMP-L5"
 
 const MAX_CHART_POINTS = 300
 
@@ -518,11 +518,11 @@ function getSensorLabel(
   sensorId: string,
 ): string {
   if (sensorId === SENSOR_L4) {
-    return "Lantai 4 (Server)"
+    return "Lantai 4 (Ruang Server)"
   }
 
   if (sensorId === SENSOR_L5) {
-    return "Lantai 5 (Ruang Kerja)"
+    return "Lantai 5 (Ruang ATC)"
   }
 
   return sensorId
@@ -750,28 +750,45 @@ export function Dashboard() {
         periodConfigs[period]
 
       try {
-        const searchParams =
-          new URLSearchParams({
-            sensorId: activeSensorId,
-            hours: String(
-              periodConfig.hours,
-            ),
-            limit: String(
-              periodConfig.limit,
-            ),
-          })
+        const sensorIds = [
+          SENSOR_L4,
+          SENSOR_L5,
+        ] as const
 
-        const response = await fetch(
-          `/api/sensor/history?${searchParams.toString()}`,
-          {
-            cache: "no-store",
-            signal,
-          },
+        const responses = await Promise.all(
+          sensorIds.map(sensorId => {
+            const searchParams =
+              new URLSearchParams({
+                sensorId,
+                limit: "5",
+              })
+
+            return fetch(
+              `/api/sensor/history?${searchParams.toString()}`,
+              {
+                cache: "no-store",
+              },
+            )
+          }),
         )
 
-        const readings =
-          await readHistoryResponse(
-            response,
+        const readingGroups =
+          await Promise.all(
+            responses.map(response =>
+              readHistoryResponse(response),
+            ),
+          )
+
+        const readings = readingGroups
+          .flat()
+          .sort(
+            (first, second) =>
+              new Date(
+                second.recordedAt,
+              ).getTime() -
+              new Date(
+                first.recordedAt,
+              ).getTime(),
           )
 
         setHistoryReadings(
@@ -1180,12 +1197,21 @@ export function Dashboard() {
       activeTemperatures.length
       : null
 
-  const recentReadings =
-    useMemo(
-      () =>
-        latestReadings.slice(0, 5),
-      [latestReadings],
-    )
+const recentReadings =
+  useMemo(
+    () =>
+      latestReadings
+        .filter(
+          reading =>
+            reading.sensorId ===
+            activeSensorId,
+        )
+        .slice(0, 5),
+    [
+      latestReadings,
+      activeSensorId,
+    ],
+  )
 
   const initialLoading =
     loadingHistory &&
@@ -1521,27 +1547,18 @@ export function Dashboard() {
                           />
 
                           <YAxis
-                            domain={[16, 30]}
-                            ticks={[
-                              16,
-                              18,
-                              20,
-                              22,
-                              24,
-                              26,
-                              28,
-                              30,
-                              32,
-                            ]}
+                            domain={temperatureDomain}
                             axisLine={false}
-                            tickLine={false}
-                            fontSize={11}
-                            width={48}
-                            tickFormatter={value =>
-                              String(Number(value))
-                            }
-                            tick={{ fill: "var(--muted-foreground)" }}
-                          />
+  tickLine={false}
+  fontSize={11}
+  width={48}
+  tickFormatter={value =>
+    String(Number(value))
+  }
+  tick={{
+    fill: "var(--muted-foreground)",
+  }}
+/>
                           <Tooltip
                             content={({ active, payload, label }) => {
                               if (active && payload && payload.length) {
@@ -1735,8 +1752,9 @@ export function Dashboard() {
                             }}
                           />
 
+
                           <YAxis
-                            domain={[200, 240]}
+                            domain={voltageDomain}
                             ticks={[200, 210, 220, 230, 240]}
                             axisLine={
                               false
@@ -1930,12 +1948,8 @@ export function Dashboard() {
                     </CardTitle>
 
                     <p className="text-[11px] text-muted-foreground">
-                      Suhu ruang kerja •{" "}
-                      {
-                        periodConfigs[
-                          period
-                        ].label
-                      }
+                      Suhu Ruang ATC •{" "}
+                      {periodConfigs[period].label}
                     </p>
                   </CardHeader>
 
@@ -2030,32 +2044,18 @@ export function Dashboard() {
                           />
 
                           <YAxis
-                            domain={[16, 30]}
-                            ticks={[
-                              16,
-                              18,
-                              20,
-                              22,
-                              24,
-                              26,
-                              28,
-                              30,
-                            ]}
-                            axisLine={
-                              false
-                            }
-                            tickLine={
-                              false
-                            }
-                            fontSize={
-                              11
-                            }
-                            width={48}
-                            tickFormatter={value =>
-                              String(Number(value))
-                            }
-                            tick={{ fill: "var(--muted-foreground)" }}
-                          />
+                            domain={temperatureDomain}
+                            axisLine={false}
+  tickLine={false}
+  fontSize={11}
+  width={48}
+  tickFormatter={value =>
+    String(Number(value))
+  }
+  tick={{
+    fill: "var(--muted-foreground)",
+  }}
+/>
 
                           <Tooltip
                             content={({ active, payload, label }) => {
@@ -2186,7 +2186,7 @@ export function Dashboard() {
 
                 <SystemRow
                   icon={Radio}
-                  label="Sensor L5 (Ruangan)"
+                  label="Sensor L5 (Ruang ATC)"
                   online={onlineL5}
                 />
               </CardContent>

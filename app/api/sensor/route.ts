@@ -5,12 +5,17 @@ import { db } from "@/lib/db"
 export const runtime = "nodejs"
 
 const readingSchema = z.object({
-  sensorId: z.literal("TEMP-L4"),
+  sensorId: z.enum([
+    "TEMP-L4",
+    "TEMP-L5",
+  ]),
+
   temperature: z
     .number()
     .finite()
     .min(-40)
     .max(100),
+
   voltage: z
     .number()
     .finite()
@@ -42,6 +47,20 @@ type OpenAlert = {
   resolvedAt: Date | null
 }
 
+function getSensorLocation(
+  sensorId: string,
+): string {
+  if (sensorId === "TEMP-L4") {
+    return "Lantai 4 (Ruang Server)"
+  }
+
+  if (sensorId === "TEMP-L5") {
+    return "Lantai 5 (Ruang ATC)"
+  }
+
+  return sensorId
+}
+
 function getAlertLevel(
   temperature: number,
   warningTemperature: number,
@@ -59,31 +78,35 @@ function getAlertLevel(
 }
 
 function getAlertContent(
+  sensorId: string,
   level: AlertLevel,
   temperature: number,
   warningTemperature: number,
   dangerTemperature: number,
 ) {
+  const location =
+    getSensorLocation(sensorId)
+
   if (level === "Bahaya") {
     return {
       title:
-        "Suhu ruang server berada pada level bahaya",
+        `Suhu ${location} berada pada level bahaya`,
       detail:
-        `Suhu ${temperature.toFixed(2)}°C telah mencapai ` +
-        `atau melewati batas bahaya ` +
+        `Suhu ${temperature.toFixed(2)}°C ` +
+        `telah mencapai atau melewati batas bahaya ` +
         `${dangerTemperature.toFixed(2)}°C. ` +
-        "Segera periksa AC dan kondisi ruang server.",
+        `Segera periksa AC dan kondisi ruangan.`,
     }
   }
 
   return {
     title:
-      "Suhu ruang server berada pada level waspada",
+      `Suhu ${location} berada pada level waspada`,
     detail:
-      `Suhu ${temperature.toFixed(2)}°C telah melewati ` +
-      `batas waspada ` +
+      `Suhu ${temperature.toFixed(2)}°C ` +
+      `telah melewati batas waspada ` +
       `${warningTemperature.toFixed(2)}°C. ` +
-      "Periksa pendingin dan sirkulasi udara ruang server.",
+      `Periksa pendingin dan sirkulasi udara.`,
   }
 }
 
@@ -416,13 +439,13 @@ export async function POST(request: Request) {
             )
           }
 
-          const content =
-            getAlertContent(
-              alertLevel,
-              temperature,
-              warningTemperature,
-              dangerTemperature,
-            )
+          const content = getAlertContent(
+  sensorId,
+  alertLevel,
+  temperature,
+  warningTemperature,
+  dangerTemperature,
+)
 
           await client.query(
             `
@@ -471,7 +494,7 @@ export async function POST(request: Request) {
         {
           success: true,
           message:
-            "Data suhu lantai 4 berhasil disimpan.",
+  `Data ${sensorId} berhasil disimpan.`,
           data: savedReading,
           alert: {
             level:
