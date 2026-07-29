@@ -22,7 +22,7 @@ const pageSize = 10
 
 const formatDate = (value: string) => 
   new Intl.DateTimeFormat("id-ID", { 
-    timeZone: "Asia/Bangkok", 
+    timeZone: "Asia/Jakarta", 
     day: "2-digit", 
     month: "short", 
     year: "numeric" 
