@@ -760,13 +760,15 @@ export function Dashboard() {
             const searchParams =
               new URLSearchParams({
                 sensorId,
-                limit: "5",
+                hours: String(periodConfig.hours),
+                limit: String(periodConfig.limit),
               })
 
             return fetch(
               `/api/sensor/history?${searchParams.toString()}`,
               {
                 cache: "no-store",
+                signal,
               },
             )
           }),
