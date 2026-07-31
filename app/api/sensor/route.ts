@@ -22,6 +22,13 @@ const readingSchema = z.object({
     .min(0)
     .max(300)
     .optional(),
+
+  current: z
+    .number()
+    .finite()
+    .min(0)
+    .max(999)
+    .optional(),
 })
 
 type AlertLevel = "Waspada" | "Bahaya"
@@ -36,6 +43,7 @@ type SavedReading = {
   sensorId: string
   temperature: number
   voltage: number | null
+  current: number | null
   recordedAt: Date
 }
 
@@ -179,6 +187,7 @@ export async function POST(request: Request) {
       sensorId,
       temperature,
       voltage,
+      current,
     } = parsed.data
 
     const client = await db.connect()
@@ -208,9 +217,10 @@ export async function POST(request: Request) {
               sensor_id,
               temperature,
               voltage,
+              current,
               recorded_at
             )
-            VALUES ($1, $2, $3, NOW())
+            VALUES ($1, $2, $3, $4, NOW())
             RETURNING
               id,
               sensor_id AS "sensorId",
@@ -218,12 +228,15 @@ export async function POST(request: Request) {
                 AS temperature,
               voltage::float8
                 AS voltage,
+              current::float8
+                AS current,
               recorded_at AS "recordedAt"
           `,
           [
             sensorId,
             temperature,
             voltage ?? null,
+            current ?? null,
           ],
         )
 
@@ -238,27 +251,38 @@ export async function POST(request: Request) {
         await client.query<{
           warningTemperature: number
           dangerTemperature: number
+          warningTemperatureL5: number
+          dangerTemperatureL5: number
         }>(
           `
             SELECT
               warning_temperature::float8
                 AS "warningTemperature",
               danger_temperature::float8
-                AS "dangerTemperature"
+                AS "dangerTemperature",
+              warning_temperature_l5::float8
+                AS "warningTemperatureL5",
+              danger_temperature_l5::float8
+                AS "dangerTemperatureL5"
             FROM monitoring_settings
             WHERE id = 'global'
             LIMIT 1
           `,
         )
 
+      // Pilih batas alarm sesuai lantai sensor
+      const isL5 = sensorId === "TEMP-L5"
+
       const warningTemperature = Number(
-        settingsResult.rows[0]
-          ?.warningTemperature ?? 27,
+        isL5
+          ? (settingsResult.rows[0]?.warningTemperatureL5 ?? 27)
+          : (settingsResult.rows[0]?.warningTemperature ?? 27),
       )
 
       const dangerTemperature = Number(
-        settingsResult.rows[0]
-          ?.dangerTemperature ?? 30,
+        isL5
+          ? (settingsResult.rows[0]?.dangerTemperatureL5 ?? 30)
+          : (settingsResult.rows[0]?.dangerTemperature ?? 30),
       )
 
       const alertLevel = getAlertLevel(

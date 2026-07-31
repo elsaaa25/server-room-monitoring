@@ -33,6 +33,7 @@ export async function GET(request: Request) {
         sensor_id AS "sensorId",
         temperature::float8 AS temperature,
         voltage::float8 AS voltage,
+        current::float8 AS current,
         recorded_at AS "recordedAt"
       FROM sensor_readings
       WHERE 1 = 1

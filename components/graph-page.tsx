@@ -56,6 +56,7 @@ type HistoryReading = {
   sensorId: string
   temperature: number | string | null
   voltage?: number | string | null
+  current?: number | string | null
   recordedAt: string
 }
 
@@ -320,6 +321,9 @@ function mapHistoryReading(
   const voltage =
     parseFiniteNumber(reading.voltage)
 
+  const current =
+    parseFiniteNumber(reading.current)
+
   const date = new Date(reading.recordedAt)
 
   if (
@@ -353,7 +357,8 @@ function mapHistoryReading(
     voltage:
       isLantai4 ? voltage : null,
 
-    current: null,
+    current:
+      isLantai4 ? current : null,
   }
 }
 

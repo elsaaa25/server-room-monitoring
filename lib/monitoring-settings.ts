@@ -1,6 +1,8 @@
 export type MonitoringSettings = {
   warningTemperature: number
   dangerTemperature: number
+  warningTemperatureL5: number
+  dangerTemperatureL5: number
   refreshInterval: number
   offlineTimeout: number
   sensorName: string
@@ -12,6 +14,8 @@ export type MonitoringSettings = {
 export const defaultMonitoringSettings: MonitoringSettings = {
   warningTemperature: 27,
   dangerTemperature: 30,
+  warningTemperatureL5: 27,
+  dangerTemperatureL5: 30,
   refreshInterval: 4,
   offlineTimeout: 30,
   sensorName: "Sensor Ruang Server",

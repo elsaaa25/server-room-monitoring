@@ -82,6 +82,7 @@ type RawReading = {
   sensorId: string
   temperature: number
   voltage: number | null
+  current: number | null
   recordedAt: string
 }
 
@@ -90,6 +91,7 @@ type ChartReading = {
   timestamp: number
   temperature: number
   voltage: number | null
+  current: number | null
 }
 
 type Status =
@@ -291,6 +293,11 @@ function normalizeReading(
       reading.voltage,
     )
 
+  const current =
+    parseFiniteNumber(
+      reading.current,
+    )
+
   const recordedAt =
     typeof reading.recordedAt ===
       "string"
@@ -319,6 +326,7 @@ function normalizeReading(
     sensorId,
     temperature,
     voltage,
+    current,
     recordedAt: date.toISOString(),
   }
 }
@@ -503,6 +511,35 @@ function getVoltageDomain(
   return [
     Math.floor(minimum - padding),
     Math.ceil(maximum + padding),
+  ]
+}
+
+function getCurrentDomain(
+  data: ChartReading[],
+): [number, number] {
+  const values = data
+    .map(item => item.current)
+    .filter(
+      (
+        value,
+      ): value is number =>
+        value !== null &&
+        Number.isFinite(value),
+    )
+
+  if (values.length === 0) {
+    return [0, 10]
+  }
+
+  const minimum = Math.min(...values)
+  const maximum = Math.max(...values)
+
+  const difference = maximum - minimum
+  const padding = Math.max(difference * 0.15, 0.5)
+
+  return [
+    Math.max(0, Math.floor((minimum - padding) * 10) / 10),
+    Math.ceil((maximum + padding) * 10) / 10,
   ]
 }
 
@@ -1080,6 +1117,8 @@ export function Dashboard() {
                 ),
               voltage:
                 reading.voltage,
+              current:
+                reading.current,
             }) satisfies ChartReading,
         )
         .filter(
@@ -1129,6 +1168,15 @@ export function Dashboard() {
         ),
     )
 
+  const hasCurrentData =
+    chartData.some(
+      reading =>
+        reading.current !== null &&
+        Number.isFinite(
+          reading.current,
+        ),
+    )
+
   const temperatureDomain =
     useMemo(
       () =>
@@ -1148,6 +1196,15 @@ export function Dashboard() {
     useMemo(
       () =>
         getVoltageDomain(
+          chartData,
+        ),
+      [chartData],
+    )
+
+  const currentDomain =
+    useMemo(
+      () =>
+        getCurrentDomain(
           chartData,
         ),
       [chartData],
@@ -1385,6 +1442,30 @@ const recentReadings =
                 />
 
                 <Metric
+                  icon={Activity}
+                  label="Arus"
+                  value={
+                    readingL4?.current !== null &&
+                    readingL4?.current !== undefined
+                      ? `${Number(Number(readingL4.current).toFixed(2))} A`
+                      : "-- A"
+                  }
+                  detail={
+                    readingL4?.current !== null &&
+                    readingL4?.current !== undefined
+                      ? `Terukur: ${Number(Number(readingL4.current).toFixed(2))} Ampere`
+                      : "Tidak ada data"
+                  }
+                  valueClassName={
+                    readingL4?.current !== null &&
+                    readingL4?.current !== undefined
+                      ? "text-cyan-600 dark:text-cyan-400"
+                      : "text-muted-foreground"
+                  }
+                  iconColor="bg-cyan-500/10 text-cyan-600 dark:text-cyan-400"
+                />
+
+                <Metric
                   icon={Radio}
                   label="Status Sensor L4"
                   value={
@@ -1407,41 +1488,10 @@ const recentReadings =
                   }
                   iconColor="bg-blue-500/10 text-blue-600 dark:text-blue-400"
                 />
-
-                <Metric
-                  icon={ShieldCheck}
-                  label="Kondisi Ruangan L4"
-                  value={
-                    !onlineL4
-                      ? "-"
-                      : statusL4 ===
-                        "Bahaya"
-                        ? "BAHAYA"
-                        : statusL4 ===
-                          "Waspada"
-                          ? "WASPADA"
-                          : "AMAN"
-                  }
-                  detail={
-                    !onlineL4
-                      ? "Sensor terputus"
-                      : statusL4 ===
-                        "Normal"
-                        ? "Suhu ruang server aman"
-                        : "Segera periksa AC server"
-                  }
-                  valueClassName={
-                    !onlineL4
-                      ? "text-muted-foreground"
-                      : getStatusColor(
-                        statusL4,
-                      )
-                  }
-                  iconColor="bg-muted text-muted-foreground"
-                />
               </section>
 
-              <section className="mt-6 grid gap-6 xl:grid-cols-2">
+              {/* Grafik Suhu L4 - Full Width */}
+              <section className="mt-6">
                 <Card className="overflow-hidden border-border shadow-sm">
                   <CardHeader>
                     <CardTitle className="text-md font-semibold text-foreground">
@@ -1551,16 +1601,16 @@ const recentReadings =
                           <YAxis
                             domain={temperatureDomain}
                             axisLine={false}
-  tickLine={false}
-  fontSize={11}
-  width={48}
-  tickFormatter={value =>
-    String(Number(value))
-  }
-  tick={{
-    fill: "var(--muted-foreground)",
-  }}
-/>
+                            tickLine={false}
+                            fontSize={11}
+                            width={48}
+                            tickFormatter={value =>
+                              String(Number(value))
+                            }
+                            tick={{
+                              fill: "var(--muted-foreground)",
+                            }}
+                          />
                           <Tooltip
                             content={({ active, payload, label }) => {
                               if (active && payload && payload.length) {
@@ -1647,7 +1697,10 @@ const recentReadings =
                     )}
                   </CardContent>
                 </Card>
+              </section>
 
+              {/* Grafik Tegangan & Arus L4 - Sejajar */}
+              <section className="mt-6 grid gap-6 xl:grid-cols-2">
                 <Card className="overflow-hidden border-border shadow-sm">
                   <CardHeader>
                     <CardTitle className="text-md font-semibold text-foreground">
@@ -1849,6 +1902,150 @@ const recentReadings =
                               r: 5,
                               fill: "#b45309",
                             }}
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Grafik Arus */}
+                <Card className="overflow-hidden border-border shadow-sm">
+                  <CardHeader>
+                    <CardTitle className="text-md font-semibold text-foreground">
+                      Grafik Arus Lantai 4
+                    </CardTitle>
+
+                    <p className="text-[11px] text-muted-foreground">
+                      Arus listrik •{" "}
+                      {
+                        periodConfigs[
+                          period
+                        ].label
+                      }
+                    </p>
+                  </CardHeader>
+
+                  <CardContent className="h-72 pl-1 pr-4 pb-4">
+                    {loadingHistory &&
+                      chartData.length ===
+                      0 ? (
+                      <ChartMessage
+                        loading
+                        message="Memuat grafik arus..."
+                      />
+                    ) : !hasCurrentData ? (
+                      <ChartMessage message="Belum ada data arus dari sensor." />
+                    ) : (
+                      <ResponsiveContainer
+                        width="100%"
+                        height="100%"
+                      >
+                        <AreaChart
+                          data={chartData}
+                          margin={{
+                            top: 16,
+                            right: 20,
+                            left: -5,
+                            bottom: 5,
+                          }}
+                        >
+                          <defs>
+                            <linearGradient
+                              id="currL4Grad"
+                              x1="0"
+                              x2="0"
+                              y1="0"
+                              y2="1"
+                            >
+                              <stop
+                                offset="0"
+                                stopColor="#06b6d4"
+                                stopOpacity={0.2}
+                              />
+                              <stop
+                                offset="1"
+                                stopColor="#06b6d4"
+                                stopOpacity={0}
+                              />
+                            </linearGradient>
+                          </defs>
+
+                          <CartesianGrid
+                            vertical={false}
+                            stroke="var(--border)"
+                          />
+
+                          <XAxis
+                            dataKey="timestamp"
+                            type="number"
+                            scale="time"
+                            domain={["dataMin", "dataMax"]}
+                            tickCount={6}
+                            tickFormatter={value =>
+                              new Intl.DateTimeFormat(
+                                "id-ID",
+                                {
+                                  timeZone: "Asia/Jakarta",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                  hourCycle: "h23",
+                                },
+                              ).format(new Date(Number(value)))
+                            }
+                            axisLine={false}
+                            tickLine={false}
+                            minTickGap={45}
+                            fontSize={11}
+                            tick={{ fill: "var(--muted-foreground)" }}
+                          />
+
+                          <YAxis
+                            domain={currentDomain}
+                            axisLine={false}
+                            tickLine={false}
+                            fontSize={11}
+                            width={48}
+                            tickFormatter={value =>
+                              `${Number(value).toFixed(1)}`
+                            }
+                            tick={{ fill: "var(--muted-foreground)" }}
+                          />
+
+                          <Tooltip
+                            content={({ active, payload, label }) => {
+                              if (active && payload && payload.length) {
+                                return (
+                                  <div className="rounded-xl border border-border bg-popover p-2.5 shadow-md text-popover-foreground text-xs font-semibold">
+                                    <p className="font-mono text-muted-foreground mb-1">{fullDateTime(Number(label))}</p>
+                                    {payload.map((p, idx) => (
+                                      <p key={idx} className="flex items-center gap-1.5 text-xs">
+                                        <span className="size-1.5 rounded-full" style={{ backgroundColor: p.color || p.stroke }} />
+                                        <span className="text-muted-foreground font-medium">Arus:</span>
+                                        <span className="font-bold">{Number(Number(p.value).toFixed(2))} A</span>
+                                      </p>
+                                    ))}
+                                  </div>
+                                )
+                              }
+                              return null
+                            }}
+                          />
+
+                          <Area
+                            type="monotone"
+                            dataKey="current"
+                            stroke="#06b6d4"
+                            strokeWidth={2.4}
+                            fill="url(#currL4Grad)"
+                            connectNulls
+                            isAnimationActive={false}
+                            dot={
+                              chartData.length === 1
+                                ? { r: 4, fill: "#06b6d4", strokeWidth: 0 }
+                                : false
+                            }
+                            activeDot={{ r: 5, fill: "#0891b2" }}
                           />
                         </AreaChart>
                       </ResponsiveContainer>
@@ -2283,6 +2480,10 @@ const recentReadings =
                         Tegangan (V)
                       </TableHead>
 
+                      <TableHead>
+                        Arus (A)
+                      </TableHead>
+
                       <TableHead className="pr-6">
                         Status
                       </TableHead>
@@ -2329,6 +2530,12 @@ const recentReadings =
                                   : "-- V"}
                               </TableCell>
 
+                              <TableCell className="text-muted-foreground">
+                                {row.current !== null && row.current !== undefined
+                                  ? `${Number(Number(row.current).toFixed(2))} A`
+                                  : "-- A"}
+                              </TableCell>
+
                               <TableCell className="pr-6">
                                 <Badge
                                   variant="secondary"
@@ -2346,7 +2553,7 @@ const recentReadings =
                     ) : (
                       <TableRow>
                         <TableCell
-                          colSpan={5}
+                          colSpan={6}
                           className="h-20 text-center text-muted-foreground"
                         >
                           Menunggu pengiriman data dari sensor...

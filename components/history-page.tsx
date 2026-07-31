@@ -15,6 +15,7 @@ type Reading = {
   recordedAt: string
   temperature: number
   voltage: number | null
+  current: number | null
   sensorId: string 
 }
 
@@ -122,9 +123,9 @@ export function HistoryPage() {
   // Export Data ke file CSV
   const exportCsv = () => {
     if (!filtered.length) return
-    const csvHeaders = "Waktu Perekaman,Sensor ID,Suhu (C),Tegangan (V),Status\n"
+    const csvHeaders = "Waktu Perekaman,Sensor ID,Suhu (C),Tegangan (V),Arus (A),Status\n"
     const csvRows = filtered.map(item => 
-      `"${item.recordedAt}","${item.sensorId}",${item.temperature},${item.voltage !== null ? item.voltage : '""'},"${getStatus(item.temperature)}"`
+      `"${item.recordedAt}","${item.sensorId}",${item.temperature},${item.voltage !== null ? item.voltage : '""'},${item.current !== null && item.current !== undefined ? item.current : '""'},"${getStatus(item.temperature)}"`
     ).join("\n")
     
     const url = URL.createObjectURL(new Blob([csvHeaders + csvRows], { type: "text/csv;charset=utf-8;" }))
@@ -218,6 +219,7 @@ export function HistoryPage() {
                         <TableHead>Sensor ID</TableHead>
                         <TableHead>Suhu (°C)</TableHead>
                         <TableHead>Tegangan (V)</TableHead>
+                        <TableHead>Arus (A)</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead className="pr-6">Keterangan</TableHead>
                       </TableRow>
@@ -239,6 +241,7 @@ export function HistoryPage() {
                               </TableCell>
                               <TableCell className="font-semibold text-foreground">{Number(item.temperature)}°C</TableCell>
                               <TableCell className="text-muted-foreground">{item.voltage !== null && item.voltage !== undefined ? `${Number(Number(item.voltage).toFixed(1))} V` : "-- V"}</TableCell>
+                              <TableCell className="text-muted-foreground">{item.current !== null && item.current !== undefined ? `${Number(Number(item.current).toFixed(2))} A` : "-- A"}</TableCell>
                               <TableCell>
                                 <StatusBadge status={status} />
                               </TableCell>
@@ -250,7 +253,7 @@ export function HistoryPage() {
                         })
                       ) : (
                         <TableRow>
-                          <TableCell colSpan={6} className="h-40 text-center text-muted-foreground">
+                          <TableCell colSpan={7} className="h-40 text-center text-muted-foreground">
                             Tidak ada data untuk tanggal ini atau filter yang dipilih.
                           </TableCell>
                         </TableRow>

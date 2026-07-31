@@ -85,6 +85,12 @@ export function SettingsPage() {
           dangerTemperature: Number(
             json.data.dangerTemperature,
           ),
+          warningTemperatureL5: Number(
+            json.data.warningTemperatureL5 ?? json.data.warningTemperature ?? defaults.warningTemperatureL5,
+          ),
+          dangerTemperatureL5: Number(
+            json.data.dangerTemperatureL5 ?? json.data.dangerTemperature ?? defaults.dangerTemperatureL5,
+          ),
           refreshInterval: Number(
             json.data.refreshInterval,
           ),
@@ -131,7 +137,11 @@ export function SettingsPage() {
     Number.isFinite(settings.warningTemperature) &&
     Number.isFinite(settings.dangerTemperature) &&
     settings.warningTemperature <
-      settings.dangerTemperature
+      settings.dangerTemperature &&
+    Number.isFinite(settings.warningTemperatureL5) &&
+    Number.isFinite(settings.dangerTemperatureL5) &&
+    settings.warningTemperatureL5 <
+      settings.dangerTemperatureL5
 
   const permissionLabel = useMemo(() => {
     switch (permission) {
@@ -471,6 +481,89 @@ export function SettingsPage() {
                   Bahaya ≥{" "}
                   {Number(
                     settings.dangerTemperature,
+                  )}
+                  °C
+                </Badge>
+              </div>
+            </SettingsCard>
+
+            <SettingsCard
+              icon={Thermometer}
+              title="Batas Alarm Suhu Lantai 5 (Ruang ATC)"
+              description="Tentukan ambang batas suhu waspada dan bahaya khusus untuk Lantai 5 yang terpisah dari Lantai 4."
+            >
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field
+                  label="Batas Waspada L5"
+                  hint="Status waspada L5 dimulai di atas nilai ini"
+                >
+                  <NumberInput
+                    value={
+                      settings.warningTemperatureL5
+                    }
+                    onChange={value =>
+                      update(
+                        "warningTemperatureL5",
+                        value,
+                      )
+                    }
+                    suffix="°C"
+                    min={20}
+                    max={40}
+                  />
+                </Field>
+
+                <Field
+                  label="Batas Bahaya L5"
+                  hint="Status bahaya L5 dimulai pada nilai ini"
+                >
+                  <NumberInput
+                    value={
+                      settings.dangerTemperatureL5
+                    }
+                    onChange={value =>
+                      update(
+                        "dangerTemperatureL5",
+                        value,
+                      )
+                    }
+                    suffix="°C"
+                    min={20}
+                    max={50}
+                  />
+                </Field>
+              </div>
+
+              {settings.warningTemperatureL5 >= settings.dangerTemperatureL5 && (
+                <p className="mt-3 text-sm text-rose-600 dark:text-rose-400">
+                  Batas bahaya L5 harus lebih
+                  tinggi dari batas waspada L5.
+                </p>
+              )}
+
+              <div className="mt-5 flex flex-wrap gap-3 text-xs">
+                <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:text-emerald-300 dark:hover:bg-emerald-950/60">
+                  Normal ≤{" "}
+                  {Number(
+                    settings.warningTemperatureL5,
+                  )}
+                  °C
+                </Badge>
+                <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 dark:bg-amber-950/60 dark:text-amber-300 dark:hover:bg-amber-950/60">
+                  Waspada{" "}
+                  {Number(
+                    settings.warningTemperatureL5,
+                  )}
+                  –
+                  {Number(
+                    settings.dangerTemperatureL5,
+                  )}
+                  °C
+                </Badge>
+                <Badge className="bg-rose-100 text-rose-700 hover:bg-rose-100 dark:bg-rose-950/60 dark:text-rose-300 dark:hover:bg-rose-950/60">
+                  Bahaya ≥{" "}
+                  {Number(
+                    settings.dangerTemperatureL5,
                   )}
                   °C
                 </Badge>

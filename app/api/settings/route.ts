@@ -9,6 +9,8 @@ export async function GET() {
       `SELECT 
         warning_temperature as "warningTemperature",
         danger_temperature as "dangerTemperature",
+        warning_temperature_l5 as "warningTemperatureL5",
+        danger_temperature_l5 as "dangerTemperatureL5",
         refresh_interval as "refreshInterval",
         offline_timeout as "offlineTimeout",
         sensor_name as "sensorName",
@@ -49,7 +51,9 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { 
       warningTemperature, 
-      dangerTemperature, 
+      dangerTemperature,
+      warningTemperatureL5,
+      dangerTemperatureL5,
       refreshInterval, 
       offlineTimeout, 
       sensorName, 
@@ -70,15 +74,19 @@ export async function POST(request: Request) {
     // 3. Update ke Database
     await db.query(
       `INSERT INTO monitoring_settings (
-        id, warning_temperature, danger_temperature, refresh_interval, 
+        id, warning_temperature, danger_temperature,
+        warning_temperature_l5, danger_temperature_l5,
+        refresh_interval, 
         offline_timeout, sensor_name, sensor_id, browser_notification, sound_alert, updated_at
       )
       VALUES (
-        'global', $1, $2, $3, $4, $5, $6, $7, $8, NOW()
+        'global', $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW()
       )
       ON CONFLICT (id) DO UPDATE SET
         warning_temperature = EXCLUDED.warning_temperature,
         danger_temperature = EXCLUDED.danger_temperature,
+        warning_temperature_l5 = EXCLUDED.warning_temperature_l5,
+        danger_temperature_l5 = EXCLUDED.danger_temperature_l5,
         refresh_interval = EXCLUDED.refresh_interval,
         offline_timeout = EXCLUDED.offline_timeout,
         sensor_name = EXCLUDED.sensor_name,
@@ -89,6 +97,8 @@ export async function POST(request: Request) {
       [
         warningTemperature,
         dangerTemperature,
+        warningTemperatureL5 ?? warningTemperature,
+        dangerTemperatureL5 ?? dangerTemperature,
         refreshInterval || 4,
         offlineTimeout || 30,
         sensorName || "Sensor Ruang Server",
