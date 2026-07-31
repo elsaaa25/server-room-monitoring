@@ -63,6 +63,16 @@ function normalizeSettings(
         defaultMonitoringSettings.dangerTemperature,
     ),
 
+    warningTemperatureL5: Number(
+      data.warningTemperatureL5 ??
+        defaultMonitoringSettings.warningTemperatureL5,
+    ),
+
+    dangerTemperatureL5: Number(
+      data.dangerTemperatureL5 ??
+        defaultMonitoringSettings.dangerTemperatureL5,
+    ),
+
     refreshInterval: Number(
       data.refreshInterval ??
         defaultMonitoringSettings.refreshInterval,

@@ -93,12 +93,16 @@ export function HistoryPage() {
     setPage(1) // Reset ke halaman pertama saat filter berubah
   }, [fetchHistoryData])
 
-  const getStatus = (temperature: number): Status => 
-    temperature >= settings.dangerTemperature ? "Bahaya" : temperature > settings.warningTemperature ? "Waspada" : "Normal"
+  const getStatus = (temperature: number, sensorId: string): Status => {
+    const isL5 = sensorId === "TEMP-L5"
+    const warn = Number(isL5 ? (settings.warningTemperatureL5 ?? 27) : settings.warningTemperature)
+    const dang = Number(isL5 ? (settings.dangerTemperatureL5 ?? 30) : settings.dangerTemperature)
+    return temperature >= dang ? "Bahaya" : temperature > warn ? "Waspada" : "Normal"
+  }
 
   // Filter client-side hanya untuk Status (karena setting threshold berada di localstorage client)
   const filtered = readings.filter(item => {
-    const status = getStatus(item.temperature)
+    const status = getStatus(item.temperature, item.sensorId)
     const matchesStatus = statusFilter === "Semua" || status === statusFilter
     return matchesStatus
   })
@@ -110,9 +114,9 @@ export function HistoryPage() {
 
   const counts = {
     total: filtered.length,
-    normal: filtered.filter(x => getStatus(x.temperature) === "Normal").length,
-    warning: filtered.filter(x => getStatus(x.temperature) === "Waspada").length,
-    danger: filtered.filter(x => getStatus(x.temperature) === "Bahaya").length
+    normal: filtered.filter(x => getStatus(x.temperature, x.sensorId) === "Normal").length,
+    warning: filtered.filter(x => getStatus(x.temperature, x.sensorId) === "Waspada").length,
+    danger: filtered.filter(x => getStatus(x.temperature, x.sensorId) === "Bahaya").length
   }
 
   const setFilter = (value: "Semua" | Status) => {
@@ -125,7 +129,7 @@ export function HistoryPage() {
     if (!filtered.length) return
     const csvHeaders = "Waktu Perekaman,Sensor ID,Suhu (C),Tegangan (V),Arus (A),Status\n"
     const csvRows = filtered.map(item => 
-      `"${item.recordedAt}","${item.sensorId}",${item.temperature},${item.voltage !== null ? item.voltage : '""'},${item.current !== null && item.current !== undefined ? item.current : '""'},"${getStatus(item.temperature)}"`
+      `"${item.recordedAt}","${item.sensorId}",${item.temperature},${item.voltage !== null ? item.voltage : '""'},${item.current !== null && item.current !== undefined ? item.current : '""'},"${getStatus(item.temperature, item.sensorId)}"`
     ).join("\n")
     
     const url = URL.createObjectURL(new Blob([csvHeaders + csvRows], { type: "text/csv;charset=utf-8;" }))
@@ -164,7 +168,7 @@ export function HistoryPage() {
           <CardHeader className="gap-4">
             <div className="flex items-center justify-between">
               <CardTitle>Data Log Sensor</CardTitle>
-              <span className="text-xs font-medium text-muted-foreground">Batas Alert: {settings.warningTemperature}°C / {settings.dangerTemperature}°C</span>
+              <span className="text-xs font-medium text-muted-foreground">Batas Waspada - L4: {Number(settings.warningTemperature)}°C / L5: {Number(settings.warningTemperatureL5 ?? 27)}°C</span>
             </div>
             <div className="grid gap-3 md:grid-cols-[1fr_auto_auto]">
               {/* Input Pencarian Sensor ID */}
@@ -227,7 +231,7 @@ export function HistoryPage() {
                     <TableBody>
                       {visible.length ? (
                         visible.map(item => {
-                          const status = getStatus(item.temperature)
+                          const status = getStatus(item.temperature, item.sensorId)
                           return (
                             <TableRow key={item.id}>
                               <TableCell className="pl-6">

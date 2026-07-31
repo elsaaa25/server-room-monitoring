@@ -386,12 +386,8 @@ export function AlertsPage() {
           />
           <Summary
             icon={Thermometer}
-            label="Batas Suhu"
-            value={`${Number(
-              settings.warningTemperature,
-            )}°C / ${Number(
-              settings.dangerTemperature,
-            )}°C`}
+            label="Batas Waspada Suhu"
+            value={`L4: ${Number(settings.warningTemperature)}°C / L5: ${Number(settings.warningTemperatureL5 ?? 27)}°C`}
             color="blue"
           />
         </section>
