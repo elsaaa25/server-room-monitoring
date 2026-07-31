@@ -666,6 +666,7 @@ export function Dashboard() {
   const activeSensorId =
     getSensorId(activeFloor)
 
+  // Batas suhu Lantai 4 (global)
   const warningTemperature =
     getNumberSetting(
       settings.warningTemperature,
@@ -685,6 +686,38 @@ export function Dashboard() {
         30,
       ),
     )
+
+  // Batas suhu Lantai 5 (khusus)
+  const warningTemperatureL5 =
+    getNumberSetting(
+      settings.warningTemperatureL5,
+      getNumberSetting(
+        defaultMonitoringSettings
+          .warningTemperatureL5,
+        27,
+      ),
+    )
+
+  const dangerTemperatureL5 =
+    getNumberSetting(
+      settings.dangerTemperatureL5,
+      getNumberSetting(
+        defaultMonitoringSettings
+          .dangerTemperatureL5,
+        30,
+      ),
+    )
+
+  // Batas suhu lantai aktif (untuk grafik/chart)
+  const activeWarningTemperature =
+    activeFloor === "5"
+      ? warningTemperatureL5
+      : warningTemperature
+
+  const activeDangerTemperature =
+    activeFloor === "5"
+      ? dangerTemperatureL5
+      : dangerTemperature
 
   const refreshInterval =
     Math.max(
@@ -1051,32 +1084,32 @@ export function Dashboard() {
     )
   }
 
-  const getTempStatus = (
-    temperature:
-      | number
-      | undefined,
+  // Status L4 memakai threshold Lantai 4
+  const getTempStatusL4 = (
+    temperature: number | undefined,
   ): Status => {
-    if (
-      temperature === undefined
-    ) {
-      return "Normal"
-    }
-
-    if (
-      temperature >=
-      dangerTemperature
-    ) {
-      return "Bahaya"
-    }
-
-    if (
-      temperature >=
-      warningTemperature
-    ) {
-      return "Waspada"
-    }
-
+    if (temperature === undefined) return "Normal"
+    if (temperature >= dangerTemperature) return "Bahaya"
+    if (temperature >= warningTemperature) return "Waspada"
     return "Normal"
+  }
+
+  // Status L5 memakai threshold Lantai 5
+  const getTempStatusL5 = (
+    temperature: number | undefined,
+  ): Status => {
+    if (temperature === undefined) return "Normal"
+    if (temperature >= dangerTemperatureL5) return "Bahaya"
+    if (temperature >= warningTemperatureL5) return "Waspada"
+    return "Normal"
+  }
+
+  // getTempStatus untuk tabel 5 pembacaan terakhir (berdasarkan lantai aktif)
+  const getTempStatus = (
+    temperature: number | undefined,
+  ): Status => {
+    if (activeFloor === "5") return getTempStatusL5(temperature)
+    return getTempStatusL4(temperature)
   }
 
   const onlineL4 =
@@ -1086,12 +1119,12 @@ export function Dashboard() {
     isOnline(readingL5)
 
   const statusL4 =
-    getTempStatus(
+    getTempStatusL4(
       readingL4?.temperature,
     )
 
   const statusL5 =
-    getTempStatus(
+    getTempStatusL5(
       readingL5?.temperature,
     )
 
@@ -1182,13 +1215,13 @@ export function Dashboard() {
       () =>
         getTemperatureDomain(
           chartData,
-          warningTemperature,
-          dangerTemperature,
+          activeWarningTemperature,
+          activeDangerTemperature,
         ),
       [
         chartData,
-        warningTemperature,
-        dangerTemperature,
+        activeWarningTemperature,
+        activeDangerTemperature,
       ],
     )
 
@@ -2272,16 +2305,16 @@ const recentReadings =
                           <YAxis
                             domain={temperatureDomain}
                             axisLine={false}
-  tickLine={false}
-  fontSize={11}
-  width={48}
-  tickFormatter={value =>
-    String(Number(value))
-  }
-  tick={{
-    fill: "var(--muted-foreground)",
-  }}
-/>
+                            tickLine={false}
+                            fontSize={11}
+                            width={48}
+                            tickFormatter={value =>
+                              String(Number(value))
+                            }
+                            tick={{
+                              fill: "var(--muted-foreground)",
+                            }}
+                          />
 
                           <Tooltip
                             content={({ active, payload, label }) => {
@@ -2304,21 +2337,29 @@ const recentReadings =
                           />
 
                           <ReferenceLine
-                            y={
-                              dangerTemperature
-                            }
+                            y={dangerTemperatureL5}
                             ifOverflow="extendDomain"
                             stroke="#fb7185"
                             strokeDasharray="5 4"
+                            label={{
+                              value: `Bahaya (≥${dangerTemperatureL5}°C)`,
+                              fill: "#f43f5e",
+                              fontSize: 10,
+                              position: "insideTopLeft",
+                            }}
                           />
 
                           <ReferenceLine
-                            y={
-                              warningTemperature
-                            }
+                            y={warningTemperatureL5}
                             ifOverflow="extendDomain"
                             stroke="#f59e0b"
                             strokeDasharray="5 4"
+                            label={{
+                              value: `Waspada (≥${warningTemperatureL5}°C)`,
+                              fill: "#d97706",
+                              fontSize: 10,
+                              position: "insideTopLeft",
+                            }}
                           />
 
                           <Area
@@ -2369,19 +2410,19 @@ const recentReadings =
                 <Limit
                   color="bg-emerald-500"
                   label="Normal"
-                  value={`< ${warningTemperature}°C`}
+                  value={`< ${activeWarningTemperature}°C`}
                 />
 
                 <Limit
                   color="bg-amber-400"
                   label="Waspada"
-                  value={`${warningTemperature}°C – < ${dangerTemperature}°C`}
+                  value={`${activeWarningTemperature}°C – < ${activeDangerTemperature}°C`}
                 />
 
                 <Limit
                   color="bg-rose-500"
                   label="Bahaya"
-                  value={`≥ ${dangerTemperature}°C`}
+                  value={`≥ ${activeDangerTemperature}°C`}
                 />
               </CardContent>
             </Card>
