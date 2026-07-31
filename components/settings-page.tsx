@@ -72,7 +72,7 @@ export function SettingsPage() {
         if (!response.ok || !json.success) {
           throw new Error(
             json.error ??
-              "Gagal memuat pengaturan",
+            "Gagal memuat pengaturan",
           )
         }
 
@@ -137,11 +137,11 @@ export function SettingsPage() {
     Number.isFinite(settings.warningTemperature) &&
     Number.isFinite(settings.dangerTemperature) &&
     settings.warningTemperature <
-      settings.dangerTemperature &&
+    settings.dangerTemperature &&
     Number.isFinite(settings.warningTemperatureL5) &&
     Number.isFinite(settings.dangerTemperatureL5) &&
     settings.warningTemperatureL5 <
-      settings.dangerTemperatureL5
+    settings.dangerTemperatureL5
 
   const permissionLabel = useMemo(() => {
     switch (permission) {
@@ -285,7 +285,7 @@ export function SettingsPage() {
       if (!response.ok || !json.success) {
         throw new Error(
           json.error ??
-            "Gagal menyimpan pengaturan",
+          "Gagal menyimpan pengaturan",
         )
       }
 
@@ -383,353 +383,352 @@ export function SettingsPage() {
         </>
       }
     >
-        {feedback && (
-          <div
-            className={`mb-4 rounded-xl border px-4 py-3 text-sm ${
-              feedback.type === "success"
-                ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300"
-                : feedback.type === "error"
-                  ? "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300"
-                  : "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/30 dark:text-blue-300"
+      {feedback && (
+        <div
+          className={`mb-4 rounded-xl border px-4 py-3 text-sm ${feedback.type === "success"
+              ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300"
+              : feedback.type === "error"
+                ? "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300"
+                : "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/30 dark:text-blue-300"
             }`}
+        >
+          {feedback.message}
+        </div>
+      )}
+
+      {loading ? (
+        <div className="grid min-h-[50vh] place-items-center text-sm text-muted-foreground">
+          Memuat konfigurasi sistem dari
+          database...
+        </div>
+      ) : (
+        <div className="grid gap-4 xl:grid-cols-2">
+          <SettingsCard
+            icon={Thermometer}
+            title="Batas Alarm Suhu Lantai 4 (Ruang Server)"
+            description="Tentukan ambang batas suhu waspada dan bahaya untuk memicu alarm."
           >
-            {feedback.message}
-          </div>
-        )}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field
+                label="Batas Waspada"
+                hint="Status waspada dimulai di atas nilai ini"
+              >
+                <NumberInput
+                  value={
+                    settings.warningTemperature
+                  }
+                  onChange={value =>
+                    update(
+                      "warningTemperature",
+                      value,
+                    )
+                  }
+                  suffix="°C"
+                  min={20}
+                  max={40}
+                />
+              </Field>
 
-        {loading ? (
-          <div className="grid min-h-[50vh] place-items-center text-sm text-muted-foreground">
-            Memuat konfigurasi sistem dari
-            database...
-          </div>
-        ) : (
-          <div className="grid gap-4 xl:grid-cols-2">
-            <SettingsCard
-              icon={Thermometer}
-              title="Batas Alarm Suhu"
-              description="Tentukan ambang batas suhu waspada dan bahaya untuk memicu alarm."
-            >
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field
-                  label="Batas Waspada"
-                  hint="Status waspada dimulai di atas nilai ini"
-                >
-                  <NumberInput
-                    value={
-                      settings.warningTemperature
-                    }
-                    onChange={value =>
-                      update(
-                        "warningTemperature",
-                        value,
-                      )
-                    }
-                    suffix="°C"
-                    min={20}
-                    max={40}
-                  />
-                </Field>
+              <Field
+                label="Batas Bahaya"
+                hint="Status bahaya dimulai pada nilai ini"
+              >
+                <NumberInput
+                  value={
+                    settings.dangerTemperature
+                  }
+                  onChange={value =>
+                    update(
+                      "dangerTemperature",
+                      value,
+                    )
+                  }
+                  suffix="°C"
+                  min={20}
+                  max={50}
+                />
+              </Field>
+            </div>
 
-                <Field
-                  label="Batas Bahaya"
-                  hint="Status bahaya dimulai pada nilai ini"
-                >
-                  <NumberInput
-                    value={
-                      settings.dangerTemperature
-                    }
-                    onChange={value =>
-                      update(
-                        "dangerTemperature",
-                        value,
-                      )
-                    }
-                    suffix="°C"
-                    min={20}
-                    max={50}
-                  />
-                </Field>
+            {!valid && (
+              <p className="mt-3 text-sm text-rose-600 dark:text-rose-400">
+                Batas bahaya harus lebih
+                tinggi dari batas waspada.
+              </p>
+            )}
+
+            <div className="mt-5 flex flex-wrap gap-3 text-xs">
+              <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:text-emerald-300 dark:hover:bg-emerald-950/60">
+                Normal ≤{" "}
+                {Number(
+                  settings.warningTemperature,
+                )}
+                °C
+              </Badge>
+              <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 dark:bg-amber-950/60 dark:text-amber-300 dark:hover:bg-amber-950/60">
+                Waspada{" "}
+                {Number(
+                  settings.warningTemperature,
+                )}
+                –
+                {Number(
+                  settings.dangerTemperature,
+                )}
+                °C
+              </Badge>
+              <Badge className="bg-rose-100 text-rose-700 hover:bg-rose-100 dark:bg-rose-950/60 dark:text-rose-300 dark:hover:bg-rose-950/60">
+                Bahaya ≥{" "}
+                {Number(
+                  settings.dangerTemperature,
+                )}
+                °C
+              </Badge>
+            </div>
+          </SettingsCard>
+
+          <SettingsCard
+            icon={Thermometer}
+            title="Batas Alarm Suhu Lantai 5 (Ruang ATC)"
+            description="Tentukan ambang batas suhu waspada dan bahaya untuk memicu alarm."
+          >
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field
+                label="Batas Waspada L5"
+                hint="Status waspada L5 dimulai di atas nilai ini"
+              >
+                <NumberInput
+                  value={
+                    settings.warningTemperatureL5
+                  }
+                  onChange={value =>
+                    update(
+                      "warningTemperatureL5",
+                      value,
+                    )
+                  }
+                  suffix="°C"
+                  min={20}
+                  max={40}
+                />
+              </Field>
+
+              <Field
+                label="Batas Bahaya L5"
+                hint="Status bahaya L5 dimulai pada nilai ini"
+              >
+                <NumberInput
+                  value={
+                    settings.dangerTemperatureL5
+                  }
+                  onChange={value =>
+                    update(
+                      "dangerTemperatureL5",
+                      value,
+                    )
+                  }
+                  suffix="°C"
+                  min={20}
+                  max={50}
+                />
+              </Field>
+            </div>
+
+            {settings.warningTemperatureL5 >= settings.dangerTemperatureL5 && (
+              <p className="mt-3 text-sm text-rose-600 dark:text-rose-400">
+                Batas bahaya L5 harus lebih
+                tinggi dari batas waspada L5.
+              </p>
+            )}
+
+            <div className="mt-5 flex flex-wrap gap-3 text-xs">
+              <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:text-emerald-300 dark:hover:bg-emerald-950/60">
+                Normal ≤{" "}
+                {Number(
+                  settings.warningTemperatureL5,
+                )}
+                °C
+              </Badge>
+              <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 dark:bg-amber-950/60 dark:text-amber-300 dark:hover:bg-amber-950/60">
+                Waspada{" "}
+                {Number(
+                  settings.warningTemperatureL5,
+                )}
+                –
+                {Number(
+                  settings.dangerTemperatureL5,
+                )}
+                °C
+              </Badge>
+              <Badge className="bg-rose-100 text-rose-700 hover:bg-rose-100 dark:bg-rose-950/60 dark:text-rose-300 dark:hover:bg-rose-950/60">
+                Bahaya ≥{" "}
+                {Number(
+                  settings.dangerTemperatureL5,
+                )}
+                °C
+              </Badge>
+            </div>
+          </SettingsCard>
+
+          <SettingsCard
+            icon={Clock3}
+            title="Pembaruan Data & Offline"
+            description="Atur kecepatan refresh dashboard dan batas toleransi sensor sebelum dianggap mati."
+          >
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field
+                label="Interval Refresh Dashboard"
+                hint="Disarankan antara 3–5 detik"
+              >
+                <NumberInput
+                  value={settings.refreshInterval}
+                  onChange={value =>
+                    update(
+                      "refreshInterval",
+                      value,
+                    )
+                  }
+                  suffix="detik"
+                  min={3}
+                  max={60}
+                />
+              </Field>
+
+              <Field
+                label="Batas Offline Sensor"
+                hint="Dianggap mati jika tidak ada data baru dalam durasi ini"
+              >
+                <NumberInput
+                  value={settings.offlineTimeout}
+                  onChange={value =>
+                    update(
+                      "offlineTimeout",
+                      value,
+                    )
+                  }
+                  suffix="detik"
+                  min={10}
+                  max={300}
+                />
+              </Field>
+            </div>
+          </SettingsCard>
+
+          <SettingsCard
+            icon={Radio}
+            title="Perangkat Sensor ESP32"
+            description="Pengaturan identitas sensor utama untuk validasi payload."
+          >
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Nama Perangkat">
+                <TextInput
+                  value={settings.sensorName}
+                  onChange={value =>
+                    update("sensorName", value)
+                  }
+                />
+              </Field>
+
+              <Field
+                label="Sensor ID Utama"
+                hint="Harus sama dengan nama ID sensor di hardware ESP32"
+              >
+                <TextInput
+                  value={settings.sensorId}
+                  onChange={value =>
+                    update("sensorId", value)
+                  }
+                  mono
+                />
+              </Field>
+            </div>
+
+            <Separator className="my-5" />
+
+            <div className="flex items-center">
+              <div className="grid size-10 place-items-center rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400">
+                <Server className="size-5" />
               </div>
-
-              {!valid && (
-                <p className="mt-3 text-sm text-rose-600 dark:text-rose-400">
-                  Batas bahaya harus lebih
-                  tinggi dari batas waspada.
-                </p>
-              )}
-
-              <div className="mt-5 flex flex-wrap gap-3 text-xs">
-                <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:text-emerald-300 dark:hover:bg-emerald-950/60">
-                  Normal ≤{" "}
-                  {Number(
-                    settings.warningTemperature,
-                  )}
-                  °C
-                </Badge>
-                <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 dark:bg-amber-950/60 dark:text-amber-300 dark:hover:bg-amber-950/60">
-                  Waspada{" "}
-                  {Number(
-                    settings.warningTemperature,
-                  )}
-                  –
-                  {Number(
-                    settings.dangerTemperature,
-                  )}
-                  °C
-                </Badge>
-                <Badge className="bg-rose-100 text-rose-700 hover:bg-rose-100 dark:bg-rose-950/60 dark:text-rose-300 dark:hover:bg-rose-950/60">
-                  Bahaya ≥{" "}
-                  {Number(
-                    settings.dangerTemperature,
-                  )}
-                  °C
-                </Badge>
+              <div className="ml-3">
+                <b className="block text-sm text-foreground">
+                  Koneksi Database Cloud
+                </b>
+                <span className="text-xs text-muted-foreground">
+                  Penyimpanan Terpusat
+                  Supabase
+                </span>
               </div>
-            </SettingsCard>
+              <Badge className="ml-auto bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:text-emerald-300 dark:hover:bg-emerald-950/60">
+                Aktif
+              </Badge>
+            </div>
+          </SettingsCard>
 
-            <SettingsCard
-              icon={Thermometer}
-              title="Batas Alarm Suhu Lantai 5 (Ruang ATC)"
-              description="Tentukan ambang batas suhu waspada dan bahaya khusus untuk Lantai 5 yang terpisah dari Lantai 4."
-            >
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field
-                  label="Batas Waspada L5"
-                  hint="Status waspada L5 dimulai di atas nilai ini"
-                >
-                  <NumberInput
-                    value={
-                      settings.warningTemperatureL5
-                    }
-                    onChange={value =>
-                      update(
-                        "warningTemperatureL5",
-                        value,
-                      )
-                    }
-                    suffix="°C"
-                    min={20}
-                    max={40}
-                  />
-                </Field>
-
-                <Field
-                  label="Batas Bahaya L5"
-                  hint="Status bahaya L5 dimulai pada nilai ini"
-                >
-                  <NumberInput
-                    value={
-                      settings.dangerTemperatureL5
-                    }
-                    onChange={value =>
-                      update(
-                        "dangerTemperatureL5",
-                        value,
-                      )
-                    }
-                    suffix="°C"
-                    min={20}
-                    max={50}
-                  />
-                </Field>
-              </div>
-
-              {settings.warningTemperatureL5 >= settings.dangerTemperatureL5 && (
-                <p className="mt-3 text-sm text-rose-600 dark:text-rose-400">
-                  Batas bahaya L5 harus lebih
-                  tinggi dari batas waspada L5.
-                </p>
-              )}
-
-              <div className="mt-5 flex flex-wrap gap-3 text-xs">
-                <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:text-emerald-300 dark:hover:bg-emerald-950/60">
-                  Normal ≤{" "}
-                  {Number(
-                    settings.warningTemperatureL5,
-                  )}
-                  °C
-                </Badge>
-                <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 dark:bg-amber-950/60 dark:text-amber-300 dark:hover:bg-amber-950/60">
-                  Waspada{" "}
-                  {Number(
-                    settings.warningTemperatureL5,
-                  )}
-                  –
-                  {Number(
-                    settings.dangerTemperatureL5,
-                  )}
-                  °C
-                </Badge>
-                <Badge className="bg-rose-100 text-rose-700 hover:bg-rose-100 dark:bg-rose-950/60 dark:text-rose-300 dark:hover:bg-rose-950/60">
-                  Bahaya ≥{" "}
-                  {Number(
-                    settings.dangerTemperatureL5,
-                  )}
-                  °C
-                </Badge>
-              </div>
-            </SettingsCard>
-
-            <SettingsCard
-              icon={Clock3}
-              title="Pembaruan Data & Offline"
-              description="Atur kecepatan refresh dashboard dan batas toleransi sensor sebelum dianggap mati."
-            >
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field
-                  label="Interval Refresh Dashboard"
-                  hint="Disarankan antara 3–5 detik"
-                >
-                  <NumberInput
-                    value={settings.refreshInterval}
-                    onChange={value =>
-                      update(
-                        "refreshInterval",
-                        value,
-                      )
-                    }
-                    suffix="detik"
-                    min={3}
-                    max={60}
-                  />
-                </Field>
-
-                <Field
-                  label="Batas Offline Sensor"
-                  hint="Dianggap mati jika tidak ada data baru dalam durasi ini"
-                >
-                  <NumberInput
-                    value={settings.offlineTimeout}
-                    onChange={value =>
-                      update(
-                        "offlineTimeout",
-                        value,
-                      )
-                    }
-                    suffix="detik"
-                    min={10}
-                    max={300}
-                  />
-                </Field>
-              </div>
-            </SettingsCard>
-
-            <SettingsCard
-              icon={Radio}
-              title="Perangkat Sensor ESP32"
-              description="Pengaturan identitas sensor utama untuk validasi payload."
-            >
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Nama Perangkat">
-                  <TextInput
-                    value={settings.sensorName}
-                    onChange={value =>
-                      update("sensorName", value)
-                    }
-                  />
-                </Field>
-
-                <Field
-                  label="Sensor ID Utama"
-                  hint="Harus sama dengan nama ID sensor di hardware ESP32"
-                >
-                  <TextInput
-                    value={settings.sensorId}
-                    onChange={value =>
-                      update("sensorId", value)
-                    }
-                    mono
-                  />
-                </Field>
-              </div>
-
-              <Separator className="my-5" />
-
-              <div className="flex items-center">
-                <div className="grid size-10 place-items-center rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400">
-                  <Server className="size-5" />
-                </div>
-                <div className="ml-3">
-                  <b className="block text-sm text-foreground">
-                    Koneksi Database Cloud
-                  </b>
-                  <span className="text-xs text-muted-foreground">
-                    Penyimpanan Terpusat
-                    Supabase
-                  </span>
-                </div>
-                <Badge className="ml-auto bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:text-emerald-300 dark:hover:bg-emerald-950/60">
-                  Aktif
-                </Badge>
-              </div>
-            </SettingsCard>
-
-            <SettingsCard
+          <SettingsCard
+            icon={Bell}
+            title="Pusat Peringatan & Suara"
+            description="Aktifkan notifikasi browser atau alarm suara saat ada kejadian suhu baru."
+          >
+            <Toggle
               icon={Bell}
-              title="Pusat Peringatan & Suara"
-              description="Aktifkan notifikasi browser atau alarm suara saat ada kejadian suhu baru."
-            >
-              <Toggle
-                icon={Bell}
-                label="Notifikasi Desktop/Browser"
-                description="Notifikasi muncul ketika ada kejadian Waspada atau Bahaya baru."
-                checked={
-                  settings.browserNotification
-                }
-                onChange={value =>
-                  void requestBrowserNotification(
-                    value,
-                  )
-                }
-                disabled={
-                  permission === "unsupported" ||
-                  permission === "denied"
-                }
-                status={
-                  <Badge
-                    className={
-                      permissionLabel.className
-                    }
-                  >
-                    {permissionLabel.text}
-                  </Badge>
-                }
-              />
+              label="Notifikasi Desktop/Browser"
+              description="Notifikasi muncul ketika ada kejadian Waspada atau Bahaya baru."
+              checked={
+                settings.browserNotification
+              }
+              onChange={value =>
+                void requestBrowserNotification(
+                  value,
+                )
+              }
+              disabled={
+                permission === "unsupported" ||
+                permission === "denied"
+              }
+              status={
+                <Badge
+                  className={
+                    permissionLabel.className
+                  }
+                >
+                  {permissionLabel.text}
+                </Badge>
+              }
+            />
 
-              <Separator className="my-2" />
+            <Separator className="my-2" />
 
-              <Toggle
-                icon={Volume2}
-                label="Alarm Suara Peringatan"
-                description="Alarm berbunyi satu kali ketika peringatan baru mencapai level Bahaya."
-                checked={settings.soundAlert}
-                onChange={value =>
-                  void toggleSound(value)
-                }
-                status={
-                  <Badge
-                    className={
-                      settings.soundAlert
-                        ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300"
-                        : "bg-muted text-muted-foreground"
-                    }
-                  >
-                    {settings.soundAlert
-                      ? "Aktif"
-                      : "Nonaktif"}
-                  </Badge>
-                }
-              />
-            </SettingsCard>
-          </div>
-        )}
+            <Toggle
+              icon={Volume2}
+              label="Alarm Suara Peringatan"
+              description="Alarm berbunyi satu kali ketika peringatan baru mencapai level Bahaya."
+              checked={settings.soundAlert}
+              onChange={value =>
+                void toggleSound(value)
+              }
+              status={
+                <Badge
+                  className={
+                    settings.soundAlert
+                      ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300"
+                      : "bg-muted text-muted-foreground"
+                  }
+                >
+                  {settings.soundAlert
+                    ? "Aktif"
+                    : "Nonaktif"}
+                </Badge>
+              }
+            />
+          </SettingsCard>
+        </div>
+      )}
 
-        <p className="mt-5 text-center text-xs text-muted-foreground">
-          Setelah mengubah toggle, klik
-          Simpan. Notifikasi dan suara bekerja
-          selama website monitoring terbuka di
-          browser.
-        </p>
+      <p className="mt-5 text-center text-xs text-muted-foreground">
+        Setelah mengubah toggle, klik
+        Simpan. Notifikasi dan suara bekerja
+        selama website monitoring terbuka di
+        browser.
+      </p>
     </AppShell>
   )
 }
@@ -836,9 +835,8 @@ function TextInput({
       onChange={event =>
         onChange(event.target.value)
       }
-      className={`h-10 w-full rounded-xl border border-border bg-card px-3 font-medium text-foreground outline-none focus:ring-2 focus:ring-primary/20 ${
-        mono ? "font-mono text-sm" : ""
-      }`}
+      className={`h-10 w-full rounded-xl border border-border bg-card px-3 font-medium text-foreground outline-none focus:ring-2 focus:ring-primary/20 ${mono ? "font-mono text-sm" : ""
+        }`}
     />
   )
 }
@@ -869,16 +867,14 @@ function Toggle({
         aria-label={label}
         disabled={disabled}
         onClick={() => onChange(!checked)}
-        className={`relative h-6 w-11 shrink-0 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-50 ${
-          checked
+        className={`relative h-6 w-11 shrink-0 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-50 ${checked
             ? "bg-primary"
             : "bg-muted"
-        }`}
+          }`}
       >
         <span
-          className={`absolute top-1 size-4 rounded-full bg-background dark:bg-foreground shadow transition-all ${
-            checked ? "left-6" : "left-1"
-          }`}
+          className={`absolute top-1 size-4 rounded-full bg-background dark:bg-foreground shadow transition-all ${checked ? "left-6" : "left-1"
+            }`}
         />
       </button>
 
