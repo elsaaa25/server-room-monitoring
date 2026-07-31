@@ -1377,7 +1377,7 @@ const recentReadings =
         <>
           {activeFloor === "4" && (
             <div>
-              <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 <Metric
                   icon={Thermometer}
                   label="Suhu Ruang Server"
@@ -1487,6 +1487,33 @@ const recentReadings =
                       : "text-rose-600 dark:text-rose-400"
                   }
                   iconColor="bg-blue-500/10 text-blue-600 dark:text-blue-400"
+                />
+
+                <Metric
+                  icon={ShieldCheck}
+                  label="Kondisi Ruangan L4"
+                  value={
+                    !onlineL4
+                      ? "-"
+                      : statusL4 === "Bahaya"
+                        ? "BAHAYA"
+                        : statusL4 === "Waspada"
+                          ? "WASPADA"
+                          : "AMAN"
+                  }
+                  detail={
+                    !onlineL4
+                      ? "Sensor terputus"
+                      : statusL4 === "Normal"
+                        ? "Suhu ruang server aman"
+                        : "Segera periksa AC server"
+                  }
+                  valueClassName={
+                    !onlineL4
+                      ? "text-muted-foreground"
+                      : getStatusColor(statusL4)
+                  }
+                  iconColor="bg-muted text-muted-foreground"
                 />
               </section>
 
