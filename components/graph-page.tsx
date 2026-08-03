@@ -1301,6 +1301,12 @@ export function GraphPage() {
           decimals={1}
           stroke="#3b82f6"
           gradientId="temperature-l5-fill"
+          warning={
+            warningTemperature
+          }
+          danger={
+            dangerTemperature
+          }
           loading={loading}
           emptyMessage="Belum ada data suhu Lantai 5 pada periode ini."
         />
