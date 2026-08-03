@@ -72,6 +72,10 @@ type SettingsResponse = {
   data?: {
     warningTemperature?: number | string
     dangerTemperature?: number | string
+
+      warningTemperatureL5?: number | string
+    dangerTemperatureL5?: number | string
+
     refreshInterval?: number | string
   }
 }
@@ -653,27 +657,40 @@ export function GraphPage() {
   const [lastUpdated, setLastUpdated] =
     useState<Date | null>(null)
 
-  const [
-    warningTemperature,
-    setWarningTemperature,
-  ] = useState(
-    DEFAULT_WARNING_TEMPERATURE,
-  )
+ const [
+  warningTemperature,
+  setWarningTemperature,
+] = useState(
+  DEFAULT_WARNING_TEMPERATURE,
+)
 
-  const [
-    dangerTemperature,
-    setDangerTemperature,
-  ] = useState(
-    DEFAULT_DANGER_TEMPERATURE,
-  )
+const [
+  dangerTemperature,
+  setDangerTemperature,
+] = useState(
+  DEFAULT_DANGER_TEMPERATURE,
+)
 
-  const [
-    refreshSeconds,
-    setRefreshSeconds,
-  ] = useState(
-    DEFAULT_REFRESH_SECONDS,
-  )
+const [
+  warningTemperatureL5,
+  setWarningTemperatureL5,
+] = useState(
+  DEFAULT_WARNING_TEMPERATURE,
+)
 
+const [
+  dangerTemperatureL5,
+  setDangerTemperatureL5,
+] = useState(
+  DEFAULT_DANGER_TEMPERATURE,
+)
+
+const [
+  refreshSeconds,
+  setRefreshSeconds,
+] = useState(
+  DEFAULT_REFRESH_SECONDS,
+)
   const latestRequestRunning =
     useRef(false)
 
@@ -705,6 +722,18 @@ export function GraphPage() {
             result.data
               ?.dangerTemperature,
           )
+        
+          const warningL5 =
+  parseFiniteNumber(
+    result.data
+      ?.warningTemperatureL5,
+  )
+
+const dangerL5 =
+  parseFiniteNumber(
+    result.data
+      ?.dangerTemperatureL5,
+  )
 
         const refresh =
           parseFiniteNumber(
@@ -713,21 +742,32 @@ export function GraphPage() {
           )
 
         if (warning !== null) {
-          setWarningTemperature(warning)
-        }
+  setWarningTemperature(warning)
+}
 
-        if (danger !== null) {
-          setDangerTemperature(danger)
-        }
+if (danger !== null) {
+  setDangerTemperature(danger)
+}
 
-        if (
-          refresh !== null &&
-          refresh >= 1
-        ) {
-          setRefreshSeconds(
-            Math.floor(refresh),
-          )
-        }
+if (warningL5 !== null) {
+  setWarningTemperatureL5(
+    warningL5,
+  )
+} else if (warning !== null) {
+  setWarningTemperatureL5(
+    warning,
+  )
+}
+
+if (dangerL5 !== null) {
+  setDangerTemperatureL5(
+    dangerL5,
+  )
+} else if (danger !== null) {
+  setDangerTemperatureL5(
+    danger,
+  )
+}
       } catch (settingsError) {
         console.error(
           "Gagal mengambil pengaturan grafik:",
@@ -1290,26 +1330,26 @@ export function GraphPage() {
         />
 
         <MetricChart
-          data={data}
-          period={period}
-          dataKey="temperatureL5"
-          title="Suhu Lantai 5"
-          description={`Data realtime TEMP-L5 • ${
-            periodConfigs[period].label
-          }`}
-          unit="°C"
-          decimals={1}
-          stroke="#3b82f6"
-          gradientId="temperature-l5-fill"
-          warning={
-            warningTemperature
-          }
-          danger={
-            dangerTemperature
-          }
-          loading={loading}
-          emptyMessage="Belum ada data suhu Lantai 5 pada periode ini."
-        />
+  data={data}
+  period={period}
+  dataKey="temperatureL5"
+  title="Suhu Lantai 5"
+  description={`Data realtime TEMP-L5 • ${
+    periodConfigs[period].label
+  }`}
+  unit="°C"
+  decimals={1}
+  stroke="#3b82f6"
+  gradientId="temperature-l5-fill"
+  warning={
+    warningTemperatureL5
+  }
+  danger={
+    dangerTemperatureL5
+  }
+  loading={loading}
+  emptyMessage="Belum ada data suhu Lantai 5 pada periode ini."
+/>
 
         <MetricChart
           data={data}
@@ -1634,6 +1674,40 @@ function MetricChart({
                     }}
                   />
                 )}
+
+                {warning !== undefined &&
+  Number.isFinite(warning) && (
+    <ReferenceLine
+      y={warning}
+      stroke="#f59e0b"
+      strokeWidth={1.5}
+      strokeDasharray="7 5"
+      ifOverflow="extendDomain"
+      label={{
+        value: `Waspada (≥${warning}°C)`,
+        fill: "#d97706",
+        fontSize: 11,
+        position: "insideTopLeft",
+      }}
+    />
+  )}
+
+{danger !== undefined &&
+  Number.isFinite(danger) && (
+    <ReferenceLine
+      y={danger}
+      stroke="#fb7185"
+      strokeWidth={1.5}
+      strokeDasharray="7 5"
+      ifOverflow="extendDomain"
+      label={{
+        value: `Bahaya (≥${danger}°C)`,
+        fill: "#f43f5e",
+        fontSize: 11,
+        position: "insideTopLeft",
+      }}
+    />
+  )}
 
                 <Area
                   type="monotone"
