@@ -9,7 +9,11 @@ import {
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
+export const revalidate = 0
 export const maxDuration = 60
+
+const DEPLOYMENT_VERSION = "monthly-cleanup-v3"
+const WIB_OFFSET_MS = 7 * 60 * 60 * 1000
 
 type DatabaseReading = {
   id: number
@@ -20,6 +24,22 @@ type DatabaseReading = {
   recorded_at: Date
 }
 
+type MonthRange = {
+  startUtc: Date
+  endUtc: Date
+}
+
+/**
+ * Mengambil bulan yang akan diekspor.
+ *
+ * Jika URL mempunyai:
+ * ?month=2026-07
+ *
+ * maka bulan tersebut digunakan.
+ *
+ * Jika tidak ada parameter month, sistem otomatis
+ * menggunakan bulan sebelumnya berdasarkan WIB.
+ */
 function getArchiveMonth(requestUrl: string): string {
   const url = new URL(requestUrl)
   const monthParam = url.searchParams.get("month")
@@ -32,14 +52,26 @@ function getArchiveMonth(requestUrl: string): string {
   }
 
   const now = new Date()
-  const wibOffsetMs = 7 * 60 * 60 * 1000
-  const wibNow = new Date(now.getTime() + wibOffsetMs)
+
+  // Mengubah waktu sekarang menjadi acuan WIB.
+  const wibNow = new Date(
+    now.getTime() + WIB_OFFSET_MS,
+  )
 
   const currentYear = wibNow.getUTCFullYear()
   const currentMonthIndex = wibNow.getUTCMonth()
 
+  /*
+   * getUTCMonth():
+   * Januari = 0
+   * Februari = 1
+   * ...
+   * Desember = 11
+   */
   const previousMonth =
-    currentMonthIndex === 0 ? 12 : currentMonthIndex
+    currentMonthIndex === 0
+      ? 12
+      : currentMonthIndex
 
   const previousYear =
     currentMonthIndex === 0
@@ -52,13 +84,25 @@ function getArchiveMonth(requestUrl: string): string {
   )
 }
 
+/**
+ * Membuat rentang bulan berdasarkan WIB,
+ * lalu dikonversi menjadi UTC untuk query database.
+ *
+ * Contoh bulan 2026-07:
+ *
+ * startUtc:
+ * 2026-06-30T17:00:00.000Z
+ * = 1 Juli 2026 pukul 00.00 WIB
+ *
+ * endUtc:
+ * 2026-07-31T17:00:00.000Z
+ * = 1 Agustus 2026 pukul 00.00 WIB
+ */
 function getMonthRangeUtc(
   archiveMonth: string,
-): {
-  startUtc: Date
-  endUtc: Date
-} {
-  const [yearText, monthText] = archiveMonth.split("-")
+): MonthRange {
+  const [yearText, monthText] =
+    archiveMonth.split("-")
 
   const year = Number(yearText)
   const month = Number(monthText)
@@ -69,19 +113,31 @@ function getMonthRangeUtc(
     month < 1 ||
     month > 12
   ) {
-    throw new Error("Bulan arsip tidak valid")
+    throw new Error(
+      "Format bulan arsip tidak valid.",
+    )
   }
 
-  const wibOffsetMs = 7 * 60 * 60 * 1000
-
   const startUtc = new Date(
-    Date.UTC(year, month - 1, 1, 0, 0, 0) -
-      wibOffsetMs,
+    Date.UTC(
+      year,
+      month - 1,
+      1,
+      0,
+      0,
+      0,
+    ) - WIB_OFFSET_MS,
   )
 
   const endUtc = new Date(
-    Date.UTC(year, month, 1, 0, 0, 0) -
-      wibOffsetMs,
+    Date.UTC(
+      year,
+      month,
+      1,
+      0,
+      0,
+      0,
+    ) - WIB_OFFSET_MS,
   )
 
   return {
@@ -90,16 +146,34 @@ function getMonthRangeUtc(
   }
 }
 
+/**
+ * Mengubah baris sensor_readings menjadi data
+ * yang dibutuhkan pembuat file Excel.
+ *
+ * Satu baris database dapat menghasilkan lebih
+ * dari satu reading Excel.
+ *
+ * Contoh:
+ * - suhu
+ * - tegangan
+ *
+ * Oleh karena itu readingCount dapat lebih besar
+ * daripada rowCount.
+ */
 function mapDatabaseReadings(
   rows: DatabaseReading[],
 ): MonthlySensorReading[] {
   const readings: MonthlySensorReading[] = []
 
   for (const row of rows) {
-    const sensorId = row.sensor_id.trim().toUpperCase()
+    const sensorId =
+      row.sensor_id
+        .trim()
+        .toUpperCase()
 
     if (row.temperature !== null) {
-      const temperature = Number(row.temperature)
+      const temperature =
+        Number(row.temperature)
 
       if (Number.isFinite(temperature)) {
         readings.push({
@@ -117,7 +191,8 @@ function mapDatabaseReadings(
     }
 
     if (row.voltage !== null) {
-      const voltage = Number(row.voltage)
+      const voltage =
+        Number(row.voltage)
 
       if (Number.isFinite(voltage)) {
         readings.push({
@@ -132,7 +207,8 @@ function mapDatabaseReadings(
     }
 
     if (row.current !== null) {
-      const current = Number(row.current)
+      const current =
+        Number(row.current)
 
       if (Number.isFinite(current)) {
         readings.push({
@@ -150,6 +226,19 @@ function mapDatabaseReadings(
   return readings
 }
 
+/**
+ * Menghapus data yang sudah berhasil diekspor.
+ *
+ * Penghapusan menggunakan transaksi:
+ *
+ * BEGIN
+ * DELETE
+ * COMMIT
+ *
+ * Jika jumlah data yang terhapus tidak sama
+ * dengan jumlah baris yang diekspor, transaksi
+ * dibatalkan menggunakan ROLLBACK.
+ */
 async function deleteExportedReadings({
   startUtc,
   endUtc,
@@ -164,23 +253,36 @@ async function deleteExportedReadings({
   try {
     await client.query("BEGIN")
 
-    const deleteResult = await client.query(
-      `
-        DELETE FROM sensor_readings
-        WHERE recorded_at >= $1
-          AND recorded_at < $2
-      `,
-      [startUtc.toISOString(), endUtc.toISOString()],
-    )
+    const deleteResult =
+      await client.query(
+        `
+          DELETE FROM sensor_readings
+          WHERE recorded_at >= $1
+            AND recorded_at < $2
+        `,
+        [
+          startUtc.toISOString(),
+          endUtc.toISOString(),
+        ],
+      )
 
-    const deletedRowCount = deleteResult.rowCount ?? 0
+    const deletedRowCount =
+      deleteResult.rowCount ?? 0
 
-    if (deletedRowCount !== expectedRowCount) {
+    /*
+     * Pengamanan agar jumlah data yang dihapus
+     * sama dengan jumlah baris sumber export.
+     */
+    if (
+      deletedRowCount !==
+      expectedRowCount
+    ) {
       throw new Error(
-        "Jumlah data yang akan dihapus berbeda " +
-          `dengan hasil export. Export: ${expectedRowCount}, ` +
-          `delete: ${deletedRowCount}. ` +
-          "Penghapusan dibatalkan.",
+        "Jumlah data yang terhapus berbeda " +
+          "dengan jumlah data yang diekspor. " +
+          `Export: ${expectedRowCount}, ` +
+          `hapus: ${deletedRowCount}. ` +
+          "Transaksi penghapusan dibatalkan.",
       )
     }
 
@@ -195,17 +297,32 @@ async function deleteExportedReadings({
   }
 }
 
-export async function GET(request: Request) {
-  const cronSecret = process.env.CRON_SECRET
-  const authHeader = request.headers.get("authorization")
+export async function GET(
+  request: Request,
+) {
+  const cronSecret =
+    process.env.CRON_SECRET?.trim()
 
+  const authHeader =
+    request.headers.get(
+      "authorization",
+    )
+
+  /*
+   * Endpoint hanya dapat dijalankan menggunakan:
+   *
+   * Authorization: Bearer CRON_SECRET
+   */
   if (
     !cronSecret ||
-    authHeader !== `Bearer ${cronSecret}`
+    authHeader !==
+      `Bearer ${cronSecret}`
   ) {
     return NextResponse.json(
       {
         success: false,
+        deploymentVersion:
+          DEPLOYMENT_VERSION,
         error: "Unauthorized",
       },
       {
@@ -215,54 +332,142 @@ export async function GET(request: Request) {
   }
 
   try {
-    const archiveMonth = getArchiveMonth(request.url)
-    const { startUtc, endUtc } =
-      getMonthRangeUtc(archiveMonth)
+    const archiveMonth =
+      getArchiveMonth(request.url)
 
-    const deleteAfterExport =
-      process.env.DELETE_AFTER_MONTHLY_EXPORT ===
-      "true"
-
-    const result = await db.query<DatabaseReading>(
-      `
-        SELECT
-          id,
-          sensor_id,
-          temperature,
-          voltage,
-          current,
-          recorded_at
-        FROM sensor_readings
-        WHERE recorded_at >= $1
-          AND recorded_at < $2
-        ORDER BY recorded_at ASC
-      `,
-      [startUtc.toISOString(), endUtc.toISOString()],
+    const {
+      startUtc,
+      endUtc,
+    } = getMonthRangeUtc(
+      archiveMonth,
     )
 
-    if (result.rows.length === 0) {
+    /*
+     * Nilai environment dibuat lebih tahan
+     * terhadap spasi dan perbedaan huruf.
+     *
+     * Nilai berikut dianggap aktif:
+     * true
+     * TRUE
+     * True
+     * true dengan spasi
+     */
+    const deleteAfterExport =
+      (
+        process.env
+          .DELETE_AFTER_MONTHLY_EXPORT ??
+        ""
+      )
+        .trim()
+        .toLowerCase() === "true"
+
+    console.log(
+      "[monthly-export] Version:",
+      DEPLOYMENT_VERSION,
+    )
+
+    console.log(
+      "[monthly-export] Archive month:",
+      archiveMonth,
+    )
+
+    console.log(
+      "[monthly-export] Period:",
+      startUtc.toISOString(),
+      "sampai",
+      endUtc.toISOString(),
+    )
+
+    console.log(
+      "[monthly-export] Delete enabled:",
+      deleteAfterExport,
+    )
+
+    /*
+     * Mengambil semua data bulan yang dipilih.
+     *
+     * Batas akhir menggunakan "< endUtc",
+     * sehingga data tanggal 1 bulan baru tidak
+     * ikut diekspor atau dihapus.
+     */
+    const result =
+      await db.query<DatabaseReading>(
+        `
+          SELECT
+            id,
+            sensor_id,
+            temperature,
+            voltage,
+            current,
+            recorded_at
+          FROM sensor_readings
+          WHERE recorded_at >= $1
+            AND recorded_at < $2
+          ORDER BY recorded_at ASC
+        `,
+        [
+          startUtc.toISOString(),
+          endUtc.toISOString(),
+        ],
+      )
+
+    const rowCount =
+      result.rows.length
+
+    console.log(
+      "[monthly-export] Database rows:",
+      rowCount,
+    )
+
+    if (rowCount === 0) {
       return NextResponse.json({
         success: false,
+        deploymentVersion:
+          DEPLOYMENT_VERSION,
         message:
-          `Tidak ada data untuk bulan ${archiveMonth}`,
+          `Tidak ada data untuk bulan ${archiveMonth}.`,
         archiveMonth,
+        period: {
+          startUtc:
+            startUtc.toISOString(),
+          endUtc:
+            endUtc.toISOString(),
+        },
         rowCount: 0,
-        deletedRowCount: 0,
+        readingCount: 0,
         deleteAfterExport,
+        deletedRowCount: 0,
       })
     }
 
-    const readings = mapDatabaseReadings(result.rows)
+    const readings =
+      mapDatabaseReadings(
+        result.rows,
+      )
+
+    console.log(
+      "[monthly-export] Excel readings:",
+      readings.length,
+    )
 
     if (readings.length === 0) {
       return NextResponse.json(
         {
           success: false,
+          deploymentVersion:
+            DEPLOYMENT_VERSION,
           error:
             "Data ditemukan, tetapi tidak ada nilai valid untuk diekspor.",
           archiveMonth,
-          rowCount: result.rows.length,
+          period: {
+            startUtc:
+              startUtc.toISOString(),
+            endUtc:
+              endUtc.toISOString(),
+          },
+          rowCount,
           readingCount: 0,
+          deleteAfterExport,
           deletedRowCount: 0,
         },
         {
@@ -271,74 +476,131 @@ export async function GET(request: Request) {
       )
     }
 
-    const fileBuffer = await createMonthlyExcel({
-      archiveMonth,
-      readings,
-    })
+    /*
+     * LANGKAH 1:
+     * Membuat file Excel.
+     */
+    const fileBuffer =
+      await createMonthlyExcel({
+        archiveMonth,
+        readings,
+      })
 
     const fileName =
       `laporan-monitoring-${archiveMonth}.xlsx`
 
+    /*
+     * LANGKAH 2:
+     * Mengunggah file Excel ke Google Drive.
+     *
+     * Jika upload gagal, fungsi akan masuk ke catch.
+     * Proses DELETE tidak pernah dijalankan.
+     */
     const uploadResult =
       await uploadExcelToGoogleDrive({
         fileName,
         fileBuffer,
       })
 
+    /*
+     * Google Drive harus mengembalikan file ID.
+     * Tanpa ID, file belum dianggap berhasil tersimpan.
+     */
+    if (!uploadResult.id) {
+      throw new Error(
+        "Google Drive tidak mengembalikan file ID. " +
+          "Penghapusan data dibatalkan.",
+      )
+    }
+
+    console.log(
+      "[monthly-export] Google Drive file ID:",
+      uploadResult.id,
+    )
+
+    /*
+     * LANGKAH 3:
+     * Menghapus data hanya jika environment
+     * DELETE_AFTER_MONTHLY_EXPORT aktif.
+     */
     let deletedRowCount = 0
 
     if (deleteAfterExport) {
-      if (!uploadResult.id) {
-        throw new Error(
-          "File Google Drive tidak memiliki ID. " +
-            "Penghapusan data dibatalkan.",
-        )
-      }
+      console.log(
+        "[monthly-export] Memulai penghapusan data.",
+      )
 
       deletedRowCount =
         await deleteExportedReadings({
           startUtc,
           endUtc,
-          expectedRowCount: result.rows.length,
+          expectedRowCount:
+            rowCount,
         })
+
+      console.log(
+        "[monthly-export] Data terhapus:",
+        deletedRowCount,
+      )
+    } else {
+      console.log(
+        "[monthly-export] Penghapusan dinonaktifkan.",
+      )
     }
 
     return NextResponse.json({
       success: true,
+      deploymentVersion:
+        DEPLOYMENT_VERSION,
       message: deleteAfterExport
         ? (
-            `Laporan ${archiveMonth} berhasil diunggah ` +
-            `dan ${deletedRowCount} data lama berhasil dihapus.`
+            `Laporan ${archiveMonth} berhasil ` +
+            `diunggah ke Google Drive dan ` +
+            `${deletedRowCount} data lama ` +
+            "berhasil dihapus."
           )
         : (
-            `Laporan ${archiveMonth} berhasil diunggah. ` +
+            `Laporan ${archiveMonth} berhasil ` +
+            "diunggah ke Google Drive. " +
             "Penghapusan data masih dinonaktifkan."
           ),
       archiveMonth,
       period: {
-        startUtc: startUtc.toISOString(),
-        endUtc: endUtc.toISOString(),
+        startUtc:
+          startUtc.toISOString(),
+        endUtc:
+          endUtc.toISOString(),
       },
-      rowCount: result.rows.length,
-      readingCount: readings.length,
+      rowCount,
+      readingCount:
+        readings.length,
       deleteAfterExport,
       deletedRowCount,
       file: {
         id: uploadResult.id,
         name: uploadResult.name,
-        webViewLink: uploadResult.webViewLink,
+        webViewLink:
+          uploadResult.webViewLink,
       },
     })
   } catch (error) {
-    console.error("Cron monthly-export gagal:", error)
+    console.error(
+      "[monthly-export] Gagal:",
+      error,
+    )
 
     return NextResponse.json(
       {
         success: false,
+        deploymentVersion:
+          DEPLOYMENT_VERSION,
         error:
           error instanceof Error
             ? error.message
-            : "Terjadi kesalahan tidak terduga",
+            : (
+                "Terjadi kesalahan " +
+                "yang tidak diketahui."
+              ),
       },
       {
         status: 500,
