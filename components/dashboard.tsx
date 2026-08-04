@@ -2883,11 +2883,13 @@ function ProfilePanel() {
   const loadProfile =
     useCallback(async () => {
       setLoading(true)
+      setFeedback(null)
 
       try {
         const response = await fetch(
           "/api/account/profile",
           {
+            method: "GET",
             cache: "no-store",
           },
         )
@@ -2984,13 +2986,13 @@ function ProfilePanel() {
       ) {
         throw new Error(
           result.message ??
-            "Gagal menyimpan profil.",
+            "Gagal menyimpan nama pengguna.",
         )
       }
 
       /*
        * Memperbarui nama pada tombol kanan atas
-       * tanpa harus me-refresh halaman.
+       * tanpa perlu memuat ulang halaman.
        */
       setProfile(result.data)
       setName(result.data.name)
@@ -3002,7 +3004,7 @@ function ProfilePanel() {
       })
     } catch (error) {
       console.error(
-        "Gagal memperbarui profil:",
+        "Gagal menyimpan nama pengguna:",
         error,
       )
 
@@ -3011,7 +3013,7 @@ function ProfilePanel() {
         message:
           error instanceof Error
             ? error.message
-            : "Gagal menyimpan profil.",
+            : "Gagal menyimpan nama pengguna.",
       })
     } finally {
       setSaving(false)
@@ -3039,7 +3041,7 @@ function ProfilePanel() {
         </Button>
       </SheetTrigger>
 
-      <SheetContent className="overflow-y-auto">
+      <SheetContent className="overflow-y-auto sm:max-w-md">
         <SheetTitle>
           Profil Pengguna
         </SheetTitle>
@@ -3048,19 +3050,19 @@ function ProfilePanel() {
           <div className="flex min-h-64 items-center justify-center">
             <div className="flex items-center gap-3 text-sm text-muted-foreground">
               <LoaderCircle className="size-5 animate-spin" />
-
               Memuat profil...
             </div>
           </div>
         ) : profile ? (
           <>
+            {/* Informasi pengguna */}
             <div className="mt-6 flex items-center gap-4 rounded-2xl bg-muted p-4">
               <div className="grid size-12 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground">
                 <UserRound className="size-5" />
               </div>
 
               <div className="min-w-0">
-                <b className="block truncate text-foreground">
+                <b className="block truncate">
                   {profile.name}
                 </b>
 
@@ -3068,12 +3070,15 @@ function ProfilePanel() {
                   {profile.email}
                 </span>
 
-                <Badge className="mt-1 bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/10 dark:text-emerald-400">
-                  {profile.role}
+                <Badge className="mt-1 bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/10">
+                  {profile.role === "ADMIN"
+                    ? "Administrator"
+                    : "Operator"}
                 </Badge>
               </div>
             </div>
 
+            {/* Pesan berhasil atau gagal */}
             {feedback && (
               <div
                 className={`mt-4 rounded-xl border px-3 py-2 text-sm ${
@@ -3087,9 +3092,10 @@ function ProfilePanel() {
               </div>
             )}
 
+            {/* Bagian edit nama pengguna */}
             <form
               onSubmit={saveProfile}
-              className="mt-6 space-y-5"
+              className="mt-6 space-y-4"
             >
               <div className="space-y-2">
                 <label
@@ -3113,9 +3119,9 @@ function ProfilePanel() {
                   }}
                   minLength={2}
                   maxLength={100}
-                  disabled={saving}
                   autoComplete="name"
                   placeholder="Masukkan nama pengguna"
+                  disabled={saving}
                 />
 
                 <p className="text-xs text-muted-foreground">
@@ -3126,51 +3132,10 @@ function ProfilePanel() {
                 {name.length > 0 &&
                   !nameValid && (
                     <p className="text-xs text-rose-600">
-                      Nama pengguna belum
-                      memenuhi ketentuan.
+                      Nama pengguna harus terdiri
+                      dari 2 sampai 100 karakter.
                     </p>
                   )}
-              </div>
-
-              <div className="space-y-2">
-                <label
-                  htmlFor="profile-email"
-                  className="text-sm font-medium"
-                >
-                  Email
-                </label>
-
-                <Input
-                  id="profile-email"
-                  value={profile.email}
-                  disabled
-                  readOnly
-                />
-
-                <p className="text-xs text-muted-foreground">
-                  Email tidak dapat diubah
-                  melalui panel ini.
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <label
-                  htmlFor="profile-role"
-                  className="text-sm font-medium"
-                >
-                  Hak akses
-                </label>
-
-                <Input
-                  id="profile-role"
-                  value={
-                    profile.role === "ADMIN"
-                      ? "Administrator"
-                      : "Operator"
-                  }
-                  disabled
-                  readOnly
-                />
               </div>
 
               <Button
@@ -3188,17 +3153,21 @@ function ProfilePanel() {
 
                 {saving
                   ? "Menyimpan..."
-                  : "Simpan perubahan"}
+                  : "Simpan nama pengguna"}
               </Button>
             </form>
 
+            {/* Form password nanti diletakkan di sini */}
+            {/* <ChangePasswordForm /> */}
+
+            {/* Menu profil */}
             <nav className="mt-6 space-y-2 border-t pt-5">
               {profile.role ===
                 "ADMIN" && (
                   <Button
                     asChild
                     variant="ghost"
-                    className="w-full justify-start text-muted-foreground hover:text-foreground"
+                    className="w-full justify-start"
                   >
                     <Link href="/pengaturan">
                       Pengaturan sistem
@@ -3209,7 +3178,7 @@ function ProfilePanel() {
               <Button
                 asChild
                 variant="ghost"
-                className="w-full justify-start text-muted-foreground hover:text-foreground"
+                className="w-full justify-start"
               >
                 <Link href="/riwayat">
                   Riwayat monitoring
@@ -3219,7 +3188,7 @@ function ProfilePanel() {
               <Button
                 asChild
                 variant="ghost"
-                className="w-full justify-start text-muted-foreground hover:text-foreground"
+                className="w-full justify-start"
               >
                 <Link href="/peringatan">
                   Pusat peringatan
@@ -3243,8 +3212,7 @@ function ProfilePanel() {
           </>
         ) : (
           <div className="mt-6 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
-            Profil pengguna tidak dapat
-            dimuat.
+            Profil pengguna tidak dapat dimuat.
           </div>
         )}
       </SheetContent>
