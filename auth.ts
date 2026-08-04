@@ -67,120 +67,107 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-  async jwt({
-    token,
-    user,
-    trigger,
-  }) {
-    if (user) {
-      token.name = user.name
-      token.email = user.email
-      token.role = user.role
-    }
-
-    /*
-     * Ketika profile-page memanggil updateSession(),
-     * ambil ulang nama terbaru langsung dari database.
-     *
-     * Data tidak dipercaya langsung dari browser.
-     */
-    if (
-      trigger === "update" &&
-      token.sub
-    ) {
-      const result = await db.query(
-        `
-          SELECT
-            name,
-            email,
-            role
-          FROM users
-          WHERE id = $1
-            AND is_active = TRUE
-          LIMIT 1
-        `,
-        [token.sub],
-      )
-
-      const currentUser =
-        result.rows[0]
-
-      if (currentUser) {
-        token.name =
-          currentUser.name
-
-        token.email =
-          currentUser.email
-
-        token.role =
-          currentUser.role
+    jwt({ token, user }) {
+      if (user) {
+        token.role = user.role
+        token.mustChangePassword =
+          user.mustChangePassword
+        token.sessionVersion =
+          user.sessionVersion
       }
-    }
 
-    return token
-  },
+      return token
+    },
 
-  session({
-    session,
-    token,
-  }) {
-    if (session.user) {
-      session.user.id =
-        token.sub ?? ""
-
-      session.user.name =
-        typeof token.name ===
-        "string"
-          ? token.name
-          : null
-
-      session.user.email =
-        typeof token.email ===
-        "string"
-          ? token.email
-          : null
-
-      session.user.role =
-        token.role as
-          | "OPERATOR"
-          | "ADMIN"
-    }
-
+    session({
+  session,
+  token,
+}) {
+  if (!session.user) {
     return session
-  },
+  }
 
-  authorized({
-    auth: session,
-    request,
-  }) {
-    const pathname =
-      request.nextUrl.pathname
+  session.user.id =
+    typeof token.sub === "string"
+      ? token.sub
+      : ""
 
-    const publicRoutes = [
-      "/login",
-      "/verifikasi-email",
-      "/api/account/verify-email",
-      "/api/auth",
-    ]
+  if (typeof token.name === "string") {
+    session.user.name = token.name
+  }
 
-    const isPublicRoute =
-      publicRoutes.some(
-        route =>
-          pathname === route ||
-          pathname.startsWith(
-            `${route}/`,
-          ),
-      )
+  if (typeof token.email === "string") {
+    session.user.email = token.email
+  }
 
-    if (isPublicRoute) {
-      return true
-    }
+  if (
+    token.role === "ADMIN"
+  ) {
+    session.user.role = token.role
+  }
 
-    if (!session?.user) {
-      return false
-    }
-
-    return true
-  },
+  return session
 },
+authorized({ auth: session, request }) {
+  const pathname = request.nextUrl.pathname
+
+  const publicRoutes = [
+   "/login",
+  "/verifikasi-email",
+  "/konfirmasi-password",
+  "/api/account/verify-email",
+  "/api/account/confirm-password",
+  "/api/auth",
+  ]
+
+  const isPublicRoute = publicRoutes.some(
+    route =>
+      pathname === route ||
+      pathname.startsWith(`${route}/`),
+  )
+
+  if (isPublicRoute) {
+    return true
+  }
+
+  if (!session?.user) {
+    return false
+  }
+
+  const passwordChangeRoutes = [
+    "/ganti-password-pertama",
+    "/api/account/change-first-password",
+  ]
+
+  const isPasswordChangeRoute =
+    passwordChangeRoutes.some(
+      route =>
+        pathname === route ||
+        pathname.startsWith(`${route}/`),
+    )
+
+  if (
+    session.user.mustChangePassword &&
+    !isPasswordChangeRoute
+  ) {
+    return Response.redirect(
+      new URL(
+        "/ganti-password-pertama",
+        request.nextUrl,
+      ),
+    )
+  }
+
+  if (
+    !session.user.mustChangePassword &&
+    isPasswordChangeRoute
+  ) {
+    return Response.redirect(
+      new URL("/", request.nextUrl),
+    )
+  }
+
+  return true
+},
+  },
 })
