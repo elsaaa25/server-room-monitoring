@@ -7,10 +7,10 @@ import {
   useRef,
   useState,
   type ComponentType,
+  type FormEvent,
 } from "react"
 import Link from "next/link"
 import {
-  getSession,
   signOut,
 } from "next-auth/react"
 import {
@@ -73,6 +73,7 @@ import {
   defaultMonitoringSettings,
   type MonitoringSettings,
 } from "@/lib/monitoring-settings"
+import { Input } from "@/components/ui/input"
 
 type Floor = "4" | "5"
 type Period = "1" | "6" | "24"
@@ -2838,128 +2839,414 @@ function SystemRow({
   )
 }
 
+type ProfileData = {
+  id: string
+  name: string
+  email: string
+  role: string
+  updatedAt?: string
+}
+
+type ProfileApiResponse = {
+  success?: boolean
+  message?: string
+  data?: ProfileData
+}
+
+function normalizeProfileName(
+  value: string,
+): string {
+  return value
+    .replace(/\s+/g, " ")
+    .trim()
+}
+
 function ProfilePanel() {
   const [profile, setProfile] =
+    useState<ProfileData | null>(null)
+
+  const [name, setName] =
+    useState("")
+
+  const [loading, setLoading] =
+    useState(true)
+
+  const [saving, setSaving] =
+    useState(false)
+
+  const [feedback, setFeedback] =
     useState<{
-      name?: string | null
-      email?: string | null
-      role?: string
+      type: "success" | "error"
+      message: string
     } | null>(null)
 
-  useEffect(() => {
-    let active = true
+  const loadProfile =
+    useCallback(async () => {
+      setLoading(true)
 
-    getSession()
-      .then(session => {
-        if (active) {
-          setProfile(
-            session?.user ?? null,
+      try {
+        const response = await fetch(
+          "/api/account/profile",
+          {
+            cache: "no-store",
+          },
+        )
+
+        const result =
+          (await response.json()) as
+            ProfileApiResponse
+
+        if (
+          !response.ok ||
+          !result.success ||
+          !result.data
+        ) {
+          throw new Error(
+            result.message ??
+              "Gagal mengambil profil.",
           )
         }
-      })
-      .catch(error => {
+
+        setProfile(result.data)
+        setName(result.data.name)
+      } catch (error) {
         console.error(
           "Gagal mengambil profil:",
           error,
         )
-      })
 
-    return () => {
-      active = false
+        setFeedback({
+          type: "error",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Gagal mengambil profil.",
+        })
+      } finally {
+        setLoading(false)
+      }
+    }, [])
+
+  useEffect(() => {
+    void loadProfile()
+  }, [loadProfile])
+
+  const normalizedName =
+    normalizeProfileName(name)
+
+  const nameValid =
+    normalizedName.length >= 2 &&
+    normalizedName.length <= 100
+
+  const hasChanges =
+    profile !== null &&
+    normalizedName !== profile.name
+
+  const saveProfile = async (
+    event: FormEvent<HTMLFormElement>,
+  ) => {
+    event.preventDefault()
+
+    if (
+      saving ||
+      !nameValid ||
+      !hasChanges
+    ) {
+      return
     }
-  }, [])
+
+    setSaving(true)
+    setFeedback(null)
+
+    try {
+      const response = await fetch(
+        "/api/account/profile",
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+          body: JSON.stringify({
+            name: normalizedName,
+          }),
+        },
+      )
+
+      const result =
+        (await response.json()) as
+          ProfileApiResponse
+
+      if (
+        !response.ok ||
+        !result.success ||
+        !result.data
+      ) {
+        throw new Error(
+          result.message ??
+            "Gagal menyimpan profil.",
+        )
+      }
+
+      /*
+       * Memperbarui nama pada tombol kanan atas
+       * tanpa harus me-refresh halaman.
+       */
+      setProfile(result.data)
+      setName(result.data.name)
+
+      setFeedback({
+        type: "success",
+        message:
+          "Nama pengguna berhasil diperbarui.",
+      })
+    } catch (error) {
+      console.error(
+        "Gagal memperbarui profil:",
+        error,
+      )
+
+      setFeedback({
+        type: "error",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Gagal menyimpan profil.",
+      })
+    } finally {
+      setSaving(false)
+    }
+  }
 
   return (
     <Sheet>
       <SheetTrigger asChild>
         <Button
+          type="button"
           variant="outline"
           className="gap-2"
         >
-          <UserRound />
+          <UserRound className="size-4" />
 
-          <span className="hidden sm:inline">
-            {profile?.name ??
-              "Pengguna"}
+          <span className="hidden max-w-44 truncate sm:inline">
+            {loading
+              ? "Memuat..."
+              : profile?.name ??
+                "Pengguna"}
           </span>
 
           <ChevronDown className="size-4" />
         </Button>
       </SheetTrigger>
 
-      <SheetContent>
+      <SheetContent className="overflow-y-auto">
         <SheetTitle>
           Profil Pengguna
         </SheetTitle>
 
-        <div className="mt-6 flex items-center gap-4 rounded-2xl bg-muted p-4">
-          <div className="grid size-12 place-items-center rounded-full bg-primary text-primary-foreground">
-            <UserRound />
+        {loading ? (
+          <div className="flex min-h-64 items-center justify-center">
+            <div className="flex items-center gap-3 text-sm text-muted-foreground">
+              <LoaderCircle className="size-5 animate-spin" />
+
+              Memuat profil...
+            </div>
           </div>
+        ) : profile ? (
+          <>
+            <div className="mt-6 flex items-center gap-4 rounded-2xl bg-muted p-4">
+              <div className="grid size-12 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground">
+                <UserRound className="size-5" />
+              </div>
 
-          <div className="min-w-0">
-            <b className="block truncate text-foreground">
-              {profile?.name ??
-                "Memuat..."}
-            </b>
+              <div className="min-w-0">
+                <b className="block truncate text-foreground">
+                  {profile.name}
+                </b>
 
-            <span className="block truncate text-xs text-muted-foreground">
-              {profile?.email}
-            </span>
+                <span className="block truncate text-xs text-muted-foreground">
+                  {profile.email}
+                </span>
 
-            <Badge className="mt-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10">
-              {profile?.role ?? "-"}
-            </Badge>
-          </div>
-        </div>
+                <Badge className="mt-1 bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/10 dark:text-emerald-400">
+                  {profile.role}
+                </Badge>
+              </div>
+            </div>
 
-        <nav className="mt-6 space-y-2">
-          {profile?.role ===
-            "ADMIN" && (
+            {feedback && (
+              <div
+                className={`mt-4 rounded-xl border px-3 py-2 text-sm ${
+                  feedback.type ===
+                  "success"
+                    ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-300"
+                    : "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-300"
+                }`}
+              >
+                {feedback.message}
+              </div>
+            )}
+
+            <form
+              onSubmit={saveProfile}
+              className="mt-6 space-y-5"
+            >
+              <div className="space-y-2">
+                <label
+                  htmlFor="profile-name"
+                  className="text-sm font-medium"
+                >
+                  Nama pengguna
+                </label>
+
+                <Input
+                  id="profile-name"
+                  value={name}
+                  onChange={event => {
+                    setName(
+                      event.target.value,
+                    )
+
+                    if (feedback) {
+                      setFeedback(null)
+                    }
+                  }}
+                  minLength={2}
+                  maxLength={100}
+                  disabled={saving}
+                  autoComplete="name"
+                  placeholder="Masukkan nama pengguna"
+                />
+
+                <p className="text-xs text-muted-foreground">
+                  Nama terdiri dari 2 sampai
+                  100 karakter.
+                </p>
+
+                {name.length > 0 &&
+                  !nameValid && (
+                    <p className="text-xs text-rose-600">
+                      Nama pengguna belum
+                      memenuhi ketentuan.
+                    </p>
+                  )}
+              </div>
+
+              <div className="space-y-2">
+                <label
+                  htmlFor="profile-email"
+                  className="text-sm font-medium"
+                >
+                  Email
+                </label>
+
+                <Input
+                  id="profile-email"
+                  value={profile.email}
+                  disabled
+                  readOnly
+                />
+
+                <p className="text-xs text-muted-foreground">
+                  Email tidak dapat diubah
+                  melalui panel ini.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <label
+                  htmlFor="profile-role"
+                  className="text-sm font-medium"
+                >
+                  Hak akses
+                </label>
+
+                <Input
+                  id="profile-role"
+                  value={
+                    profile.role === "ADMIN"
+                      ? "Administrator"
+                      : "Operator"
+                  }
+                  disabled
+                  readOnly
+                />
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={
+                  saving ||
+                  !nameValid ||
+                  !hasChanges
+                }
+              >
+                {saving && (
+                  <LoaderCircle className="size-4 animate-spin" />
+                )}
+
+                {saving
+                  ? "Menyimpan..."
+                  : "Simpan perubahan"}
+              </Button>
+            </form>
+
+            <nav className="mt-6 space-y-2 border-t pt-5">
+              {profile.role ===
+                "ADMIN" && (
+                  <Button
+                    asChild
+                    variant="ghost"
+                    className="w-full justify-start text-muted-foreground hover:text-foreground"
+                  >
+                    <Link href="/pengaturan">
+                      Pengaturan sistem
+                    </Link>
+                  </Button>
+                )}
+
               <Button
                 asChild
                 variant="ghost"
                 className="w-full justify-start text-muted-foreground hover:text-foreground"
               >
-                <Link href="/pengaturan">
-                  Pengaturan sistem
+                <Link href="/riwayat">
+                  Riwayat monitoring
                 </Link>
               </Button>
-            )}
 
-          <Button
-            asChild
-            variant="ghost"
-            className="w-full justify-start text-muted-foreground hover:text-foreground"
-          >
-            <Link href="/riwayat">
-              Riwayat monitoring
-            </Link>
-          </Button>
+              <Button
+                asChild
+                variant="ghost"
+                className="w-full justify-start text-muted-foreground hover:text-foreground"
+              >
+                <Link href="/peringatan">
+                  Pusat peringatan
+                </Link>
+              </Button>
 
-          <Button
-            asChild
-            variant="ghost"
-            className="w-full justify-start text-muted-foreground hover:text-foreground"
-          >
-            <Link href="/peringatan">
-              Pusat peringatan
-            </Link>
-          </Button>
-
-          <Button
-            variant="outline"
-            className="mt-4 w-full border-destructive/30 text-destructive hover:bg-destructive/10"
-            onClick={() =>
-              signOut({
-                callbackUrl:
-                  "/login",
-              })
-            }
-          >
-            Keluar
-          </Button>
-        </nav>
+              <Button
+                type="button"
+                variant="outline"
+                className="mt-4 w-full border-destructive/30 text-destructive hover:bg-destructive/10"
+                onClick={() =>
+                  signOut({
+                    callbackUrl:
+                      "/login",
+                  })
+                }
+              >
+                Keluar
+              </Button>
+            </nav>
+          </>
+        ) : (
+          <div className="mt-6 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+            Profil pengguna tidak dapat
+            dimuat.
+          </div>
+        )}
       </SheetContent>
     </Sheet>
   )

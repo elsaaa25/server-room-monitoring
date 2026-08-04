@@ -5,6 +5,7 @@ import { AlertNotificationCenter } from "@/components/alert-notification-center"
 import { TooltipProvider } from "@/components/ui/tooltip"
 
 import "./globals.css"
+import { AuthSessionProvider } from "@/components/auth-session-provider"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -47,10 +48,12 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}
       >
-        <TooltipProvider>
-          <AlertNotificationCenter />
-          {children}
-        </TooltipProvider>
+        <AuthSessionProvider>
+    <TooltipProvider>
+      <AlertNotificationCenter />
+      {children}
+    </TooltipProvider>
+  </AuthSessionProvider>
       </body>
     </html>
   )

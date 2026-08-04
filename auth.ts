@@ -67,92 +67,120 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    jwt({ token, user }) {
-      if (user) {
-        token.role = user.role
-        token.mustChangePassword =
-          user.mustChangePassword
-        token.sessionVersion =
-          user.sessionVersion
+  async jwt({
+    token,
+    user,
+    trigger,
+  }) {
+    if (user) {
+      token.name = user.name
+      token.email = user.email
+      token.role = user.role
+    }
+
+    /*
+     * Ketika profile-page memanggil updateSession(),
+     * ambil ulang nama terbaru langsung dari database.
+     *
+     * Data tidak dipercaya langsung dari browser.
+     */
+    if (
+      trigger === "update" &&
+      token.sub
+    ) {
+      const result = await db.query(
+        `
+          SELECT
+            name,
+            email,
+            role
+          FROM users
+          WHERE id = $1
+            AND is_active = TRUE
+          LIMIT 1
+        `,
+        [token.sub],
+      )
+
+      const currentUser =
+        result.rows[0]
+
+      if (currentUser) {
+        token.name =
+          currentUser.name
+
+        token.email =
+          currentUser.email
+
+        token.role =
+          currentUser.role
       }
+    }
 
-      return token
-    },
-
-    session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.sub ?? ""
-        session.user.role = "ADMIN"
-
-        session.user.mustChangePassword =
-          Boolean(token.mustChangePassword)
-
-        session.user.sessionVersion =
-          Number(token.sessionVersion ?? 0)
-      }
-
-      return session
-    },
-authorized({ auth: session, request }) {
-  const pathname = request.nextUrl.pathname
-
-  const publicRoutes = [
-   "/login",
-  "/verifikasi-email",
-  "/konfirmasi-password",
-  "/api/account/verify-email",
-  "/api/account/confirm-password",
-  "/api/auth",
-  ]
-
-  const isPublicRoute = publicRoutes.some(
-    route =>
-      pathname === route ||
-      pathname.startsWith(`${route}/`),
-  )
-
-  if (isPublicRoute) {
-    return true
-  }
-
-  if (!session?.user) {
-    return false
-  }
-
-  const passwordChangeRoutes = [
-    "/ganti-password-pertama",
-    "/api/account/change-first-password",
-  ]
-
-  const isPasswordChangeRoute =
-    passwordChangeRoutes.some(
-      route =>
-        pathname === route ||
-        pathname.startsWith(`${route}/`),
-    )
-
-  if (
-    session.user.mustChangePassword &&
-    !isPasswordChangeRoute
-  ) {
-    return Response.redirect(
-      new URL(
-        "/ganti-password-pertama",
-        request.nextUrl,
-      ),
-    )
-  }
-
-  if (
-    !session.user.mustChangePassword &&
-    isPasswordChangeRoute
-  ) {
-    return Response.redirect(
-      new URL("/", request.nextUrl),
-    )
-  }
-
-  return true
-},
+    return token
   },
+
+  session({
+    session,
+    token,
+  }) {
+    if (session.user) {
+      session.user.id =
+        token.sub ?? ""
+
+      session.user.name =
+        typeof token.name ===
+        "string"
+          ? token.name
+          : null
+
+      session.user.email =
+        typeof token.email ===
+        "string"
+          ? token.email
+          : null
+
+      session.user.role =
+        token.role as
+          | "OPERATOR"
+          | "ADMIN"
+    }
+
+    return session
+  },
+
+  authorized({
+    auth: session,
+    request,
+  }) {
+    const pathname =
+      request.nextUrl.pathname
+
+    const publicRoutes = [
+      "/login",
+      "/verifikasi-email",
+      "/api/account/verify-email",
+      "/api/auth",
+    ]
+
+    const isPublicRoute =
+      publicRoutes.some(
+        route =>
+          pathname === route ||
+          pathname.startsWith(
+            `${route}/`,
+          ),
+      )
+
+    if (isPublicRoute) {
+      return true
+    }
+
+    if (!session?.user) {
+      return false
+    }
+
+    return true
+  },
+},
 })
