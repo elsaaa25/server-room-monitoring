@@ -136,29 +136,26 @@ export async function PATCH(
       )
     }
 
-    const body =
-      await request.json().catch(
-        () => null,
-      )
+    const body = await request
+      .json()
+      .catch(() => null)
 
-    const rawName =
+    const name =
       typeof body?.name === "string"
-        ? normalizeName(body.name)
+        ? body.name
+            .replace(/\s+/g, " ")
+            .trim()
         : ""
 
-    const parsed =
-      updateProfileSchema.safeParse({
-        name: rawName,
-      })
-
-    if (!parsed.success) {
+    if (
+      name.length < 2 ||
+      name.length > 100
+    ) {
       return Response.json(
         {
           success: false,
           message:
-            parsed.error.issues[0]
-              ?.message ??
-            "Nama pengguna tidak valid.",
+            "Nama pengguna harus terdiri dari 2 sampai 100 karakter.",
         },
         {
           status: 400,
@@ -166,27 +163,32 @@ export async function PATCH(
       )
     }
 
-    const result =
-      await db.query<DatabaseUser>(
-        `
-          UPDATE users
-          SET
-            name = $1,
-            updated_at = NOW()
-          WHERE id = $2
-            AND is_active = TRUE
-          RETURNING
-            id::text,
-            name,
-            email,
-            role,
-            updated_at
-        `,
-        [
-          parsed.data.name,
-          userId,
-        ],
-      )
+    const result = await db.query<{
+      id: string
+      name: string
+      email: string
+      role: string
+      updated_at: Date
+    }>(
+      `
+        UPDATE users
+        SET
+          name = $1,
+          updated_at = NOW()
+        WHERE id = $2
+          AND is_active = TRUE
+        RETURNING
+          id::text,
+          name,
+          email,
+          role,
+          updated_at
+      `,
+      [
+        name,
+        userId,
+      ],
+    )
 
     const user = result.rows[0]
 
@@ -195,7 +197,7 @@ export async function PATCH(
         {
           success: false,
           message:
-            "Pengguna tidak ditemukan atau sudah dinonaktifkan.",
+            "Pengguna tidak ditemukan.",
         },
         {
           status: 404,
@@ -207,11 +209,17 @@ export async function PATCH(
       success: true,
       message:
         "Nama pengguna berhasil diperbarui.",
-      data: mapUser(user),
+      data: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        updatedAt: user.updated_at,
+      },
     })
   } catch (error) {
     console.error(
-      "Gagal memperbarui profil:",
+      "Gagal memperbarui nama pengguna:",
       error,
     )
 
@@ -219,7 +227,7 @@ export async function PATCH(
       {
         success: false,
         message:
-          "Terjadi kesalahan saat memperbarui profil.",
+          "Terjadi kesalahan saat memperbarui nama pengguna.",
       },
       {
         status: 500,
