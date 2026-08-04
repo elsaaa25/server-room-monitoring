@@ -1675,39 +1675,6 @@ function MetricChart({
                   />
                 )}
 
-                {warning !== undefined &&
-  Number.isFinite(warning) && (
-    <ReferenceLine
-      y={warning}
-      stroke="#f59e0b"
-      strokeWidth={1.5}
-      strokeDasharray="7 5"
-      ifOverflow="extendDomain"
-      label={{
-        value: `Waspada (≥${warning}°C)`,
-        fill: "#d97706",
-        fontSize: 11,
-        position: "insideTopLeft",
-      }}
-    />
-  )}
-
-{danger !== undefined &&
-  Number.isFinite(danger) && (
-    <ReferenceLine
-      y={danger}
-      stroke="#fb7185"
-      strokeWidth={1.5}
-      strokeDasharray="7 5"
-      ifOverflow="extendDomain"
-      label={{
-        value: `Bahaya (≥${danger}°C)`,
-        fill: "#f43f5e",
-        fontSize: 11,
-        position: "insideTopLeft",
-      }}
-    />
-  )}
 
                 <Area
                   type="monotone"
