@@ -10,6 +10,7 @@ import {
   type FormEvent,
 } from "react"
 import Link from "next/link"
+
 import {
   signOut,
 } from "next-auth/react"
@@ -17,17 +18,23 @@ import {
   Activity,
   CalendarDays,
   CheckCircle2,
-  ChevronDown,
   Database,
-  LoaderCircle,
   Menu,
   Radio,
   ShieldCheck,
   Thermometer,
   TrendingDown,
   TrendingUp,
-  UserRound,
   Zap,
+  Bell,
+  ChevronDown,
+  ChevronRight,
+  History,
+  LoaderCircle,
+  LogOut,
+  Pencil,
+  Settings,
+  UserRound,
 } from "lucide-react"
 import {
   Area,
@@ -52,8 +59,10 @@ import {
 } from "@/components/ui/card"
 import {
   Sheet,
+  SheetClose,
   SheetContent,
   SheetTitle,
+  SheetHeader,
   SheetTrigger,
 } from "@/components/ui/sheet"
 import {
@@ -2844,7 +2853,6 @@ type ProfileData = {
   name: string
   email: string
   role: string
-  updatedAt?: string
 }
 
 type ProfileApiResponse = {
@@ -2865,31 +2873,17 @@ function ProfilePanel() {
   const [profile, setProfile] =
     useState<ProfileData | null>(null)
 
-  const [name, setName] =
-    useState("")
-
   const [loading, setLoading] =
     useState(true)
-
-  const [saving, setSaving] =
-    useState(false)
-
-  const [feedback, setFeedback] =
-    useState<{
-      type: "success" | "error"
-      message: string
-    } | null>(null)
 
   const loadProfile =
     useCallback(async () => {
       setLoading(true)
-      setFeedback(null)
 
       try {
         const response = await fetch(
           "/api/account/profile",
           {
-            method: "GET",
             cache: "no-store",
           },
         )
@@ -2910,20 +2904,11 @@ function ProfilePanel() {
         }
 
         setProfile(result.data)
-        setName(result.data.name)
       } catch (error) {
         console.error(
-          "Gagal mengambil profil:",
+          "Gagal mengambil profil pengguna:",
           error,
         )
-
-        setFeedback({
-          type: "error",
-          message:
-            error instanceof Error
-              ? error.message
-              : "Gagal mengambil profil.",
-        })
       } finally {
         setLoading(false)
       }
@@ -2933,100 +2918,13 @@ function ProfilePanel() {
     void loadProfile()
   }, [loadProfile])
 
-  const normalizedName =
-    normalizeProfileName(name)
-
-  const nameValid =
-    normalizedName.length >= 2 &&
-    normalizedName.length <= 100
-
-  const hasChanges =
-    profile !== null &&
-    normalizedName !== profile.name
-
-  const saveProfile = async (
-    event: FormEvent<HTMLFormElement>,
-  ) => {
-    event.preventDefault()
-
-    if (
-      saving ||
-      !nameValid ||
-      !hasChanges
-    ) {
-      return
-    }
-
-    setSaving(true)
-    setFeedback(null)
-
-    try {
-      const response = await fetch(
-        "/api/account/profile",
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-          body: JSON.stringify({
-            name: normalizedName,
-          }),
-        },
-      )
-
-      const result =
-        (await response.json()) as
-          ProfileApiResponse
-
-      if (
-        !response.ok ||
-        !result.success ||
-        !result.data
-      ) {
-        throw new Error(
-          result.message ??
-            "Gagal menyimpan nama pengguna.",
-        )
-      }
-
-      /*
-       * Memperbarui nama pada tombol kanan atas
-       * tanpa perlu memuat ulang halaman.
-       */
-      setProfile(result.data)
-      setName(result.data.name)
-
-      setFeedback({
-        type: "success",
-        message:
-          "Nama pengguna berhasil diperbarui.",
-      })
-    } catch (error) {
-      console.error(
-        "Gagal menyimpan nama pengguna:",
-        error,
-      )
-
-      setFeedback({
-        type: "error",
-        message:
-          error instanceof Error
-            ? error.message
-            : "Gagal menyimpan nama pengguna.",
-      })
-    } finally {
-      setSaving(false)
-    }
-  }
-
   return (
     <Sheet>
       <SheetTrigger asChild>
         <Button
           type="button"
           variant="outline"
-          className="gap-2"
+          className="h-10 gap-2 rounded-xl px-3"
         >
           <UserRound className="size-4" />
 
@@ -3037,185 +2935,145 @@ function ProfilePanel() {
                 "Pengguna"}
           </span>
 
-          <ChevronDown className="size-4" />
+          <ChevronDown className="size-4 text-muted-foreground" />
         </Button>
       </SheetTrigger>
 
-      <SheetContent className="overflow-y-auto sm:max-w-md">
-        <SheetTitle>
-          Profil Pengguna
-        </SheetTitle>
+      <SheetContent
+        side="right"
+        className="flex w-full flex-col p-0 sm:max-w-[420px]"
+      >
+        <SheetHeader className="border-b px-6 py-5 text-left">
+          <SheetTitle className="text-xl font-semibold">
+            Profil pengguna
+          </SheetTitle>
+        </SheetHeader>
 
-        {loading ? (
-          <div className="flex min-h-64 items-center justify-center">
-            <div className="flex items-center gap-3 text-sm text-muted-foreground">
-              <LoaderCircle className="size-5 animate-spin" />
-              Memuat profil...
-            </div>
-          </div>
-        ) : profile ? (
-          <>
-            {/* Informasi pengguna */}
-            <div className="mt-6 flex items-center gap-4 rounded-2xl bg-muted p-4">
-              <div className="grid size-12 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground">
-                <UserRound className="size-5" />
-              </div>
+        <div className="flex-1 overflow-y-auto">
+          {loading ? (
+            <div className="flex min-h-72 items-center justify-center">
+              <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                <LoaderCircle className="size-5 animate-spin" />
 
-              <div className="min-w-0">
-                <b className="block truncate">
-                  {profile.name}
-                </b>
-
-                <span className="block truncate text-xs text-muted-foreground">
-                  {profile.email}
-                </span>
-
-                <Badge className="mt-1 bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/10">
-                  {profile.role === "ADMIN"
-                    ? "Administrator"
-                    : "Operator"}
-                </Badge>
+                Memuat profil...
               </div>
             </div>
+          ) : profile ? (
+            <>
+              {/* Informasi pengguna */}
+              <div className="px-5 pt-5">
+                <div className="flex items-center gap-4 rounded-2xl bg-muted/70 p-5">
+                  <div className="grid size-14 shrink-0 place-items-center rounded-full bg-background shadow-sm">
+                    <UserRound className="size-7 text-muted-foreground" />
+                  </div>
 
-            {/* Pesan berhasil atau gagal */}
-            {feedback && (
-              <div
-                className={`mt-4 rounded-xl border px-3 py-2 text-sm ${
-                  feedback.type ===
-                  "success"
-                    ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-300"
-                    : "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-300"
-                }`}
-              >
-                {feedback.message}
+                  <div className="min-w-0">
+                    <h3 className="truncate text-base font-semibold">
+                      {profile.name}
+                    </h3>
+
+                    <p className="mt-0.5 truncate text-sm text-muted-foreground">
+                      {profile.email}
+                    </p>
+
+                    <Badge
+                      className={
+                        profile.role === "ADMIN"
+                          ? "mt-2 bg-primary text-primary-foreground hover:bg-primary"
+                          : "mt-2 bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/10 dark:text-emerald-400"
+                      }
+                    >
+                      {profile.role === "ADMIN"
+                        ? "Administrator"
+                        : "Operator"}
+                    </Badge>
+                  </div>
+                </div>
               </div>
-            )}
 
-            {/* Bagian edit nama pengguna */}
-            <form
-              onSubmit={saveProfile}
-              className="mt-6 space-y-4"
-            >
-              <div className="space-y-2">
-                <label
-                  htmlFor="profile-name"
-                  className="text-sm font-medium"
-                >
-                  Nama pengguna
-                </label>
-
-                <Input
-                  id="profile-name"
-                  value={name}
-                  onChange={event => {
-                    setName(
-                      event.target.value,
-                    )
-
-                    if (feedback) {
-                      setFeedback(null)
-                    }
-                  }}
-                  minLength={2}
-                  maxLength={100}
-                  autoComplete="name"
-                  placeholder="Masukkan nama pengguna"
-                  disabled={saving}
+              {/* Menu profil */}
+              <nav className="mt-5 px-3">
+                <ProfileMenuItem
+                  href="/profil"
+                  icon={Pencil}
+                  label="Edit profil"
                 />
 
-                <p className="text-xs text-muted-foreground">
-                  Nama terdiri dari 2 sampai
-                  100 karakter.
-                </p>
-
-                {name.length > 0 &&
-                  !nameValid && (
-                    <p className="text-xs text-rose-600">
-                      Nama pengguna harus terdiri
-                      dari 2 sampai 100 karakter.
-                    </p>
-                  )}
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={
-                  saving ||
-                  !nameValid ||
-                  !hasChanges
-                }
-              >
-                {saving && (
-                  <LoaderCircle className="size-4 animate-spin" />
+                {profile.role === "ADMIN" && (
+                  <ProfileMenuItem
+                    href="/pengaturan"
+                    icon={Settings}
+                    label="Pengaturan sistem"
+                  />
                 )}
 
-                {saving
-                  ? "Menyimpan..."
-                  : "Simpan nama pengguna"}
-              </Button>
-            </form>
+                <ProfileMenuItem
+                  href="/riwayat"
+                  icon={History}
+                  label="Riwayat monitoring"
+                />
 
-            {/* Form password nanti diletakkan di sini */}
-            {/* <ChangePasswordForm /> */}
+                <ProfileMenuItem
+                  href="/peringatan"
+                  icon={Bell}
+                  label="Pusat peringatan"
+                />
+              </nav>
+            </>
+          ) : (
+            <div className="m-5 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-300">
+              Profil pengguna tidak dapat dimuat.
+            </div>
+          )}
+        </div>
 
-            {/* Menu profil */}
-            <nav className="mt-6 space-y-2 border-t pt-5">
-              {profile.role ===
-                "ADMIN" && (
-                  <Button
-                    asChild
-                    variant="ghost"
-                    className="w-full justify-start"
-                  >
-                    <Link href="/pengaturan">
-                      Pengaturan sistem
-                    </Link>
-                  </Button>
-                )}
+        {/* Tombol logout */}
+        <div className="border-t p-5">
+          <Button
+            type="button"
+            variant="outline"
+            className="h-12 w-full gap-3 rounded-xl border-rose-200 text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:border-rose-900 dark:hover:bg-rose-950/30"
+            onClick={() =>
+              signOut({
+                callbackUrl: "/login",
+              })
+            }
+          >
+            <LogOut className="size-5" />
 
-              <Button
-                asChild
-                variant="ghost"
-                className="w-full justify-start"
-              >
-                <Link href="/riwayat">
-                  Riwayat monitoring
-                </Link>
-              </Button>
-
-              <Button
-                asChild
-                variant="ghost"
-                className="w-full justify-start"
-              >
-                <Link href="/peringatan">
-                  Pusat peringatan
-                </Link>
-              </Button>
-
-              <Button
-                type="button"
-                variant="outline"
-                className="mt-4 w-full border-destructive/30 text-destructive hover:bg-destructive/10"
-                onClick={() =>
-                  signOut({
-                    callbackUrl:
-                      "/login",
-                  })
-                }
-              >
-                Keluar
-              </Button>
-            </nav>
-          </>
-        ) : (
-          <div className="mt-6 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
-            Profil pengguna tidak dapat dimuat.
-          </div>
-        )}
+            Keluar
+          </Button>
+        </div>
       </SheetContent>
     </Sheet>
+  )
+}
+
+function ProfileMenuItem({
+  href,
+  icon: Icon,
+  label,
+}: {
+  href: string
+  icon: React.ComponentType<{
+    className?: string
+  }>
+  label: string
+}) {
+  return (
+    <SheetClose asChild>
+      <Link
+        href={href}
+        className="group flex min-h-16 items-center gap-4 rounded-xl px-4 text-sm font-medium transition-colors hover:bg-muted"
+      >
+        <Icon className="size-6 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground" />
+
+        <span className="flex-1">
+          {label}
+        </span>
+
+        <ChevronRight className="size-5 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+      </Link>
+    </SheetClose>
   )
 }
