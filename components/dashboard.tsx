@@ -582,30 +582,20 @@ function getChartTimeline(
 } {
   const latestTimestamp =
     data.at(-1)?.timestamp ?? Date.now()
-  const selectedPeriodDuration =
-    periodConfigs[period].hours * 60 * 60 * 1000
-  const periodStart = latestTimestamp - selectedPeriodDuration
-  const earliestAvailableTimestamp =
-    data.at(0)?.timestamp ?? periodStart
-  const visibleDataStart = Math.max(
-    periodStart,
-    earliestAvailableTimestamp,
-  )
-  const availableDuration = Math.max(
-    latestTimestamp - visibleDataStart,
-    15 * 60 * 1000,
-  )
   const intervalMinutes =
-    availableDuration <= 90 * 60 * 1000
-      ? 15
-      : availableDuration <= 8 * 60 * 60 * 1000
+    period === "24"
+      ? 240
+      : period === "6"
         ? 60
-        : 240
+        : 15
   const interval = intervalMinutes * 60 * 1000
   const timezoneOffset = 7 * 60 * 60 * 1000
+  const periodStart =
+    latestTimestamp -
+    periodConfigs[period].hours * 60 * 60 * 1000
   const firstRegularTick =
-    Math.floor(
-      (visibleDataStart + timezoneOffset) /
+    Math.ceil(
+      (periodStart + timezoneOffset) /
       interval,
     ) * interval - timezoneOffset
   const lastRegularTick =
@@ -638,7 +628,7 @@ function getChartTimeline(
   }
 
   return {
-    domain: [firstRegularTick, lastRegularTick],
+    domain: [periodStart, lastRegularTick],
     ticks,
   }
 }
@@ -2744,6 +2734,54 @@ function CombinedTelemetryChart({
       unit: "A",
     },
   }
+  const hoveredValues: number[] = hoveredMetric
+    ? data
+      .map(reading => {
+        if (hoveredMetric === "suhu") {
+          return reading.temperature
+        }
+
+        if (hoveredMetric === "tegangan") {
+          return reading.voltage
+        }
+
+        return reading.current
+      })
+      .filter(
+        (value): value is number =>
+          value !== null && Number.isFinite(value),
+      )
+    : []
+  const hoveredStats =
+    hoveredMetric && hoveredValues.length > 0
+      ? {
+        current: hoveredValues.at(-1) ?? null,
+        minimum: Math.min(...hoveredValues),
+        maximum: Math.max(...hoveredValues),
+        average:
+          hoveredValues.reduce(
+            (total, value) => total + value,
+            0,
+          ) / hoveredValues.length,
+      }
+      : null
+
+  const formatSummaryValue = (
+    value: number | null | undefined,
+  ): string => {
+    if (
+      !hoveredMetric ||
+      value === null ||
+      value === undefined
+    ) {
+      return "--"
+    }
+
+    const precision =
+      hoveredMetric === "arus" ? 2 : 1
+
+    return `${Number(value.toFixed(precision))} ${metricDetails[hoveredMetric].unit}`
+  }
 
   return (
     <Card className="mt-6 overflow-hidden rounded-2xl border-slate-200/80 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
@@ -2834,11 +2872,57 @@ function CombinedTelemetryChart({
             )
           })}
 
-          <span className="ml-auto text-[11px] font-medium text-slate-400 dark:text-slate-500">
-            {hoveredMetric
-              ? `Sumbu Y: ${metricDetails[hoveredMetric].label} (${metricDetails[hoveredMetric].unit})`
-              : "Hover garis untuk melihat sumbu Y"}
-          </span>
+        </div>
+
+        <div className="flex flex-col gap-2.5 rounded-xl border border-slate-200/80 bg-slate-50/70 p-2.5 dark:border-slate-800 dark:bg-slate-950/30 lg:flex-row lg:items-center">
+          <div className="min-w-36 px-1">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+              Ringkasan Metrik
+            </p>
+            <p className="mt-0.5 text-xs font-bold text-slate-700 dark:text-slate-200">
+              {hoveredMetric
+                ? metricDetails[hoveredMetric].label
+                : "Hover salah satu grafik"}
+            </p>
+          </div>
+
+          <div className="grid flex-1 grid-cols-2 gap-2 sm:grid-cols-4">
+            {[
+              {
+                label: "Sekarang",
+                value: hoveredStats?.current,
+              },
+              {
+                label: "Min",
+                value: hoveredStats?.minimum,
+              },
+              {
+                label: "Max",
+                value: hoveredStats?.maximum,
+              },
+              {
+                label: "Avg",
+                value: hoveredStats?.average,
+              },
+            ].map(item => (
+              <div
+                key={item.label}
+                className="rounded-lg border border-slate-200/70 bg-white px-3 py-2 dark:border-slate-800 dark:bg-slate-900"
+              >
+                <span className="block text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                  {item.label}
+                </span>
+                <span
+                  className="mt-0.5 block text-sm font-extrabold text-slate-700 dark:text-slate-200"
+                  style={hoveredMetric
+                    ? { color: metricDetails[hoveredMetric].color }
+                    : undefined}
+                >
+                  {formatSummaryValue(item.value)}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       </CardHeader>
 
@@ -2914,12 +2998,21 @@ function CombinedTelemetryChart({
                     return null
                   }
 
+                  const uniquePayload = payload.filter(
+                    (item, index, items) =>
+                      items.findIndex(
+                        candidate =>
+                          String(candidate.dataKey) ===
+                          String(item.dataKey),
+                      ) === index,
+                  )
+
                   return (
                     <div className="rounded-xl border border-border bg-popover p-2.5 text-xs text-popover-foreground shadow-md">
                       <p className="mb-1.5 font-mono font-semibold text-muted-foreground">
                         {fullDateTime(Number(label))}
                       </p>
-                      {payload.map(item => {
+                      {uniquePayload.map(item => {
                         const key = String(item.dataKey) as "temperature" | "voltage" | "current"
                         const metric: ChartMetric =
                           key === "temperature"
