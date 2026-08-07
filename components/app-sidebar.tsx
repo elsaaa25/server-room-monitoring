@@ -1,204 +1,76 @@
 "use client"
 
-import {
-  useEffect,
-  useState,
-} from "react"
+import * as React from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { NavMain, type NavItem } from "@/components/nav-main"
+import { NavUser } from "@/components/nav-user"
+import { AirNavLogo } from "@/components/airnav-logo"
 import {
-  Activity,
-  Bell,
-  History,
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarRail,
+  SidebarSeparator,
+} from "@/components/ui/sidebar"
+import {
   House,
-  Moon,
-  Radio,
-  Server,
+  Activity,
+  History,
+  Bell,
   Settings,
-  Sun,
-  X,
 } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
-
-type AppSidebarProps = {
-  showCloseButton?: boolean
-  onClose?: () => void
-}
-
-const navigation = [
+const navItems: NavItem[] = [
   {
-    label: "Dashboard",
-    icon: House,
-    href: "/",
+    title: "Dashboard",
+    url: "/",
+    icon: <House className="size-4 shrink-0" />,
   },
   {
-    label: "Grafik",
-    icon: Activity,
-    href: "/grafik",
+    title: "Grafik Telemetri",
+    url: "/grafik",
+    icon: <Activity className="size-4 shrink-0" />,
   },
   {
-    label: "Riwayat",
-    icon: History,
-    href: "/riwayat",
+    title: "Riwayat Data",
+    url: "/riwayat",
+    icon: <History className="size-4 shrink-0" />,
   },
   {
-    label: "Peringatan",
-    icon: Bell,
-    href: "/peringatan",
+    title: "Log Peringatan",
+    url: "/peringatan",
+    icon: <Bell className="size-4 shrink-0" />,
   },
   {
-    label: "Pengaturan",
-    icon: Settings,
-    href: "/pengaturan",
+    title: "Pengaturan Sistem",
+    url: "/pengaturan",
+    icon: <Settings className="size-4 shrink-0" />,
   },
 ]
 
-export function AppSidebar({
-  showCloseButton = false,
-  onClose,
-}: AppSidebarProps) {
-  const pathname = usePathname()
-
-  const [theme, setTheme] =
-    useState<"light" | "dark">(
-      "light",
-    )
-
-  useEffect(() => {
-    const timerId = window.setTimeout(
-      () => {
-        const isDark =
-          document.documentElement.classList.contains(
-            "dark",
-          )
-
-        setTheme(
-          isDark ? "dark" : "light",
-        )
-      },
-      0,
-    )
-
-    return () => {
-      window.clearTimeout(timerId)
-    }
-  }, [])
-
-  const toggleTheme = () => {
-    const nextTheme =
-      theme === "light"
-        ? "dark"
-        : "light"
-
-    setTheme(nextTheme)
-
-    if (nextTheme === "dark") {
-      document.documentElement.classList.add(
-        "dark",
-      )
-
-      localStorage.setItem(
-        "theme",
-        "dark",
-      )
-    } else {
-      document.documentElement.classList.remove(
-        "dark",
-      )
-
-      localStorage.setItem(
-        "theme",
-        "light",
-      )
-    }
-  }
-
+export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
-    <div className="relative flex h-full flex-col border-r border-sidebar-border bg-sidebar p-4 text-sidebar-foreground">
-      {showCloseButton && (
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={onClose}
-          aria-label="Tutup sidebar"
-          title="Tutup sidebar"
-          className="absolute right-3 top-3 z-10 hidden rounded-full text-muted-foreground hover:text-sidebar-foreground lg:inline-flex"
-        >
-          <X className="size-5" />
-        </Button>
-      )}
+    <Sidebar collapsible="icon" className="border-r border-sidebar-border" {...props}>
+      <SidebarHeader className="h-16 px-3.5 pt-3 pb-2 flex items-center justify-between group-data-[collapsible=icon]:p-2 group-data-[collapsible=icon]:justify-center">
+        <Link href="/" className="flex items-center gap-3 p-0 transition-opacity hover:opacity-90">
+          <AirNavLogo className="h-9.5" showText={true} />
+        </Link>
+      </SidebarHeader>
 
-      <Link
-        href="/"
-        className="mb-8 flex size-11 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md shadow-primary/20 transition-transform hover:scale-105"
-        aria-label="Dashboard"
-      >
-        <Server className="size-5" />
-      </Link>
+      <SidebarSeparator />
 
-      <nav className="space-y-1">
-        {navigation.map(
-          ({
-            label,
-            icon: Icon,
-            href,
-          }) => {
-            const active =
-              pathname === href
+      <SidebarContent className="px-0 py-3">
+        <NavMain items={navItems} />
+      </SidebarContent>
 
-            return (
-              <Button
-                key={label}
-                asChild
-                variant="ghost"
-                className={`w-full justify-start gap-3 transition-colors ${
-                  active
-                    ? "bg-sidebar-accent font-semibold text-sidebar-accent-foreground"
-                    : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
-                }`}
-              >
-                <Link href={href}>
-                  <Icon className="size-4 shrink-0" />
+      <SidebarSeparator />
 
-                  <span className="text-xs">
-                    {label}
-                  </span>
-                </Link>
-              </Button>
-            )
-          },
-        )}
-      </nav>
+      <SidebarFooter className="p-2 group-data-[collapsible=icon]:p-2 group-data-[collapsible=icon]:justify-center">
+        <NavUser />
+      </SidebarFooter>
 
-      <div className="mt-auto flex flex-col gap-3 border-t border-sidebar-border pt-4">
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={toggleTheme}
-          className="w-full justify-start gap-3 text-muted-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
-        >
-          {theme === "light" ? (
-            <Moon className="size-4" />
-          ) : (
-            <Sun className="size-4" />
-          )}
-
-          <span className="text-[11px] font-medium">
-            {theme === "light"
-              ? "Mode Gelap"
-              : "Mode Terang"}
-          </span>
-        </Button>
-
-        <div className="flex items-center gap-2 px-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          <Radio className="size-3.5 animate-pulse text-primary" />
-
-          <span>AirNav Banyuwangi</span>
-        </div>
-      </div>
-    </div>
+      <SidebarRail />
+    </Sidebar>
   )
 }

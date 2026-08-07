@@ -1,20 +1,22 @@
 "use client"
 
-import {
-  useEffect,
-  useState,
-  type ReactNode,
-} from "react"
-import { Menu } from "lucide-react"
-
+import { type ReactNode } from "react"
 import { AppSidebar } from "@/components/app-sidebar"
-import { Button } from "@/components/ui/button"
+import { ThemeToggle } from "@/components/theme-toggle"
+import { Separator } from "@/components/ui/separator"
 import {
-  Sheet,
-  SheetContent,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet"
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar"
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
 
 type AppShellProps = {
   title: string
@@ -23,131 +25,66 @@ type AppShellProps = {
   children: ReactNode
 }
 
-const SIDEBAR_STORAGE_KEY =
-  "monitoring-sidebar-open"
-
 export function AppShell({
   title,
   description,
   actions,
   children,
 }: AppShellProps) {
-  const [sidebarOpen, setSidebarOpen] =
-    useState(true)
-
-  useEffect(() => {
-    const timerId = window.setTimeout(
-      () => {
-        const storedValue =
-          localStorage.getItem(
-            SIDEBAR_STORAGE_KEY,
-          )
-
-        if (storedValue !== null) {
-          setSidebarOpen(
-            storedValue === "true",
-          )
-        }
-      },
-      0,
-    )
-
-    return () => {
-      window.clearTimeout(timerId)
-    }
-  }, [])
-
-  const openSidebar = () => {
-    setSidebarOpen(true)
-
-    localStorage.setItem(
-      SIDEBAR_STORAGE_KEY,
-      "true",
-    )
-  }
-
-  const closeSidebar = () => {
-    setSidebarOpen(false)
-
-    localStorage.setItem(
-      SIDEBAR_STORAGE_KEY,
-      "false",
-    )
-  }
-
   return (
-    <div className="min-h-screen bg-background p-2 lg:flex">
-      {sidebarOpen && (
-        <aside className="sticky top-2 hidden h-[calc(100vh-1rem)] w-56 shrink-0 overflow-hidden rounded-3xl border border-sidebar-border bg-sidebar shadow-sm lg:block">
-          <AppSidebar
-            showCloseButton
-            onClose={closeSidebar}
-          />
-        </aside>
-      )}
-
-      <main className="min-w-0 flex-1 px-2 pb-8 lg:px-6">
-        <header className="flex min-h-20 items-center gap-3">
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button
-                type="button"
-                size="icon"
-                variant="outline"
-                className="shrink-0 lg:hidden"
-                aria-label="Buka navigasi"
-              >
-                <Menu className="size-5" />
-              </Button>
-            </SheetTrigger>
-
-            <SheetContent
-              side="left"
-              className="w-56 p-0"
-            >
-              <SheetTitle className="sr-only">
-                Navigasi
-              </SheetTitle>
-
-              <AppSidebar />
-            </SheetContent>
-          </Sheet>
-
-          {!sidebarOpen && (
-            <Button
-              type="button"
-              size="icon"
-              variant="outline"
-              onClick={openSidebar}
-              className="hidden shrink-0 rounded-full text-primary shadow-sm lg:inline-flex"
-              aria-label="Tampilkan sidebar"
-              title="Tampilkan sidebar"
-            >
-              <Menu className="size-5" />
-            </Button>
-          )}
-
-          <div className="min-w-0">
-            <h1 className="truncate text-xl font-semibold text-foreground sm:text-2xl">
+    <SidebarProvider defaultOpen={true}>
+      <AppSidebar />
+      <SidebarInset className="flex flex-col bg-slate-50/60 dark:bg-slate-950 min-h-screen">
+        {/* Sticky App Header */}
+        <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between gap-3 border-b border-border/80 bg-background/90 backdrop-blur-md px-4 shadow-xs">
+          <div className="flex items-center gap-2 min-w-0">
+            <SidebarTrigger className="-ml-1 text-muted-foreground hover:text-foreground" />
+            <Separator orientation="vertical" className="mr-1.5 h-4 shrink-0" />
+            <Breadcrumb className="hidden sm:block">
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbLink href="/" className="text-xs font-medium">
+                    Monitoring
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage className="text-xs font-semibold text-foreground">
+                    {title}
+                  </BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+            <span className="sm:hidden text-sm font-bold text-foreground truncate">
               {title}
-            </h1>
-
-            {description && (
-              <p className="hidden text-sm text-muted-foreground sm:block">
-                {description}
-              </p>
-            )}
+            </span>
           </div>
 
-          {actions && (
-            <div className="ml-auto flex shrink-0 items-center gap-2">
-              {actions}
-            </div>
-          )}
+          <div className="flex items-center gap-2 shrink-0">
+            {actions}
+            <ThemeToggle />
+          </div>
         </header>
 
-        {children}
-      </main>
-    </div>
+        {/* Main Content Area */}
+        <main className="flex-1 p-4 lg:p-6 space-y-6 min-w-0">
+          {(title || description) && (
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 pb-2 border-b border-border/40">
+              <div>
+                <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+                  {title}
+                </h1>
+                {description && (
+                  <p className="text-xs text-muted-foreground font-medium mt-0.5">
+                    {description}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+          {children}
+        </main>
+      </SidebarInset>
+    </SidebarProvider>
   )
 }

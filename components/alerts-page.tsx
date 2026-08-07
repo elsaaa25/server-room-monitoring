@@ -32,6 +32,7 @@ import {
   type MonitoringSettings,
 } from "@/lib/monitoring-settings"
 import { AppShell } from "@/components/app-shell"
+import { AnimatedTabsNoIcon } from "@/components/shadcn-space/tabs/tabs-08"
 
 type Level = "Waspada" | "Bahaya"
 type AlertStatus = "Aktif" | "Ditangani"
@@ -418,6 +419,7 @@ export function AlertsPage() {
 
               <FilterGroup
                 showIcon
+                indicatorId="alert-status-tabs"
                 values={[
                   "Semua",
                   "Aktif",
@@ -433,6 +435,7 @@ export function AlertsPage() {
                 }
               />
               <FilterGroup
+                indicatorId="alert-level-tabs"
                 values={[
                   "Semua",
                   "Waspada",
@@ -446,6 +449,7 @@ export function AlertsPage() {
                 }
               />
               <FilterGroup
+                indicatorId="alert-sensor-tabs"
                 values={[
                   "Semua",
                   "Lantai 4",
@@ -670,32 +674,26 @@ function FilterGroup({
   active,
   onChange,
   showIcon = false,
+  indicatorId = "alert-filter-group",
 }: {
   values: string[]
   active: string
   onChange: (value: string) => void
   showIcon?: boolean
+  indicatorId?: string
 }) {
+  const tabs = values.map((val) => ({ value: val, label: val }))
   return (
-    <div className="flex h-10 max-w-full items-center overflow-x-auto rounded-xl border border-border bg-card p-1">
+    <div className="flex items-center gap-1.5 min-w-0">
       {showIcon && (
-        <Filter className="mx-2 size-4 shrink-0 text-muted-foreground" />
+        <Filter className="ml-1 size-4 shrink-0 text-muted-foreground" />
       )}
-
-      {values.map(value => (
-        <button
-          key={value}
-          type="button"
-          onClick={() => onChange(value)}
-          className={`h-full whitespace-nowrap rounded-lg px-3 text-xs transition-colors ${
-            active === value
-              ? "bg-primary font-semibold text-primary-foreground"
-              : "text-muted-foreground hover:bg-muted"
-          }`}
-        >
-          {value}
-        </button>
-      ))}
+      <AnimatedTabsNoIcon
+        tabs={tabs}
+        value={active}
+        onValueChange={onChange}
+        indicatorId={indicatorId}
+      />
     </div>
   )
 }

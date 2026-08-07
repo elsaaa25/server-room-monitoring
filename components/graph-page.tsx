@@ -30,6 +30,7 @@ import {
 } from "recharts"
 
 import { AppShell } from "@/components/app-shell"
+import { AnimatedTabsNoIcon } from "@/components/shadcn-space/tabs/tabs-08"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -1245,45 +1246,17 @@ if (dangerL5 !== null) {
               Perbarui
             </Button>
 
-            <Tabs
+            <AnimatedTabsNoIcon
+              tabs={[
+                { value: "1", label: "1 Jam" },
+                { value: "6", label: "6 Jam" },
+                { value: "24", label: "24 Jam" },
+                { value: "168", label: "7 Hari" },
+              ]}
               value={period}
-              onValueChange={value =>
-                setPeriod(
-                  value as Period,
-                )
-              }
-              className="w-full sm:w-auto"
-            >
-              <TabsList className="grid h-auto w-full grid-cols-2 gap-1 rounded-xl bg-muted p-1 sm:grid-cols-4">
-                <TabsTrigger
-                  value="1"
-                  className="whitespace-nowrap rounded-lg px-3 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-                >
-                  1 Jam
-                </TabsTrigger>
-
-                <TabsTrigger
-                  value="6"
-                  className="whitespace-nowrap rounded-lg px-3 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-                >
-                  6 Jam
-                </TabsTrigger>
-
-                <TabsTrigger
-                  value="24"
-                  className="whitespace-nowrap rounded-lg px-3 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-                >
-                  24 Jam
-                </TabsTrigger>
-
-                <TabsTrigger
-                  value="168"
-                  className="whitespace-nowrap rounded-lg px-3 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-                >
-                  7 Hari
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
+              onValueChange={(val) => setPeriod(val as Period)}
+              indicatorId="graph-period-tabs"
+            />
           </div>
         </CardContent>
       </Card>

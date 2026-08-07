@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { defaultMonitoringSettings, type MonitoringSettings } from "@/lib/monitoring-settings"
 import { AppShell } from "@/components/app-shell"
+import { AnimatedTabsNoIcon } from "@/components/shadcn-space/tabs/tabs-08"
 
 type Status = "Normal" | "Waspada" | "Bahaya"
 type Reading = { 
@@ -194,17 +195,19 @@ export function HistoryPage() {
               </label>
 
               {/* Filter Tombol Status */}
-              <div className="flex items-center gap-1 rounded-xl border border-border bg-card p-1">
-                <Filter className="mx-2 size-4 text-muted-foreground" />
-                {(["Semua", "Normal", "Waspada", "Bahaya"] as const).map(value => (
-                  <button 
-                    key={value} 
-                    onClick={() => setFilter(value)} 
-                    className={`rounded-lg px-3 py-1.5 text-xs transition-colors ${statusFilter === value ? "bg-primary text-primary-foreground font-semibold" : "text-muted-foreground hover:bg-muted"}`}
-                  >
-                    {value}
-                  </button>
-                ))}
+              <div className="flex items-center gap-1.5 min-w-0">
+                <Filter className="ml-1 size-4 shrink-0 text-muted-foreground" />
+                <AnimatedTabsNoIcon
+                  tabs={[
+                    { value: "Semua", label: "Semua" },
+                    { value: "Normal", label: "Normal" },
+                    { value: "Waspada", label: "Waspada" },
+                    { value: "Bahaya", label: "Bahaya" },
+                  ]}
+                  value={statusFilter}
+                  onValueChange={(val) => setFilter(val as any)}
+                  indicatorId="history-status-tabs"
+                />
               </div>
             </div>
           </CardHeader>
