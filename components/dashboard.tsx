@@ -46,6 +46,7 @@ import {
   Area,
   AreaChart,
   CartesianGrid,
+  Line,
   ReferenceLine,
   ResponsiveContainer,
   Tooltip,
@@ -581,20 +582,30 @@ function getChartTimeline(
 } {
   const latestTimestamp =
     data.at(-1)?.timestamp ?? Date.now()
+  const selectedPeriodDuration =
+    periodConfigs[period].hours * 60 * 60 * 1000
+  const periodStart = latestTimestamp - selectedPeriodDuration
+  const earliestAvailableTimestamp =
+    data.at(0)?.timestamp ?? periodStart
+  const visibleDataStart = Math.max(
+    periodStart,
+    earliestAvailableTimestamp,
+  )
+  const availableDuration = Math.max(
+    latestTimestamp - visibleDataStart,
+    15 * 60 * 1000,
+  )
   const intervalMinutes =
-    period === "24"
-      ? 240
-      : period === "6"
+    availableDuration <= 90 * 60 * 1000
+      ? 15
+      : availableDuration <= 8 * 60 * 60 * 1000
         ? 60
-        : 15
+        : 240
   const interval = intervalMinutes * 60 * 1000
   const timezoneOffset = 7 * 60 * 60 * 1000
-  const periodStart =
-    latestTimestamp -
-    periodConfigs[period].hours * 60 * 60 * 1000
   const firstRegularTick =
-    Math.ceil(
-      (periodStart + timezoneOffset) /
+    Math.floor(
+      (visibleDataStart + timezoneOffset) /
       interval,
     ) * interval - timezoneOffset
   const lastRegularTick =
@@ -627,9 +638,35 @@ function getChartTimeline(
   }
 
   return {
-    domain: [periodStart, lastRegularTick],
+    domain: [firstRegularTick, lastRegularTick],
     ticks,
   }
+}
+
+function getIntegerAxisTicks(
+  domain: [number, number],
+): number[] {
+  const minimum = Math.floor(domain[0])
+  const maximum = Math.ceil(domain[1])
+  const step = Math.max(
+    1,
+    Math.ceil((maximum - minimum) / 4),
+  )
+  const ticks: number[] = []
+
+  for (
+    let value = minimum;
+    value <= maximum;
+    value += step
+  ) {
+    ticks.push(value)
+  }
+
+  if (ticks.at(-1) !== maximum) {
+    ticks.push(maximum)
+  }
+
+  return ticks.reverse()
 }
 
 function getSensorId(
@@ -2678,6 +2715,11 @@ function CombinedTelemetryChart({
         : hoveredMetric === "arus"
           ? currentDomain
           : [0, 1]
+  const indicatorTicks = hoveredMetric
+    ? getIntegerAxisTicks(
+      indicatorDomain as [number, number],
+    )
+    : []
   const metricDetails: Record<
     ChartMetric,
     {
@@ -2806,7 +2848,26 @@ function CombinedTelemetryChart({
         ) : !hasVisibleData ? (
           <ChartMessage message="Belum ada data telemetri pada periode ini." />
         ) : (
-          <ResponsiveContainer width="100%" height="100%">
+          <div className="relative h-full">
+            <div
+              className={cn(
+                "pointer-events-none absolute bottom-7 left-0 top-2 z-10 flex w-11 flex-col justify-between border-r border-slate-200/70 pr-2 text-right transition-opacity dark:border-slate-800",
+                hoveredMetric ? "opacity-100" : "opacity-0",
+              )}
+              aria-hidden={!hoveredMetric}
+            >
+              {indicatorTicks.map(value => (
+                <span
+                  key={value}
+                  className="text-[10px] font-semibold leading-none text-slate-500 dark:text-slate-400"
+                >
+                  {value}
+                </span>
+              ))}
+            </div>
+
+            <div className="h-full pl-12">
+            <ResponsiveContainer width="100%" height="100%">
             <AreaChart
               data={data}
               margin={{ top: 10, right: 18, left: 0, bottom: 4 }}
@@ -2845,24 +2906,6 @@ function CombinedTelemetryChart({
               <YAxis yAxisId="suhu" domain={temperatureDomain} hide />
               <YAxis yAxisId="tegangan" domain={voltageDomain} hide />
               <YAxis yAxisId="arus" domain={currentDomain} hide />
-              <YAxis
-                yAxisId="indicator"
-                domain={indicatorDomain as [number, number]}
-                width={50}
-                tickCount={5}
-                allowDecimals={false}
-                axisLine={false}
-                tickLine={false}
-                tickFormatter={value =>
-                  hoveredMetric ? String(Math.round(Number(value))) : ""
-                }
-                tick={{
-                  fill: hoveredMetric
-                    ? "var(--muted-foreground)"
-                    : "transparent",
-                  fontSize: 11,
-                }}
-              />
 
               <Tooltip
                 cursor={{ stroke: "var(--muted-foreground)", strokeDasharray: "4 4", strokeOpacity: 0.45 }}
@@ -2950,8 +2993,59 @@ function CombinedTelemetryChart({
                   onMouseEnter={() => setHoveredMetric("arus")}
                 />
               )}
+
+              {visibleMetrics.includes("suhu") && hasData.suhu && (
+                <Line
+                  yAxisId="suhu"
+                  type="monotone"
+                  dataKey="temperature"
+                  stroke="#10b981"
+                  strokeOpacity={0.001}
+                  strokeWidth={16}
+                  dot={false}
+                  activeDot={false}
+                  isAnimationActive={false}
+                  tooltipType="none"
+                  style={{ cursor: "crosshair", pointerEvents: "stroke" }}
+                  onMouseEnter={() => setHoveredMetric("suhu")}
+                />
+              )}
+              {visibleMetrics.includes("tegangan") && hasData.tegangan && (
+                <Line
+                  yAxisId="tegangan"
+                  type="monotone"
+                  dataKey="voltage"
+                  stroke="#f59e0b"
+                  strokeOpacity={0.001}
+                  strokeWidth={16}
+                  dot={false}
+                  activeDot={false}
+                  isAnimationActive={false}
+                  tooltipType="none"
+                  style={{ cursor: "crosshair", pointerEvents: "stroke" }}
+                  onMouseEnter={() => setHoveredMetric("tegangan")}
+                />
+              )}
+              {visibleMetrics.includes("arus") && hasData.arus && (
+                <Line
+                  yAxisId="arus"
+                  type="monotone"
+                  dataKey="current"
+                  stroke="#06b6d4"
+                  strokeOpacity={0.001}
+                  strokeWidth={16}
+                  dot={false}
+                  activeDot={false}
+                  isAnimationActive={false}
+                  tooltipType="none"
+                  style={{ cursor: "crosshair", pointerEvents: "stroke" }}
+                  onMouseEnter={() => setHoveredMetric("arus")}
+                />
+              )}
             </AreaChart>
-          </ResponsiveContainer>
+            </ResponsiveContainer>
+            </div>
+          </div>
         )}
       </CardContent>
     </Card>
