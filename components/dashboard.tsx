@@ -382,15 +382,13 @@ function normalizeReadings(
 function mergeHistoryReadings({
   previous,
   incoming,
-  sensorId,
   hours,
-  limit,
+  limitPerSensor,
 }: {
   previous: RawReading[]
   incoming: RawReading[]
-  sensorId: string
   hours: number
-  limit: number
+  limitPerSensor: number
 }): RawReading[] {
   const cutoff =
     Date.now() -
@@ -405,12 +403,6 @@ function mergeHistoryReadings({
     ...incoming,
     ...previous,
   ]) {
-    if (
-      reading.sensorId !== sensorId
-    ) {
-      continue
-    }
-
     const timestamp = new Date(
       reading.recordedAt,
     ).getTime()
@@ -432,7 +424,7 @@ function mergeHistoryReadings({
     }
   }
 
-  return Array.from(
+  const readings = Array.from(
     readingMap.values(),
   )
     .sort(
@@ -444,7 +436,23 @@ function mergeHistoryReadings({
           first.recordedAt,
         ).getTime(),
     )
-    .slice(0, limit)
+  const sensorCounts = new Map<string, number>()
+
+  return readings.filter(reading => {
+    const currentCount =
+      sensorCounts.get(reading.sensorId) ?? 0
+
+    if (currentCount >= limitPerSensor) {
+      return false
+    }
+
+    sensorCounts.set(
+      reading.sensorId,
+      currentCount + 1,
+    )
+
+    return true
+  })
 }
 
 function downsampleChartData(
@@ -922,12 +930,8 @@ export function Dashboard() {
 
 
 
-  /*
-   * Riwayat penuh hanya dimuat saat:
-   * - halaman pertama dibuka;
-   * - lantai berubah;
-   * - periode berubah.
-   */
+  // Muat data utama 24 jam sekali saat dashboard dibuka.
+  // Pilihan periode hanya memfilter data ini di sisi tampilan.
   const fetchHistory = useCallback(
     async (
       signal?: AbortSignal,
@@ -1047,29 +1051,15 @@ export function Dashboard() {
 
         setLatestReadings(readings)
 
-        const activeLatest =
-          readings.filter(
-            reading =>
-              reading.sensorId ===
-              activeSensorId,
-          )
-
-        if (activeLatest.length > 0) {
-          const periodConfig =
-            periodConfigs[period]
-
+        if (readings.length > 0) {
           setHistoryReadings(
             previous =>
               mergeHistoryReadings({
                 previous,
-                incoming:
-                  activeLatest,
-                sensorId:
-                  activeSensorId,
-                hours:
-                  periodConfig.hours,
-                limit:
-                  periodConfig.limit,
+                incoming: readings,
+                hours: periodConfigs["24"].hours,
+                limitPerSensor:
+                  periodConfigs["24"].limit,
               }),
           )
         }
@@ -1082,10 +1072,7 @@ export function Dashboard() {
         latestRequestRunning.current =
           false
       }
-    }, [
-      activeSensorId,
-      period,
-    ])
+    }, [])
 
   useEffect(() => {
     const controller =
