@@ -100,6 +100,8 @@ type ChartTab =
   | "tegangan"
   | "arus"
 
+type ChartMetric = Exclude<ChartTab, "all">
+
 type RawReading = {
   id: number | string
   sensorId: string
@@ -564,6 +566,70 @@ function getCurrentDomain(
     Math.max(0, Math.floor((minimum - padding) * 10) / 10),
     Math.ceil((maximum + padding) * 10) / 10,
   ]
+}
+
+function formatAxisClock(value: number): string {
+  return clock(value).replace(":", ".")
+}
+
+function getChartTimeline(
+  data: ChartReading[],
+  period: Period,
+): {
+  domain: [number, number]
+  ticks: number[]
+} {
+  const latestTimestamp =
+    data.at(-1)?.timestamp ?? Date.now()
+  const intervalMinutes =
+    period === "24"
+      ? 240
+      : period === "6"
+        ? 60
+        : 15
+  const interval = intervalMinutes * 60 * 1000
+  const timezoneOffset = 7 * 60 * 60 * 1000
+  const periodStart =
+    latestTimestamp -
+    periodConfigs[period].hours * 60 * 60 * 1000
+  const firstRegularTick =
+    Math.ceil(
+      (periodStart + timezoneOffset) /
+      interval,
+    ) * interval - timezoneOffset
+  const lastRegularTick =
+    Math.ceil(
+      (latestTimestamp + timezoneOffset) /
+      interval,
+    ) * interval - timezoneOffset
+  const ticks: number[] = []
+
+  for (
+    let tick = firstRegularTick;
+    tick <= lastRegularTick;
+    tick += interval
+  ) {
+    ticks.push(tick)
+  }
+
+  const latestMinute = Math.floor(
+    latestTimestamp / 60_000,
+  )
+  const latestAlreadyIncluded = ticks.some(
+    tick =>
+      Math.floor(tick / 60_000) ===
+      latestMinute,
+  )
+
+  if (!latestAlreadyIncluded) {
+    ticks.push(latestTimestamp)
+    ticks.sort((first, second) => first - second)
+  }
+
+  return {
+    domain: [periodStart, lastRegularTick],
+    ticks,
+  }
 }
 
 function getSensorId(
@@ -1602,6 +1668,20 @@ export function Dashboard() {
                 </div>
               </div>
 
+              <CombinedTelemetryChart
+                floor="4"
+                data={chartData}
+                chartTab={chartTab}
+                onChartTabChange={setChartTab}
+                period={period}
+                onPeriodChange={setPeriod}
+                loading={loadingHistory}
+                temperatureDomain={temperatureDomain}
+                voltageDomain={voltageDomain}
+                currentDomain={currentDomain}
+              />
+
+              <div className="hidden" aria-hidden="true">
               <ChartControls
                 floor="4"
                 chartTab={chartTab}
@@ -1881,6 +1961,7 @@ export function Dashboard() {
                   </Card>
                 )}
               </div>
+              </div>
             </div>
           )}
 
@@ -2029,6 +2110,20 @@ export function Dashboard() {
                 </div>
               </div>
 
+              <CombinedTelemetryChart
+                floor="5"
+                data={chartData}
+                chartTab={chartTab}
+                onChartTabChange={setChartTab}
+                period={period}
+                onPeriodChange={setPeriod}
+                loading={loadingHistory}
+                temperatureDomain={temperatureDomain}
+                voltageDomain={voltageDomain}
+                currentDomain={currentDomain}
+              />
+
+              <div className="hidden" aria-hidden="true">
               <ChartControls
                 floor="5"
                 chartTab={chartTab}
@@ -2308,6 +2403,7 @@ export function Dashboard() {
                   </Card>
                 )}
               </div>
+              </div>
             </div>
           )}
 
@@ -2520,6 +2616,345 @@ export function Dashboard() {
         </>
       )}
     </AppShell>
+  )
+}
+
+function CombinedTelemetryChart({
+  floor,
+  data,
+  chartTab,
+  onChartTabChange,
+  period,
+  onPeriodChange,
+  loading,
+  temperatureDomain,
+  voltageDomain,
+  currentDomain,
+}: {
+  floor: Floor
+  data: ChartReading[]
+  chartTab: ChartTab
+  onChartTabChange: (value: ChartTab) => void
+  period: Period
+  onPeriodChange: (value: Period) => void
+  loading: boolean
+  temperatureDomain: [number, number]
+  voltageDomain: [number, number]
+  currentDomain: [number, number]
+}) {
+  const [hoveredMetric, setHoveredMetric] =
+    useState<ChartMetric | null>(null)
+  const visibleMetrics: ChartMetric[] =
+    chartTab === "all"
+      ? ["suhu", "tegangan", "arus"]
+      : [chartTab]
+  const hasData: Record<ChartMetric, boolean> = {
+    suhu: data.some(reading =>
+      Number.isFinite(reading.temperature),
+    ),
+    tegangan: data.some(
+      reading =>
+        reading.voltage !== null &&
+        Number.isFinite(reading.voltage),
+    ),
+    arus: data.some(
+      reading =>
+        reading.current !== null &&
+        Number.isFinite(reading.current),
+    ),
+  }
+  const hasVisibleData = visibleMetrics.some(
+    metric => hasData[metric],
+  )
+  const timeline = useMemo(
+    () => getChartTimeline(data, period),
+    [data, period],
+  )
+  const indicatorDomain =
+    hoveredMetric === "suhu"
+      ? temperatureDomain
+      : hoveredMetric === "tegangan"
+        ? voltageDomain
+        : hoveredMetric === "arus"
+          ? currentDomain
+          : [0, 1]
+  const metricDetails: Record<
+    ChartMetric,
+    {
+      color: string
+      label: string
+      unit: string
+    }
+  > = {
+    suhu: {
+      color: "#10b981",
+      label: "Suhu",
+      unit: "°C",
+    },
+    tegangan: {
+      color: "#f59e0b",
+      label: "Tegangan",
+      unit: "V",
+    },
+    arus: {
+      color: "#06b6d4",
+      label: "Arus",
+      unit: "A",
+    },
+  }
+
+  return (
+    <Card className="mt-6 overflow-hidden rounded-2xl border-slate-200/80 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <CardHeader className="gap-5 border-b border-slate-100 pb-4 dark:border-slate-800/80">
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#005A9C]/10 text-[#005A9C] dark:bg-blue-500/10 dark:text-blue-400">
+              <TrendingUp className="size-5" />
+            </div>
+            <div>
+              <CardTitle className="text-base font-bold text-slate-900 dark:text-white">
+                Grafik Telemetri Lantai {floor}
+              </CardTitle>
+              <p className="mt-0.5 text-xs font-medium text-slate-500 dark:text-slate-400">
+                Data suhu, tegangan, dan arus · {periodConfigs[period].label}
+              </p>
+            </div>
+          </div>
+
+          <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+            <div className="min-w-0">
+              <span className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                Tampilan
+              </span>
+              <AnimatedTabs
+                tabs={[
+                  { value: "all", label: "Semua", icon: LayoutGrid },
+                  { value: "suhu", label: "Suhu", icon: Thermometer },
+                  { value: "tegangan", label: "Tegangan", icon: Zap },
+                  { value: "arus", label: "Arus", icon: Activity },
+                ]}
+                value={chartTab}
+                onValueChange={value =>
+                  onChartTabChange(value as ChartTab)
+                }
+                indicatorId={`combined-chart-tabs-l${floor}`}
+              />
+            </div>
+
+            <div className="min-w-0">
+              <span className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                Periode
+              </span>
+              <AnimatedTabsNoIcon
+                tabs={[
+                  { value: "1", label: "1 Jam" },
+                  { value: "6", label: "6 Jam" },
+                  { value: "24", label: "24 Jam" },
+                ]}
+                value={period}
+                onValueChange={value =>
+                  onPeriodChange(value as Period)
+                }
+                indicatorId={`combined-chart-period-l${floor}`}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex min-h-6 flex-wrap items-center gap-x-5 gap-y-2">
+          {visibleMetrics.map(metric => {
+            const detail = metricDetails[metric]
+
+            return (
+              <button
+                key={metric}
+                type="button"
+                className={cn(
+                  "flex items-center gap-2 text-xs font-semibold transition-opacity",
+                  hasData[metric]
+                    ? "text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
+                    : "cursor-default text-slate-300 dark:text-slate-700",
+                )}
+                onMouseEnter={() =>
+                  hasData[metric] && setHoveredMetric(metric)
+                }
+                onMouseLeave={() => setHoveredMetric(null)}
+              >
+                <span
+                  className="h-0.5 w-5 rounded-full"
+                  style={{ backgroundColor: detail.color }}
+                />
+                {detail.label}
+                {!hasData[metric] && (
+                  <span className="font-medium">(belum ada data)</span>
+                )}
+              </button>
+            )
+          })}
+
+          <span className="ml-auto text-[11px] font-medium text-slate-400 dark:text-slate-500">
+            {hoveredMetric
+              ? `Sumbu Y: ${metricDetails[hoveredMetric].label} (${metricDetails[hoveredMetric].unit})`
+              : "Hover garis untuk melihat sumbu Y"}
+          </span>
+        </div>
+      </CardHeader>
+
+      <CardContent className="h-[390px] px-3 pb-4 pt-4 sm:px-5">
+        {loading && data.length === 0 ? (
+          <ChartMessage loading message="Memuat grafik telemetri..." />
+        ) : !hasVisibleData ? (
+          <ChartMessage message="Belum ada data telemetri pada periode ini." />
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart
+              data={data}
+              margin={{ top: 10, right: 18, left: 0, bottom: 4 }}
+              onMouseLeave={() => setHoveredMetric(null)}
+            >
+              <defs>
+                <linearGradient id={`combinedTempL${floor}`} x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0" stopColor="#10b981" stopOpacity={0.2} />
+                  <stop offset="1" stopColor="#10b981" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id={`combinedVoltL${floor}`} x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0" stopColor="#f59e0b" stopOpacity={0.16} />
+                  <stop offset="1" stopColor="#f59e0b" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id={`combinedCurrentL${floor}`} x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0" stopColor="#06b6d4" stopOpacity={0.16} />
+                  <stop offset="1" stopColor="#06b6d4" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+
+              <CartesianGrid vertical={false} stroke="var(--border)" />
+              <XAxis
+                dataKey="timestamp"
+                type="number"
+                scale="time"
+                domain={timeline.domain}
+                ticks={timeline.ticks}
+                interval={0}
+                tickFormatter={value => formatAxisClock(Number(value))}
+                axisLine={false}
+                tickLine={false}
+                fontSize={11}
+                tick={{ fill: "var(--muted-foreground)" }}
+              />
+
+              <YAxis yAxisId="suhu" domain={temperatureDomain} hide />
+              <YAxis yAxisId="tegangan" domain={voltageDomain} hide />
+              <YAxis yAxisId="arus" domain={currentDomain} hide />
+              <YAxis
+                yAxisId="indicator"
+                domain={indicatorDomain as [number, number]}
+                width={50}
+                tickCount={5}
+                allowDecimals={false}
+                axisLine={false}
+                tickLine={false}
+                tickFormatter={value =>
+                  hoveredMetric ? String(Math.round(Number(value))) : ""
+                }
+                tick={{
+                  fill: hoveredMetric
+                    ? "var(--muted-foreground)"
+                    : "transparent",
+                  fontSize: 11,
+                }}
+              />
+
+              <Tooltip
+                cursor={{ stroke: "var(--muted-foreground)", strokeDasharray: "4 4", strokeOpacity: 0.45 }}
+                content={({ active, payload, label }) => {
+                  if (!active || !payload?.length) {
+                    return null
+                  }
+
+                  return (
+                    <div className="rounded-xl border border-border bg-popover p-2.5 text-xs text-popover-foreground shadow-md">
+                      <p className="mb-1.5 font-mono font-semibold text-muted-foreground">
+                        {fullDateTime(Number(label))}
+                      </p>
+                      {payload.map(item => {
+                        const key = String(item.dataKey) as "temperature" | "voltage" | "current"
+                        const metric: ChartMetric =
+                          key === "temperature"
+                            ? "suhu"
+                            : key === "voltage"
+                              ? "tegangan"
+                              : "arus"
+                        const detail = metricDetails[metric]
+                        const precision = metric === "arus" ? 2 : 1
+
+                        return (
+                          <p key={key} className="flex items-center gap-2 py-0.5">
+                            <span className="size-1.5 rounded-full" style={{ backgroundColor: detail.color }} />
+                            <span className="text-muted-foreground">{detail.label}:</span>
+                            <span className="font-bold">
+                              {Number(item.value).toFixed(precision)} {detail.unit}
+                            </span>
+                          </p>
+                        )
+                      })}
+                    </div>
+                  )
+                }}
+              />
+
+              {visibleMetrics.includes("suhu") && hasData.suhu && (
+                <Area
+                  yAxisId="suhu"
+                  type="monotone"
+                  dataKey="temperature"
+                  name="Suhu"
+                  stroke="#10b981"
+                  strokeWidth={2.5}
+                  fill={`url(#combinedTempL${floor})`}
+                  connectNulls
+                  isAnimationActive={false}
+                  dot={false}
+                  activeDot={{ r: 4, fill: "#059669" }}
+                  onMouseEnter={() => setHoveredMetric("suhu")}
+                />
+              )}
+              {visibleMetrics.includes("tegangan") && hasData.tegangan && (
+                <Area
+                  yAxisId="tegangan"
+                  type="monotone"
+                  dataKey="voltage"
+                  name="Tegangan"
+                  stroke="#f59e0b"
+                  strokeWidth={2.4}
+                  fill={`url(#combinedVoltL${floor})`}
+                  connectNulls
+                  isAnimationActive={false}
+                  dot={false}
+                  activeDot={{ r: 4, fill: "#d97706" }}
+                  onMouseEnter={() => setHoveredMetric("tegangan")}
+                />
+              )}
+              {visibleMetrics.includes("arus") && hasData.arus && (
+                <Area
+                  yAxisId="arus"
+                  type="monotone"
+                  dataKey="current"
+                  name="Arus"
+                  stroke="#06b6d4"
+                  strokeWidth={2.4}
+                  fill={`url(#combinedCurrentL${floor})`}
+                  connectNulls
+                  isAnimationActive={false}
+                  dot={false}
+                  activeDot={{ r: 4, fill: "#0891b2" }}
+                  onMouseEnter={() => setHoveredMetric("arus")}
+                />
+              )}
+            </AreaChart>
+          </ResponsiveContainer>
+        )}
+      </CardContent>
+    </Card>
   )
 }
 
