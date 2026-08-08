@@ -103,6 +103,16 @@ type ChartTab =
 
 type ChartMetric = Exclude<ChartTab, "all">
 
+const FLOOR_CHART_METRICS: Record<Floor, ChartMetric[]> = {
+  "4": ["suhu", "tegangan", "arus"],
+  "5": ["suhu"],
+}
+
+const VOLTAGE_MINIMUM = 200
+const VOLTAGE_TARGET = 220
+const VOLTAGE_MAXIMUM = 240
+const CURRENT_CAPACITY = 25
+
 type RawReading = {
   id: number | string
   sensorId: string
@@ -561,9 +571,7 @@ function getCurrentDomain(
         Number.isFinite(value),
     )
 
-  if (values.length === 0) {
-    return [0, 10]
-  }
+  values.push(CURRENT_CAPACITY)
 
   const minimum = Math.min(...values)
   const maximum = Math.max(...values)
@@ -1229,12 +1237,14 @@ export function Dashboard() {
   const voltageL4 = readingL4?.voltage !== null && readingL4?.voltage !== undefined ? Number(readingL4.voltage) : null
   const currentL4 = readingL4?.current !== null && readingL4?.current !== undefined ? Number(readingL4.current) : null
   const powerKwL4 = voltageL4 !== null && currentL4 !== null ? (voltageL4 * currentL4) / 1000 : null
-  const loadPercentageL4 = currentL4 !== null ? Math.min(Math.round((currentL4 / 25) * 100), 100) : null
+  const loadPercentageL4 = currentL4 !== null ? Math.min(Math.round((currentL4 / CURRENT_CAPACITY) * 100), 100) : null
 
+  // Dipertahankan hanya untuk blok grafik lama yang sudah disembunyikan.
+  // Kapabilitas UI aktif Lantai 5 tetap hanya suhu.
   const voltageL5 = readingL5?.voltage !== null && readingL5?.voltage !== undefined ? Number(readingL5.voltage) : null
   const currentL5 = readingL5?.current !== null && readingL5?.current !== undefined ? Number(readingL5.current) : null
   const powerKwL5 = voltageL5 !== null && currentL5 !== null ? (voltageL5 * currentL5) / 1000 : null
-  const loadPercentageL5 = currentL5 !== null ? Math.min(Math.round((currentL5 / 25) * 100), 100) : null
+  const loadPercentageL5 = currentL5 !== null ? Math.min(Math.round((currentL5 / CURRENT_CAPACITY) * 100), 100) : null
 
   const chartData = useMemo(() => {
     const hoursLimit = periodConfigs[period].hours
@@ -1261,9 +1271,9 @@ export function Dashboard() {
                   reading.temperature,
                 ),
               voltage:
-                reading.voltage,
+                activeFloor === "4" ? reading.voltage : null,
               current:
-                reading.current,
+                activeFloor === "4" ? reading.current : null,
             }) satisfies ChartReading,
         )
         .filter(
@@ -1294,6 +1304,7 @@ export function Dashboard() {
   }, [
     historyReadings,
     activeSensorId,
+    activeFloor,
     period,
   ])
 
@@ -1467,7 +1478,9 @@ export function Dashboard() {
               Status Operasional: Normal
             </p>
             <p className="text-xs text-emerald-700 dark:text-emerald-400 font-medium">
-              Seluruh parameter suhu &amp; kelistrikan Lantai {activeFloor} beroperasi dalam batas aman.
+              {activeFloor === "4"
+                ? "Seluruh parameter suhu dan kelistrikan Lantai 4 beroperasi dalam batas aman."
+                : "Parameter suhu Lantai 5 beroperasi dalam batas aman."}
             </p>
           </div>
         </div>
@@ -1693,6 +1706,8 @@ export function Dashboard() {
                 temperatureDomain={temperatureDomain}
                 voltageDomain={voltageDomain}
                 currentDomain={currentDomain}
+                warningTemperature={warningTemperature}
+                dangerTemperature={dangerTemperature}
               />
 
               <div className="hidden" aria-hidden="true">
@@ -1999,40 +2014,6 @@ export function Dashboard() {
                     iconColor: "text-purple-600 dark:text-purple-400",
                   },
                   {
-                    icon: Zap,
-                    label: "Tegangan Listrik L5",
-                    value: voltageL5 !== null
-                      ? `${voltageL5.toFixed(1)} V`
-                      : "-- V",
-                    detail: voltageL5 !== null
-                      ? voltageL5 >= 200 && voltageL5 <= 240
-                        ? "🟢 220V Nominal (Stabil)"
-                        : "Volt Anomali"
-                      : "Belum ada data",
-                    valueClassName: voltageL5 !== null
-                      ? voltageL5 >= 200 && voltageL5 <= 240
-                        ? "text-emerald-600 dark:text-emerald-400"
-                        : "text-rose-600 dark:text-rose-400"
-                      : "text-muted-foreground",
-                    iconBgColor: "bg-amber-500/10",
-                    iconColor: "text-amber-600 dark:text-amber-400",
-                  },
-                  {
-                    icon: Activity,
-                    label: "Arus & Beban L5",
-                    value: currentL5 !== null
-                      ? `${currentL5.toFixed(2)} A`
-                      : "-- A",
-                    detail: powerKwL5 !== null
-                      ? `⚡ Daya: ${powerKwL5.toFixed(2)} kW (${loadPercentageL5}% Load)`
-                      : "Belum ada data",
-                    valueClassName: currentL5 !== null
-                      ? "text-cyan-600 dark:text-cyan-400"
-                      : "text-muted-foreground",
-                    iconBgColor: "bg-cyan-500/10",
-                    iconColor: "text-cyan-600 dark:text-cyan-400",
-                  },
-                  {
                     icon: Radio,
                     label: "Sensor L5",
                     value: onlineL5 ? "Online" : "Offline",
@@ -2069,61 +2050,6 @@ export function Dashboard() {
                 ]}
               />
 
-              {/* Power & Electrical Health Banner L5 */}
-              <div className="mt-4 grid gap-3 grid-cols-1 md:grid-cols-3">
-                <div className="flex items-center justify-between p-3.5 rounded-xl border border-slate-200/80 bg-gradient-to-r from-amber-50/50 to-orange-50/30 dark:from-amber-950/20 dark:to-orange-950/10 dark:border-slate-800">
-                  <div className="flex items-center gap-3">
-                    <div className="flex size-9 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold shrink-0">
-                      <Zap className="size-4" />
-                    </div>
-                    <div>
-                      <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Stabilitas Tegangan L5</p>
-                      <p className="text-sm font-extrabold text-slate-900 dark:text-slate-100">
-                        {voltageL5 !== null ? `${voltageL5.toFixed(1)} V AC` : "-- V"}
-                      </p>
-                    </div>
-                  </div>
-                  <Badge variant="outline" className={`text-[10px] font-semibold ${voltageL5 !== null && voltageL5 >= 200 && voltageL5 <= 240 ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900" : "border-rose-200 bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400"}`}>
-                    {voltageL5 !== null && voltageL5 >= 200 && voltageL5 <= 240 ? "220V Normal" : "Volt Anomali"}
-                  </Badge>
-                </div>
-
-                <div className="flex items-center justify-between p-3.5 rounded-xl border border-slate-200/80 bg-gradient-to-r from-cyan-50/50 to-blue-50/30 dark:from-cyan-950/20 dark:to-blue-950/10 dark:border-slate-800">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="flex size-9 items-center justify-center rounded-lg bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-bold shrink-0">
-                      <Activity className="size-4" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Kapasitas Arus L5</p>
-                      <p className="text-sm font-extrabold text-slate-900 dark:text-slate-100 truncate">
-                        {currentL5 !== null ? `${currentL5.toFixed(2)} A` : "-- A"}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-[10px] font-semibold text-slate-500 block">Kapasitas Load</span>
-                    <span className="text-xs font-bold text-cyan-700 dark:text-cyan-400">{loadPercentageL5 !== null ? `${loadPercentageL5}%` : "--%"}</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between p-3.5 rounded-xl border border-slate-200/80 bg-gradient-to-r from-emerald-50/50 to-teal-50/30 dark:from-emerald-950/20 dark:to-teal-950/10 dark:border-slate-800">
-                  <div className="flex items-center gap-3">
-                    <div className="flex size-9 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold shrink-0">
-                      <Cpu className="size-4" />
-                    </div>
-                    <div>
-                      <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Estimasi Daya L5</p>
-                      <p className="text-sm font-extrabold text-emerald-700 dark:text-emerald-400">
-                        {powerKwL5 !== null ? `${powerKwL5.toFixed(2)} kW` : "-- kW"}
-                      </p>
-                    </div>
-                  </div>
-                  <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900 text-[10px] font-semibold">
-                    Daya Efisien
-                  </Badge>
-                </div>
-              </div>
-
               <CombinedTelemetryChart
                 floor="5"
                 data={chartData}
@@ -2135,6 +2061,8 @@ export function Dashboard() {
                 temperatureDomain={temperatureDomain}
                 voltageDomain={voltageDomain}
                 currentDomain={currentDomain}
+                warningTemperature={warningTemperatureL5}
+                dangerTemperature={dangerTemperatureL5}
               />
 
               <div className="hidden" aria-hidden="true">
@@ -2538,13 +2466,17 @@ export function Dashboard() {
                         Suhu (°C)
                       </TableHead>
 
-                      <TableHead>
-                        Tegangan (V)
-                      </TableHead>
+                      {activeFloor === "4" && (
+                        <>
+                          <TableHead>
+                            Tegangan (V)
+                          </TableHead>
 
-                      <TableHead>
-                        Arus (A)
-                      </TableHead>
+                          <TableHead>
+                            Arus (A)
+                          </TableHead>
+                        </>
+                      )}
 
                       <TableHead className="pr-6">
                         Status
@@ -2585,18 +2517,21 @@ export function Dashboard() {
                                 °C
                               </TableCell>
 
-                              <TableCell className="text-muted-foreground">
-                                {row.voltage !==
-                                  null
-                                  ? `${Number(Number(row.voltage).toFixed(1))} V`
-                                  : "-- V"}
-                              </TableCell>
+                              {activeFloor === "4" && (
+                                <>
+                                  <TableCell className="text-muted-foreground">
+                                    {row.voltage !== null
+                                      ? `${Number(Number(row.voltage).toFixed(1))} V`
+                                      : "-- V"}
+                                  </TableCell>
 
-                              <TableCell className="text-muted-foreground">
-                                {row.current !== null && row.current !== undefined
-                                  ? `${Number(Number(row.current).toFixed(2))} A`
-                                  : "-- A"}
-                              </TableCell>
+                                  <TableCell className="text-muted-foreground">
+                                    {row.current !== null && row.current !== undefined
+                                      ? `${Number(Number(row.current).toFixed(2))} A`
+                                      : "-- A"}
+                                  </TableCell>
+                                </>
+                              )}
 
                               <TableCell className="pr-6">
                                 <Badge
@@ -2615,7 +2550,7 @@ export function Dashboard() {
                     ) : (
                       <TableRow>
                         <TableCell
-                          colSpan={6}
+                          colSpan={activeFloor === "4" ? 6 : 4}
                           className="h-20 text-center text-muted-foreground"
                         >
                           Menunggu pengiriman data dari sensor...
@@ -2644,6 +2579,8 @@ function CombinedTelemetryChart({
   temperatureDomain,
   voltageDomain,
   currentDomain,
+  warningTemperature,
+  dangerTemperature,
 }: {
   floor: Floor
   data: ChartReading[]
@@ -2655,27 +2592,36 @@ function CombinedTelemetryChart({
   temperatureDomain: [number, number]
   voltageDomain: [number, number]
   currentDomain: [number, number]
+  warningTemperature: number
+  dangerTemperature: number
 }) {
   const [hoveredMetric, setHoveredMetric] =
     useState<ChartMetric | null>(null)
+  const supportedMetrics = FLOOR_CHART_METRICS[floor]
+  const effectiveChartTab: ChartTab =
+    floor === "5" ? "suhu" : chartTab
   const visibleMetrics: ChartMetric[] =
-    chartTab === "all"
-      ? ["suhu", "tegangan", "arus"]
-      : [chartTab]
+    effectiveChartTab === "all"
+      ? supportedMetrics
+      : [effectiveChartTab]
   const hasData: Record<ChartMetric, boolean> = {
     suhu: data.some(reading =>
       Number.isFinite(reading.temperature),
     ),
-    tegangan: data.some(
-      reading =>
-        reading.voltage !== null &&
-        Number.isFinite(reading.voltage),
-    ),
-    arus: data.some(
-      reading =>
-        reading.current !== null &&
-        Number.isFinite(reading.current),
-    ),
+    tegangan:
+      supportedMetrics.includes("tegangan") &&
+      data.some(
+        reading =>
+          reading.voltage !== null &&
+          Number.isFinite(reading.voltage),
+      ),
+    arus:
+      supportedMetrics.includes("arus") &&
+      data.some(
+        reading =>
+          reading.current !== null &&
+          Number.isFinite(reading.current),
+      ),
   }
   const hasVisibleData = visibleMetrics.some(
     metric => hasData[metric],
@@ -2684,15 +2630,19 @@ function CombinedTelemetryChart({
     () => getChartTimeline(data, period),
     [data, period],
   )
+  const displayedMetric =
+    effectiveChartTab === "all"
+      ? hoveredMetric
+      : effectiveChartTab
   const indicatorDomain =
-    hoveredMetric === "suhu"
+    displayedMetric === "suhu"
       ? temperatureDomain
-      : hoveredMetric === "tegangan"
+      : displayedMetric === "tegangan"
         ? voltageDomain
-        : hoveredMetric === "arus"
+        : displayedMetric === "arus"
           ? currentDomain
           : [0, 1]
-  const indicatorTicks = hoveredMetric
+  const indicatorTicks = displayedMetric
     ? getIntegerAxisTicks(
       indicatorDomain as [number, number],
     )
@@ -2721,14 +2671,14 @@ function CombinedTelemetryChart({
       unit: "A",
     },
   }
-  const hoveredValues: number[] = hoveredMetric
+  const hoveredValues: number[] = displayedMetric
     ? data
       .map(reading => {
-        if (hoveredMetric === "suhu") {
+        if (displayedMetric === "suhu") {
           return reading.temperature
         }
 
-        if (hoveredMetric === "tegangan") {
+        if (displayedMetric === "tegangan") {
           return reading.voltage
         }
 
@@ -2740,7 +2690,7 @@ function CombinedTelemetryChart({
       )
     : []
   const hoveredStats =
-    hoveredMetric && hoveredValues.length > 0
+    displayedMetric && hoveredValues.length > 0
       ? {
         current: hoveredValues.at(-1) ?? null,
         minimum: Math.min(...hoveredValues),
@@ -2757,7 +2707,7 @@ function CombinedTelemetryChart({
     value: number | null | undefined,
   ): string => {
     if (
-      !hoveredMetric ||
+      !displayedMetric ||
       value === null ||
       value === undefined
     ) {
@@ -2765,9 +2715,9 @@ function CombinedTelemetryChart({
     }
 
     const precision =
-      hoveredMetric === "arus" ? 2 : 1
+      displayedMetric === "arus" ? 2 : 1
 
-    return `${Number(value.toFixed(precision))} ${metricDetails[hoveredMetric].unit}`
+    return `${Number(value.toFixed(precision))} ${metricDetails[displayedMetric].unit}`
   }
 
   return (
@@ -2783,30 +2733,34 @@ function CombinedTelemetryChart({
                 Grafik Telemetri Lantai {floor}
               </CardTitle>
               <p className="mt-0.5 text-xs font-medium text-slate-500 dark:text-slate-400">
-                Data suhu, tegangan, dan arus · {periodConfigs[period].label}
+                {floor === "4"
+                  ? "Data suhu, tegangan, dan arus"
+                  : "Data suhu ruang ATC"} · {periodConfigs[period].label}
               </p>
             </div>
           </div>
 
           <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
-            <div className="min-w-0">
-              <span className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                Tampilan
-              </span>
-              <AnimatedTabs
-                tabs={[
-                  { value: "all", label: "Semua", icon: LayoutGrid },
-                  { value: "suhu", label: "Suhu", icon: Thermometer },
-                  { value: "tegangan", label: "Tegangan", icon: Zap },
-                  { value: "arus", label: "Arus", icon: Activity },
-                ]}
-                value={chartTab}
-                onValueChange={value =>
-                  onChartTabChange(value as ChartTab)
-                }
-                indicatorId={`combined-chart-tabs-l${floor}`}
-              />
-            </div>
+            {floor === "4" && (
+              <div className="min-w-0">
+                <span className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  Tampilan
+                </span>
+                <AnimatedTabs
+                  tabs={[
+                    { value: "all", label: "Semua", icon: LayoutGrid },
+                    { value: "suhu", label: "Suhu", icon: Thermometer },
+                    { value: "tegangan", label: "Tegangan", icon: Zap },
+                    { value: "arus", label: "Arus", icon: Activity },
+                  ]}
+                  value={effectiveChartTab}
+                  onValueChange={value =>
+                    onChartTabChange(value as ChartTab)
+                  }
+                  indicatorId={`combined-chart-tabs-l${floor}`}
+                />
+              </div>
+            )}
 
             <div className="min-w-0">
               <span className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
@@ -2867,8 +2821,8 @@ function CombinedTelemetryChart({
               Ringkasan Metrik
             </p>
             <p className="mt-0.5 text-xs font-bold text-slate-700 dark:text-slate-200">
-              {hoveredMetric
-                ? metricDetails[hoveredMetric].label
+              {displayedMetric
+                ? metricDetails[displayedMetric].label
                 : "Hover salah satu grafik"}
             </p>
           </div>
@@ -2901,8 +2855,8 @@ function CombinedTelemetryChart({
                 </span>
                 <span
                   className="mt-0.5 block text-sm font-extrabold text-slate-700 dark:text-slate-200"
-                  style={hoveredMetric
-                    ? { color: metricDetails[hoveredMetric].color }
+                  style={displayedMetric
+                    ? { color: metricDetails[displayedMetric].color }
                     : undefined}
                 >
                   {formatSummaryValue(item.value)}
@@ -2923,9 +2877,9 @@ function CombinedTelemetryChart({
             <div
               className={cn(
                 "pointer-events-none absolute bottom-7 left-0 top-2 z-10 flex w-11 flex-col justify-between border-r border-slate-200/70 pr-2 text-right transition-opacity dark:border-slate-800",
-                hoveredMetric ? "opacity-100" : "opacity-0",
+                displayedMetric ? "opacity-100" : "opacity-0",
               )}
-              aria-hidden={!hoveredMetric}
+              aria-hidden={!displayedMetric}
             >
               {indicatorTicks.map(value => (
                 <span
@@ -2977,6 +2931,97 @@ function CombinedTelemetryChart({
               <YAxis yAxisId="suhu" domain={temperatureDomain} hide />
               <YAxis yAxisId="tegangan" domain={voltageDomain} hide />
               <YAxis yAxisId="arus" domain={currentDomain} hide />
+
+              {displayedMetric === "suhu" && (
+                <>
+                  <ReferenceLine
+                    yAxisId="suhu"
+                    y={dangerTemperature}
+                    ifOverflow="extendDomain"
+                    stroke="#fb7185"
+                    strokeDasharray="5 4"
+                    label={{
+                      value: `Bahaya (≥${dangerTemperature}°C)`,
+                      fill: "#f43f5e",
+                      fontSize: 10,
+                      position: "insideTopLeft",
+                    }}
+                  />
+                  <ReferenceLine
+                    yAxisId="suhu"
+                    y={warningTemperature}
+                    ifOverflow="extendDomain"
+                    stroke="#f59e0b"
+                    strokeDasharray="5 4"
+                    label={{
+                      value: `Waspada (≥${warningTemperature}°C)`,
+                      fill: "#d97706",
+                      fontSize: 10,
+                      position: "insideTopLeft",
+                    }}
+                  />
+                </>
+              )}
+
+              {displayedMetric === "tegangan" && (
+                <>
+                  <ReferenceLine
+                    yAxisId="tegangan"
+                    y={VOLTAGE_TARGET}
+                    ifOverflow="extendDomain"
+                    stroke="#3b82f6"
+                    strokeDasharray="4 4"
+                    label={{
+                      value: `Target ${VOLTAGE_TARGET} V`,
+                      fill: "#2563eb",
+                      fontSize: 10,
+                      position: "insideTopLeft",
+                    }}
+                  />
+                  <ReferenceLine
+                    yAxisId="tegangan"
+                    y={VOLTAGE_MINIMUM}
+                    ifOverflow="extendDomain"
+                    stroke="#f43f5e"
+                    strokeDasharray="4 4"
+                    label={{
+                      value: `Batas minimum ${VOLTAGE_MINIMUM} V`,
+                      fill: "#f43f5e",
+                      fontSize: 10,
+                      position: "insideBottomLeft",
+                    }}
+                  />
+                  <ReferenceLine
+                    yAxisId="tegangan"
+                    y={VOLTAGE_MAXIMUM}
+                    ifOverflow="extendDomain"
+                    stroke="#f43f5e"
+                    strokeDasharray="4 4"
+                    label={{
+                      value: `Batas maksimum ${VOLTAGE_MAXIMUM} V`,
+                      fill: "#f43f5e",
+                      fontSize: 10,
+                      position: "insideTopLeft",
+                    }}
+                  />
+                </>
+              )}
+
+              {displayedMetric === "arus" && (
+                <ReferenceLine
+                  yAxisId="arus"
+                  y={CURRENT_CAPACITY}
+                  ifOverflow="extendDomain"
+                  stroke="#f43f5e"
+                  strokeDasharray="5 4"
+                  label={{
+                    value: `Batas kapasitas ${CURRENT_CAPACITY} A`,
+                    fill: "#f43f5e",
+                    fontSize: 10,
+                    position: "insideTopLeft",
+                  }}
+                />
+              )}
 
               <Tooltip
                 cursor={{ stroke: "var(--muted-foreground)", strokeDasharray: "4 4", strokeOpacity: 0.45 }}
@@ -3277,7 +3322,7 @@ function MetricStatistics02({ items }: { items: MetricItemData[] }) {
           return (
             <div
               key={index}
-              className="w-full sm:w-1/2 lg:w-1/5 border-slate-100 dark:border-slate-800/80 border-b lg:border-b-0 border-e sm:odd:border-e lg:even:border-e lg:border-e lg:last:border-e-0 last:border-b-0 transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-800/30"
+                className="w-full sm:w-1/2 lg:w-auto lg:flex-1 border-slate-100 dark:border-slate-800/80 border-b lg:border-b-0 border-e sm:odd:border-e lg:even:border-e lg:border-e lg:last:border-e-0 last:border-b-0 transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-800/30"
             >
               <div className="p-5 flex items-start justify-between gap-3 h-full">
                 <div className="flex flex-col justify-between gap-2 min-w-0 flex-1">
