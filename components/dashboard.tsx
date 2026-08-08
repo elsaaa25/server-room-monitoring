@@ -768,7 +768,7 @@ export function Dashboard() {
     useState<Period>("24")
 
   const [chartTab, setChartTab] =
-    useState<ChartTab>("all")
+    useState<ChartTab>("suhu")
 
   const [
     historyReadings,
@@ -1466,31 +1466,6 @@ export function Dashboard() {
         </>
       }
     >
-      {/* Banner Health Status Overview */}
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-emerald-200/80 bg-emerald-50/80 p-3.5 dark:border-emerald-900/50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="flex size-3 items-center justify-center">
-            <span className="absolute size-3 animate-ping rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative size-2.5 rounded-full bg-emerald-600 dark:bg-emerald-400"></span>
-          </div>
-          <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-300">
-              Status Operasional: Normal
-            </p>
-            <p className="text-xs text-emerald-700 dark:text-emerald-400 font-medium">
-              {activeFloor === "4"
-                ? "Seluruh parameter suhu dan kelistrikan Lantai 4 beroperasi dalam batas aman."
-                : "Parameter suhu Lantai 5 beroperasi dalam batas aman."}
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Badge className="bg-emerald-600 text-white font-semibold shadow-sm">
-            STATUS: AMAN
-          </Badge>
-        </div>
-      </div>
-
       <div className="mb-6 pb-1">
         <UnderlineTabs
           tabs={[
@@ -1550,6 +1525,145 @@ export function Dashboard() {
         <>
           {activeFloor === "4" && (
             <div>
+              <PairedMetricGrid
+                pairs={[
+                  {
+                    metric: {
+                      icon: Thermometer,
+                      label: "Suhu Ruang Server",
+                      value: readingL4
+                        ? `${Number(Number(readingL4.temperature).toFixed(1))}°C`
+                        : "--°C",
+                      detail: readingL4
+                        ? `Batas waspada ${warningTemperature}°C`
+                        : "Menunggu data",
+                      valueClassName: readingL4
+                        ? getStatusColor(statusL4)
+                        : "text-muted-foreground",
+                      iconBgColor: "bg-emerald-500/10",
+                      iconColor: "text-emerald-600 dark:text-emerald-400",
+                    },
+                    condition: {
+                      icon: ShieldCheck,
+                      label: "Kondisi Suhu L4",
+                      value: !onlineL4
+                        ? "-"
+                        : statusL4 === "Bahaya"
+                          ? "BAHAYA"
+                          : statusL4 === "Waspada"
+                            ? "WASPADA"
+                            : "AMAN",
+                      detail: !onlineL4
+                        ? "Sensor suhu terputus"
+                        : statusL4 === "Normal"
+                          ? "Suhu ruangan normal"
+                          : "Periksa pendingin ruangan",
+                      valueClassName: !onlineL4
+                        ? "text-muted-foreground"
+                        : getStatusColor(statusL4),
+                      iconBgColor: "bg-emerald-500/10",
+                      iconColor: "text-emerald-600 dark:text-emerald-400",
+                    },
+                  },
+                  {
+                    metric: {
+                      icon: Zap,
+                      label: "Tegangan Listrik (AC)",
+                      value: voltageL4 !== null
+                        ? `${voltageL4.toFixed(1)} V`
+                        : "-- V",
+                      detail: voltageL4 !== null
+                        ? "Rentang operasional 200–240 V"
+                        : "Menunggu data",
+                      valueClassName: voltageL4 !== null
+                        ? voltageL4 >= VOLTAGE_MINIMUM && voltageL4 <= VOLTAGE_MAXIMUM
+                          ? "text-emerald-600 dark:text-emerald-400"
+                          : "text-rose-600 dark:text-rose-400"
+                        : "text-muted-foreground",
+                      iconBgColor: "bg-amber-500/10",
+                      iconColor: "text-amber-600 dark:text-amber-400",
+                    },
+                    condition: {
+                      icon: ShieldCheck,
+                      label: "Kondisi Tegangan L4",
+                      value: voltageL4 === null
+                        ? "-"
+                        : voltageL4 >= VOLTAGE_MINIMUM && voltageL4 <= VOLTAGE_MAXIMUM
+                          ? "AMAN"
+                          : "BAHAYA",
+                      detail: voltageL4 === null
+                        ? "Menunggu data tegangan"
+                        : voltageL4 < VOLTAGE_MINIMUM
+                          ? "Tegangan di bawah batas"
+                          : voltageL4 > VOLTAGE_MAXIMUM
+                            ? "Tegangan di atas batas"
+                            : "Tegangan dalam batas aman",
+                      valueClassName: voltageL4 === null
+                        ? "text-muted-foreground"
+                        : voltageL4 >= VOLTAGE_MINIMUM && voltageL4 <= VOLTAGE_MAXIMUM
+                          ? "text-emerald-600 dark:text-emerald-400"
+                          : "text-rose-600 dark:text-rose-400",
+                      iconBgColor: "bg-amber-500/10",
+                      iconColor: "text-amber-600 dark:text-amber-400",
+                    },
+                  },
+                  {
+                    metric: {
+                      icon: Activity,
+                      label: "Arus & Beban Listrik",
+                      value: currentL4 !== null
+                        ? `${currentL4.toFixed(2)} A`
+                        : "-- A",
+                      detail: currentL4 !== null
+                        ? `Kapasitas maksimum ${CURRENT_CAPACITY} A`
+                        : "Menunggu data",
+                      valueClassName: currentL4 !== null
+                        ? currentL4 <= CURRENT_CAPACITY
+                          ? "text-cyan-600 dark:text-cyan-400"
+                          : "text-rose-600 dark:text-rose-400"
+                        : "text-muted-foreground",
+                      iconBgColor: "bg-cyan-500/10",
+                      iconColor: "text-cyan-600 dark:text-cyan-400",
+                    },
+                    condition: {
+                      icon: ShieldCheck,
+                      label: "Kondisi Arus L4",
+                      value: currentL4 === null
+                        ? "-"
+                        : currentL4 <= CURRENT_CAPACITY
+                          ? "AMAN"
+                          : "BAHAYA",
+                      detail: currentL4 === null
+                        ? "Menunggu data arus"
+                        : currentL4 <= CURRENT_CAPACITY
+                          ? "Arus di bawah kapasitas"
+                          : "Arus melebihi kapasitas",
+                      valueClassName: currentL4 === null
+                        ? "text-muted-foreground"
+                        : currentL4 <= CURRENT_CAPACITY
+                          ? "text-emerald-600 dark:text-emerald-400"
+                          : "text-rose-600 dark:text-rose-400",
+                      iconBgColor: "bg-cyan-500/10",
+                      iconColor: "text-cyan-600 dark:text-cyan-400",
+                    },
+                  },
+                ]}
+                sensor={{
+                  icon: Radio,
+                  label: "Sensor L4",
+                  value: onlineL4 ? "Online" : "Offline",
+                  detail: readingL4
+                    ? `Sinkron: ${clock(readingL4.recordedAt, true)} WIB`
+                    : "Menunggu data",
+                  valueClassName: onlineL4
+                    ? "text-emerald-600 dark:text-emerald-400"
+                    : "text-rose-600 dark:text-rose-400",
+                  iconBgColor: "bg-blue-500/10",
+                  iconColor: "text-blue-600 dark:text-blue-400",
+                }}
+              />
+
+              <div className="hidden" aria-hidden="true">
               <MetricStatistics02
                 items={[
                   {
@@ -1693,6 +1807,8 @@ export function Dashboard() {
                     Daya Efisien
                   </Badge>
                 </div>
+              </div>
+
               </div>
 
               <CombinedTelemetryChart
@@ -1996,6 +2112,63 @@ export function Dashboard() {
 
           {activeFloor === "5" && (
             <div>
+              <PairedMetricGrid
+                pairs={[
+                  {
+                    metric: {
+                      icon: Thermometer,
+                      label: "Suhu Ruangan L5",
+                      value: readingL5
+                        ? `${Number(Number(readingL5.temperature).toFixed(1))}°C`
+                        : "--°C",
+                      detail: readingL5
+                        ? `Batas waspada ${warningTemperatureL5}°C`
+                        : "Belum ada data",
+                      valueClassName: readingL5
+                        ? getStatusColor(statusL5)
+                        : "text-muted-foreground",
+                      iconBgColor: "bg-purple-500/10",
+                      iconColor: "text-purple-600 dark:text-purple-400",
+                    },
+                    condition: {
+                      icon: ShieldCheck,
+                      label: "Kondisi Suhu L5",
+                      value: !onlineL5
+                        ? "-"
+                        : statusL5 === "Bahaya"
+                          ? "BAHAYA"
+                          : statusL5 === "Waspada"
+                            ? "WASPADA"
+                            : "AMAN",
+                      detail: !onlineL5
+                        ? "Sensor suhu terputus"
+                        : statusL5 === "Normal"
+                          ? "Suhu ruangan normal"
+                          : "Periksa kondisi AC Lantai 5",
+                      valueClassName: !onlineL5
+                        ? "text-muted-foreground"
+                        : getStatusColor(statusL5),
+                      iconBgColor: "bg-purple-500/10",
+                      iconColor: "text-purple-600 dark:text-purple-400",
+                    },
+                  },
+                ]}
+                sensor={{
+                  icon: Radio,
+                  label: "Sensor L5",
+                  value: onlineL5 ? "Online" : "Offline",
+                  detail: readingL5
+                    ? `Update: ${clock(readingL5.recordedAt, true)}`
+                    : "Belum ada data",
+                  valueClassName: onlineL5
+                    ? "text-emerald-600 dark:text-emerald-400"
+                    : "text-rose-600 dark:text-rose-400",
+                  iconBgColor: "bg-blue-500/10",
+                  iconColor: "text-blue-600 dark:text-blue-400",
+                }}
+              />
+
+              <div className="hidden" aria-hidden="true">
               <MetricStatistics02
                 items={[
                   {
@@ -2049,6 +2222,8 @@ export function Dashboard() {
                   },
                 ]}
               />
+
+              </div>
 
               <CombinedTelemetryChart
                 floor="5"
@@ -2598,12 +2773,11 @@ function CombinedTelemetryChart({
   const [hoveredMetric, setHoveredMetric] =
     useState<ChartMetric | null>(null)
   const supportedMetrics = FLOOR_CHART_METRICS[floor]
-  const effectiveChartTab: ChartTab =
-    floor === "5" ? "suhu" : chartTab
-  const visibleMetrics: ChartMetric[] =
-    effectiveChartTab === "all"
-      ? supportedMetrics
-      : [effectiveChartTab]
+  const effectiveChartTab: ChartMetric =
+    floor === "5" || chartTab === "all"
+      ? "suhu"
+      : chartTab
+  const visibleMetrics: ChartMetric[] = [effectiveChartTab]
   const hasData: Record<ChartMetric, boolean> = {
     suhu: data.some(reading =>
       Number.isFinite(reading.temperature),
@@ -2630,10 +2804,7 @@ function CombinedTelemetryChart({
     () => getChartTimeline(data, period),
     [data, period],
   )
-  const displayedMetric =
-    effectiveChartTab === "all"
-      ? hoveredMetric
-      : effectiveChartTab
+  const displayedMetric = hoveredMetric ?? effectiveChartTab
   const indicatorDomain =
     displayedMetric === "suhu"
       ? temperatureDomain
@@ -2748,7 +2919,6 @@ function CombinedTelemetryChart({
                 </span>
                 <AnimatedTabs
                   tabs={[
-                    { value: "all", label: "Semua", icon: LayoutGrid },
                     { value: "suhu", label: "Suhu", icon: Thermometer },
                     { value: "tegangan", label: "Tegangan", icon: Zap },
                     { value: "arus", label: "Arus", icon: Activity },
@@ -2780,39 +2950,6 @@ function CombinedTelemetryChart({
               />
             </div>
           </div>
-        </div>
-
-        <div className="flex min-h-6 flex-wrap items-center gap-x-5 gap-y-2">
-          {visibleMetrics.map(metric => {
-            const detail = metricDetails[metric]
-
-            return (
-              <button
-                key={metric}
-                type="button"
-                className={cn(
-                  "flex items-center gap-2 text-xs font-semibold transition-opacity",
-                  hasData[metric]
-                    ? "text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
-                    : "cursor-default text-slate-300 dark:text-slate-700",
-                )}
-                onMouseEnter={() =>
-                  hasData[metric] && setHoveredMetric(metric)
-                }
-                onMouseLeave={() => setHoveredMetric(null)}
-              >
-                <span
-                  className="h-0.5 w-5 rounded-full"
-                  style={{ backgroundColor: detail.color }}
-                />
-                {detail.label}
-                {!hasData[metric] && (
-                  <span className="font-medium">(belum ada data)</span>
-                )}
-              </button>
-            )
-          })}
-
         </div>
 
         <div className="flex flex-col gap-2.5 rounded-xl border border-slate-200/80 bg-slate-50/70 p-2.5 dark:border-slate-800 dark:bg-slate-950/30 lg:flex-row lg:items-center">
@@ -3311,6 +3448,89 @@ interface MetricItemData {
   valueClassName?: string
   iconBgColor?: string
   iconColor?: string
+}
+
+interface MetricPairData {
+  metric: MetricItemData
+  condition: MetricItemData
+}
+
+function MetricContent({ item }: { item: MetricItemData }) {
+  const Icon = item.icon
+
+  return (
+    <div className="flex min-w-0 flex-1 items-start justify-between gap-3 p-4">
+      <div className="flex min-w-0 flex-1 flex-col gap-2">
+        <p className="truncate text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          {item.label}
+        </p>
+        <div>
+          <p
+            className={cn(
+              "truncate text-xl font-extrabold tracking-tight",
+              item.valueClassName ?? "text-slate-900 dark:text-white",
+            )}
+          >
+            {item.value}
+          </p>
+          <p className="mt-1 truncate text-[10px] font-medium text-slate-400 dark:text-slate-500">
+            {item.detail}
+          </p>
+        </div>
+      </div>
+
+      <div
+        className={cn(
+          "grid size-10 shrink-0 place-items-center rounded-xl",
+          item.iconBgColor ?? "bg-slate-100 dark:bg-slate-800",
+        )}
+      >
+        <Icon
+          className={cn(
+            "size-4.5",
+            item.iconColor ?? "text-slate-600 dark:text-slate-300",
+          )}
+        />
+      </div>
+    </div>
+  )
+}
+
+function PairedMetricGrid({
+  pairs,
+  sensor,
+}: {
+  pairs: MetricPairData[]
+  sensor: MetricItemData
+}) {
+  return (
+    <div
+      className={cn(
+        "grid gap-3 md:grid-cols-2",
+        pairs.length === 1
+          ? "2xl:grid-cols-[minmax(0,2fr)_minmax(230px,1fr)]"
+          : "2xl:grid-cols-[repeat(3,minmax(0,1fr))_minmax(230px,.72fr)]",
+      )}
+    >
+      {pairs.map(pair => (
+        <Card
+          key={pair.metric.label}
+          className="overflow-hidden rounded-2xl border-slate-200/80 bg-white p-0 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+        >
+          <CardContent className="grid h-full grid-cols-1 divide-y divide-slate-100 p-0 dark:divide-slate-800/80 sm:grid-cols-2 sm:divide-x sm:divide-y-0">
+            <MetricContent item={pair.metric} />
+            <MetricContent item={pair.condition} />
+          </CardContent>
+        </Card>
+      ))}
+
+      <Card className="overflow-hidden rounded-2xl border-slate-200/80 bg-white p-0 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <CardContent className="flex h-full p-0">
+          <MetricContent item={sensor} />
+        </CardContent>
+      </Card>
+    </div>
+  )
 }
 
 function MetricStatistics02({ items }: { items: MetricItemData[] }) {
