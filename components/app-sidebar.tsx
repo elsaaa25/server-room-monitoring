@@ -53,8 +53,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border" {...props}>
       <SidebarHeader className="h-16 px-3.5 pt-3 pb-2 flex items-center justify-between group-data-[collapsible=icon]:p-2 group-data-[collapsible=icon]:justify-center">
-        <Link href="/" className="flex items-center gap-3 p-0 transition-opacity hover:opacity-90">
-          <AirNavLogo className="h-9.5" showText={true} />
+        <Link href="/" className="flex items-center gap-2 p-0 transition-opacity hover:opacity-90 min-w-0 overflow-hidden">
+          <AirNavLogo className="h-8" showText={true} />
         </Link>
       </SidebarHeader>
 

@@ -1,28 +1,36 @@
 import React from "react"
 
 export function AirNavLogo({
-  className = "h-9",
+  className = "h-8",
   showText = true,
 }: {
   className?: string
   showText?: boolean
 }) {
   return (
-    <div className={`flex items-center gap-2.5 ${className}`}>
-      {/* Official AirNav Indonesia Logo */}
-      <img
-        src="/airnav-logo.png"
-        alt="AirNav Indonesia"
-        className="h-8.5 w-auto object-contain shrink-0 group-data-[collapsible=icon]:w-8 group-data-[collapsible=icon]:object-cover group-data-[collapsible=icon]:object-left"
-      />
+    <div className={`flex items-center gap-2 min-w-0 overflow-hidden ${className}`}>
+      {/* Collapsed Sidebar Mode: Clean circular emblem crop */}
+      <div className="relative size-8 shrink-0 overflow-hidden rounded-full group-data-[collapsible=icon]:flex hidden items-center justify-center">
+        <img
+          src="/airnav-logo.png"
+          alt="AirNav Indonesia"
+          className="absolute left-0 top-0 h-8 w-auto max-w-none object-cover object-left"
+        />
+      </div>
 
-      {showText && (
-        <div className="flex flex-col justify-center leading-tight group-data-[collapsible=icon]:hidden">
-          <span className="text-[10px] font-bold tracking-wider text-slate-500 uppercase truncate">
-            Bandara Banyuwangi (BWX)
+      {/* Expanded Sidebar Mode: Official Landscape Logo cleanly constrained */}
+      <div className="flex items-center gap-2 min-w-0 group-data-[collapsible=icon]:hidden">
+        <img
+          src="/airnav-logo.png"
+          alt="AirNav Indonesia"
+          className="h-7 w-auto max-w-[145px] shrink-0 object-contain"
+        />
+        {showText && (
+          <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 border-l border-slate-200 dark:border-slate-800 pl-2">
+            BWX
           </span>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }
