@@ -630,7 +630,19 @@ function getChartTimeline(
     ticks.push(tick)
   }
 
-  // Keep ticks array uniform without pushing irregular latestTimestamp into XAxis ticks
+  const latestMinute = Math.floor(
+    latestTimestamp / 60_000,
+  )
+  const latestAlreadyIncluded = ticks.some(
+    tick =>
+      Math.floor(tick / 60_000) ===
+      latestMinute,
+  )
+
+  if (!latestAlreadyIncluded) {
+    ticks.push(latestTimestamp)
+    ticks.sort((first, second) => first - second)
+  }
 
   return {
     domain: [periodStart, lastRegularTick],
@@ -3022,7 +3034,7 @@ function CombinedTelemetryChart({
             <ResponsiveContainer width="100%" height="100%">
             <AreaChart
               data={data}
-              margin={{ top: 14, right: 18, left: 0, bottom: 4 }}
+              margin={{ top: 10, right: 18, left: 0, bottom: 16 }}
               onMouseLeave={() => setHoveredMetric(null)}
             >
               <defs>
@@ -3048,11 +3060,36 @@ function CombinedTelemetryChart({
                 domain={timeline.domain}
                 ticks={timeline.ticks}
                 interval={0}
-                tickFormatter={value => formatAxisClock(Number(value))}
                 axisLine={false}
                 tickLine={false}
-                fontSize={11}
-                tick={{ fill: "var(--muted-foreground)" }}
+                height={36}
+                tick={props => {
+                  const { x, y, payload } = props
+                  if (!payload || payload.value === undefined) return null
+
+                  const valueNum = Number(payload.value)
+                  const isLatest =
+                    timeline.latestTimestamp !== undefined &&
+                    Math.abs(valueNum - timeline.latestTimestamp) < 1000
+
+                  return (
+                    <g transform={`translate(${x},${y})`}>
+                      <text
+                        x={0}
+                        y={0}
+                        dy={isLatest ? 22 : 10}
+                        textAnchor="middle"
+                        fill={isLatest ? "#10b981" : "var(--muted-foreground)"}
+                        fontSize={11}
+                        fontWeight={isLatest ? 600 : 400}
+                      >
+                        {isLatest
+                          ? `Sekarang (${formatAxisClock(valueNum)})`
+                          : formatAxisClock(valueNum)}
+                      </text>
+                    </g>
+                  )
+                }}
               />
 
               <YAxis yAxisId="suhu" domain={temperatureDomain} hide />
@@ -3065,13 +3102,6 @@ function CombinedTelemetryChart({
                   stroke="#10b981"
                   strokeDasharray="4 4"
                   strokeWidth={1.5}
-                  label={{
-                    value: `Sekarang (${formatAxisClock(timeline.latestTimestamp)})`,
-                    fill: "#10b981",
-                    fontSize: 10,
-                    fontWeight: 600,
-                    position: "insideTopRight",
-                  }}
                 />
               )}
 
