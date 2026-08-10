@@ -595,6 +595,7 @@ function getChartTimeline(
 ): {
   domain: [number, number]
   ticks: number[]
+  latestTimestamp?: number
 } {
   const latestTimestamp =
     data.at(-1)?.timestamp ?? Date.now()
@@ -646,6 +647,7 @@ function getChartTimeline(
   return {
     domain: [periodStart, lastRegularTick],
     ticks,
+    latestTimestamp,
   }
 }
 
@@ -3032,7 +3034,7 @@ function CombinedTelemetryChart({
             <ResponsiveContainer width="100%" height="100%">
             <AreaChart
               data={data}
-              margin={{ top: 10, right: 18, left: 0, bottom: 4 }}
+              margin={{ top: 10, right: 18, left: 0, bottom: 16 }}
               onMouseLeave={() => setHoveredMetric(null)}
             >
               <defs>
@@ -3058,11 +3060,34 @@ function CombinedTelemetryChart({
                 domain={timeline.domain}
                 ticks={timeline.ticks}
                 interval={0}
-                tickFormatter={value => formatAxisClock(Number(value))}
                 axisLine={false}
                 tickLine={false}
-                fontSize={11}
-                tick={{ fill: "var(--muted-foreground)" }}
+                height={36}
+                tick={props => {
+                  const { x, y, payload } = props
+                  if (!payload || payload.value === undefined) return null
+
+                  const valueNum = Number(payload.value)
+                  const isLatest =
+                    timeline.latestTimestamp !== undefined &&
+                    Math.abs(valueNum - timeline.latestTimestamp) < 1000
+
+                  return (
+                    <g transform={`translate(${x},${y})`}>
+                      <text
+                        x={0}
+                        y={0}
+                        dy={isLatest ? 22 : 10}
+                        textAnchor="middle"
+                        fill={isLatest ? "#10b981" : "var(--muted-foreground)"}
+                        fontSize={11}
+                        fontWeight={isLatest ? 600 : 400}
+                      >
+                        {formatAxisClock(valueNum)}
+                      </text>
+                    </g>
+                  )
+                }}
               />
 
               <YAxis yAxisId="suhu" domain={temperatureDomain} hide />
