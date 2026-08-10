@@ -2896,7 +2896,7 @@ function CombinedTelemetryChart({
   return (
     <Card className="mt-6 overflow-hidden rounded-2xl border-slate-200/80 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
       <CardHeader className="gap-5 border-b border-slate-100 pb-4 dark:border-slate-800/80">
-        <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-3">
             <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#005A9C]/10 text-[#005A9C] dark:bg-blue-500/10 dark:text-blue-400">
               <TrendingUp className="size-5" />
@@ -2913,7 +2913,7 @@ function CombinedTelemetryChart({
             </div>
           </div>
 
-          <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+          <div className="flex flex-wrap items-center gap-3 lg:justify-end">
             {floor === "4" && (
               <div className="min-w-0">
                 <span className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
@@ -3495,21 +3495,21 @@ function MetricContent({ item }: { item: MetricItemData }) {
   const Icon = item.icon
 
   return (
-    <div className="flex min-w-0 flex-1 items-start justify-between gap-3 p-4">
-      <div className="flex min-w-0 flex-1 flex-col gap-2">
+    <div className="flex min-w-0 flex-1 items-start justify-between gap-2.5 p-3.5 sm:p-4">
+      <div className="flex min-w-0 flex-1 flex-col gap-1.5">
         <p className="truncate text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
           {item.label}
         </p>
         <div>
           <p
             className={cn(
-              "truncate text-xl font-extrabold tracking-tight",
+              "truncate text-lg sm:text-xl font-extrabold tracking-tight",
               item.valueClassName ?? "text-slate-900 dark:text-white",
             )}
           >
             {item.value}
           </p>
-          <p className="mt-1 truncate text-[10px] font-medium text-slate-400 dark:text-slate-500">
+          <p className="mt-0.5 truncate text-[10px] font-medium text-slate-400 dark:text-slate-500">
             {item.detail}
           </p>
         </div>
@@ -3517,13 +3517,13 @@ function MetricContent({ item }: { item: MetricItemData }) {
 
       <div
         className={cn(
-          "grid size-10 shrink-0 place-items-center rounded-xl",
+          "grid size-9 sm:size-10 shrink-0 place-items-center rounded-xl",
           item.iconBgColor ?? "bg-slate-100 dark:bg-slate-800",
         )}
       >
         <Icon
           className={cn(
-            "size-4.5",
+            "size-4 sm:size-4.5",
             item.iconColor ?? "text-slate-600 dark:text-slate-300",
           )}
         />
@@ -3544,8 +3544,8 @@ function PairedMetricGrid({
       className={cn(
         "grid gap-3 md:grid-cols-2",
         pairs.length === 1
-          ? "2xl:grid-cols-[minmax(0,2fr)_minmax(230px,1fr)]"
-          : "2xl:grid-cols-[repeat(3,minmax(0,1fr))_minmax(230px,.72fr)]",
+          ? "xl:grid-cols-[minmax(0,2fr)_minmax(210px,1fr)]"
+          : "xl:grid-cols-[repeat(3,minmax(0,1fr))_minmax(210px,.75fr)]",
       )}
     >
       {pairs.map(pair => (
