@@ -3497,7 +3497,7 @@ function MetricContent({ item }: { item: MetricItemData }) {
   return (
     <div className="flex min-w-0 flex-1 items-start justify-between gap-2.5 p-3.5 sm:p-4">
       <div className="flex min-w-0 flex-1 flex-col gap-1 sm:gap-1.5">
-        <p className="truncate text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+        <p className="min-h-6 text-[10px] font-bold uppercase leading-tight tracking-wider text-slate-500 dark:text-slate-400">
           {item.label}
         </p>
         <div>
@@ -3509,7 +3509,7 @@ function MetricContent({ item }: { item: MetricItemData }) {
           >
             {item.value}
           </p>
-          <p className="mt-0.5 truncate text-[10px] font-medium text-slate-400 dark:text-slate-500">
+          <p className="mt-0.5 text-[10px] font-medium leading-snug text-slate-400 dark:text-slate-500">
             {item.detail}
           </p>
         </div>
@@ -3542,7 +3542,10 @@ function PairedMetricGrid({
   return (
     <div
       className={cn(
-        "grid gap-3.5 grid-cols-1 md:grid-cols-2 2xl:grid-cols-4",
+        "grid grid-cols-1 gap-3.5",
+        pairs.length === 1
+          ? "md:grid-cols-[minmax(0,2fr)_minmax(240px,1fr)]"
+          : "md:grid-cols-2 min-[1800px]:grid-cols-4",
       )}
     >
       {pairs.map(pair => (
