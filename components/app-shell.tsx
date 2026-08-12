@@ -36,7 +36,7 @@ export function AppShell({
       <AppSidebar />
       <SidebarInset className="flex flex-col bg-slate-50/60 dark:bg-slate-950 min-h-screen">
         {/* Sticky App Header */}
-        <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between gap-3 border-b border-border/80 bg-background/90 backdrop-blur-md px-4 shadow-xs">
+        <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between gap-3 border-b border-border/80 bg-background/90 backdrop-blur-md px-4 shadow-xs">
           <div className="flex items-center gap-2 min-w-0">
             <SidebarTrigger className="-ml-1 text-muted-foreground hover:text-foreground" />
             <Separator orientation="vertical" className="mr-1.5 h-4 shrink-0" />
