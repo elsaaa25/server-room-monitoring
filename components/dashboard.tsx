@@ -528,6 +528,8 @@ function getTemperatureDomain(
 
 function getVoltageDomain(
   data: ChartReading[],
+  voltageMin = 200,
+  voltageMax = 240,
 ): [number, number] {
   const values = data
     .map(item => item.voltage)
@@ -539,7 +541,7 @@ function getVoltageDomain(
         Number.isFinite(value),
     )
 
-  values.push(200, 220, 240)
+  values.push(voltageMin, 220, voltageMax)
 
   const minimum = Math.min(...values)
   const maximum = Math.max(...values)
@@ -872,6 +874,26 @@ export function Dashboard() {
         300,
       ),
       1,
+    )
+
+  const voltageMin =
+    getNumberSetting(
+      settings.voltageMin,
+      getNumberSetting(
+        defaultMonitoringSettings
+          .voltageMin,
+        200,
+      ),
+    )
+
+  const voltageMax =
+    getNumberSetting(
+      settings.voltageMax,
+      getNumberSetting(
+        defaultMonitoringSettings
+          .voltageMax,
+        240,
+      ),
     )
 
   useEffect(() => {
@@ -1361,8 +1383,10 @@ export function Dashboard() {
       () =>
         getVoltageDomain(
           chartData,
+          voltageMin,
+          voltageMax,
         ),
-      [chartData],
+      [chartData, voltageMin, voltageMax],
     )
 
   const currentDomain =
@@ -1580,10 +1604,10 @@ export function Dashboard() {
                         ? `${voltageL4.toFixed(1)} V`
                         : "-- V",
                       detail: voltageL4 !== null
-                        ? "Rentang operasional 200–240 V"
+                        ? `Rentang operasional ${voltageMin}–${voltageMax} V`
                         : "Menunggu data",
                       valueClassName: voltageL4 !== null
-                        ? voltageL4 >= VOLTAGE_MINIMUM && voltageL4 <= VOLTAGE_MAXIMUM
+                        ? voltageL4 >= voltageMin && voltageL4 <= voltageMax
                           ? "text-emerald-600 dark:text-emerald-400"
                           : "text-rose-600 dark:text-rose-400"
                         : "text-muted-foreground",
@@ -1595,19 +1619,19 @@ export function Dashboard() {
                       label: "Kondisi Tegangan L4",
                       value: voltageL4 === null
                         ? "-"
-                        : voltageL4 >= VOLTAGE_MINIMUM && voltageL4 <= VOLTAGE_MAXIMUM
+                        : voltageL4 >= voltageMin && voltageL4 <= voltageMax
                           ? "AMAN"
                           : "BAHAYA",
                       detail: voltageL4 === null
                         ? "Menunggu data tegangan"
-                        : voltageL4 < VOLTAGE_MINIMUM
+                        : voltageL4 < voltageMin
                           ? "Tegangan di bawah batas"
-                          : voltageL4 > VOLTAGE_MAXIMUM
+                          : voltageL4 > voltageMax
                             ? "Tegangan di atas batas"
                             : "Tegangan dalam batas aman",
                       valueClassName: voltageL4 === null
                         ? "text-muted-foreground"
-                        : voltageL4 >= VOLTAGE_MINIMUM && voltageL4 <= VOLTAGE_MAXIMUM
+                        : voltageL4 >= voltageMin && voltageL4 <= voltageMax
                           ? "text-emerald-600 dark:text-emerald-400"
                           : "text-rose-600 dark:text-rose-400",
                       iconBgColor: "bg-amber-500/10",
@@ -1695,14 +1719,14 @@ export function Dashboard() {
                       ? `${voltageL4.toFixed(1)} V`
                       : "-- V",
                     detail: voltageL4 !== null
-                      ? voltageL4 >= 200 && voltageL4 <= 240
-                        ? "🟢 220V Nominal (Stabil)"
-                        : voltageL4 < 200
-                          ? "⚠️ Drop Voltage (<200V)"
-                          : "🚨 Overvoltage Surge (>240V)"
+                      ? voltageL4 >= voltageMin && voltageL4 <= voltageMax
+                        ? `${voltageMin}V - ${voltageMax}V Nominal (Stabil)`
+                        : voltageL4 < voltageMin
+                          ? `⚠️ Drop Voltage (<${voltageMin}V)`
+                          : `🚨 Overvoltage Surge (>${voltageMax}V)`
                       : "Menunggu data",
                     valueClassName: voltageL4 !== null
-                      ? voltageL4 >= 200 && voltageL4 <= 240
+                      ? voltageL4 >= voltageMin && voltageL4 <= voltageMax
                         ? "text-emerald-600 dark:text-emerald-400"
                         : "text-rose-600 dark:text-rose-400"
                       : "text-muted-foreground",
@@ -1775,8 +1799,8 @@ export function Dashboard() {
                       </p>
                     </div>
                   </div>
-                  <Badge variant="outline" className={`text-[10px] font-semibold ${voltageL4 !== null && voltageL4 >= 200 && voltageL4 <= 240 ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900" : "border-rose-200 bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400"}`}>
-                    {voltageL4 !== null && voltageL4 >= 200 && voltageL4 <= 240 ? "220V Normal" : "Volt Anomali"}
+                  <Badge variant="outline" className={`text-[10px] font-semibold ${voltageL4 !== null && voltageL4 >= voltageMin && voltageL4 <= voltageMax ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900" : "border-rose-200 bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400"}`}>
+                    {voltageL4 !== null && voltageL4 >= voltageMin && voltageL4 <= voltageMax ? "Tegangan Normal" : "Volt Anomali"}
                   </Badge>
                 </div>
 
@@ -2763,6 +2787,8 @@ function CombinedTelemetryChart({
   currentDomain,
   warningTemperature,
   dangerTemperature,
+  voltageMin = 200,
+  voltageMax = 240,
 }: {
   floor: Floor
   data: ChartReading[]
@@ -2776,6 +2802,8 @@ function CombinedTelemetryChart({
   currentDomain: [number, number]
   warningTemperature: number
   dangerTemperature: number
+  voltageMin?: number
+  voltageMax?: number
 }) {
   const [hoveredMetric, setHoveredMetric] =
     useState<ChartMetric | null>(null)
@@ -3158,12 +3186,12 @@ function CombinedTelemetryChart({
                   />
                   <ReferenceLine
                     yAxisId="tegangan"
-                    y={VOLTAGE_MINIMUM}
+                    y={voltageMin}
                     ifOverflow="extendDomain"
                     stroke="#f43f5e"
                     strokeDasharray="4 4"
                     label={{
-                      value: `Batas minimum ${VOLTAGE_MINIMUM} V`,
+                      value: `Batas minimum ${voltageMin} V`,
                       fill: "#f43f5e",
                       fontSize: 10,
                       position: "insideBottomLeft",
@@ -3171,12 +3199,12 @@ function CombinedTelemetryChart({
                   />
                   <ReferenceLine
                     yAxisId="tegangan"
-                    y={VOLTAGE_MAXIMUM}
+                    y={voltageMax}
                     ifOverflow="extendDomain"
                     stroke="#f43f5e"
                     strokeDasharray="4 4"
                     label={{
-                      value: `Batas maksimum ${VOLTAGE_MAXIMUM} V`,
+                      value: `Batas maksimum ${voltageMax} V`,
                       fill: "#f43f5e",
                       fontSize: 10,
                       position: "insideTopLeft",

@@ -3,6 +3,8 @@ export type MonitoringSettings = {
   dangerTemperature: number
   warningTemperatureL5: number
   dangerTemperatureL5: number
+  voltageMin: number
+  voltageMax: number
   refreshInterval: number
   offlineTimeout: number
   sensorName: string
@@ -16,6 +18,8 @@ export const defaultMonitoringSettings: MonitoringSettings = {
   dangerTemperature: 30,
   warningTemperatureL5: 27,
   dangerTemperatureL5: 30,
+  voltageMin: 200,
+  voltageMax: 240,
   refreshInterval: 4,
   offlineTimeout: 30,
   sensorName: "Sensor Ruang Server",

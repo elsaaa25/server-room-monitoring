@@ -11,6 +11,8 @@ export async function GET() {
         danger_temperature as "dangerTemperature",
         warning_temperature_l5 as "warningTemperatureL5",
         danger_temperature_l5 as "dangerTemperatureL5",
+        voltage_min as "voltageMin",
+        voltage_max as "voltageMax",
         refresh_interval as "refreshInterval",
         offline_timeout as "offlineTimeout",
         sensor_name as "sensorName",
@@ -54,6 +56,8 @@ export async function POST(request: Request) {
       dangerTemperature,
       warningTemperatureL5,
       dangerTemperatureL5,
+      voltageMin,
+      voltageMax,
       refreshInterval, 
       offlineTimeout, 
       sensorName, 
@@ -71,22 +75,29 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Batas suhu bahaya harus lebih tinggi dari batas waspada" }, { status: 400 })
     }
 
+    if (voltageMin !== undefined && voltageMax !== undefined && voltageMin >= voltageMax) {
+      return NextResponse.json({ error: "Batas minimum tegangan harus lebih kecil dari batas maksimum" }, { status: 400 })
+    }
+
     // 3. Update ke Database
     await db.query(
       `INSERT INTO monitoring_settings (
         id, warning_temperature, danger_temperature,
         warning_temperature_l5, danger_temperature_l5,
+        voltage_min, voltage_max,
         refresh_interval, 
         offline_timeout, sensor_name, sensor_id, browser_notification, sound_alert, updated_at
       )
       VALUES (
-        'global', $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW()
+        'global', $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW()
       )
       ON CONFLICT (id) DO UPDATE SET
         warning_temperature = EXCLUDED.warning_temperature,
         danger_temperature = EXCLUDED.danger_temperature,
         warning_temperature_l5 = EXCLUDED.warning_temperature_l5,
         danger_temperature_l5 = EXCLUDED.danger_temperature_l5,
+        voltage_min = EXCLUDED.voltage_min,
+        voltage_max = EXCLUDED.voltage_max,
         refresh_interval = EXCLUDED.refresh_interval,
         offline_timeout = EXCLUDED.offline_timeout,
         sensor_name = EXCLUDED.sensor_name,
@@ -99,6 +110,8 @@ export async function POST(request: Request) {
         dangerTemperature,
         warningTemperatureL5 ?? warningTemperature,
         dangerTemperatureL5 ?? dangerTemperature,
+        voltageMin ?? 200,
+        voltageMax ?? 240,
         refreshInterval || 4,
         offlineTimeout || 30,
         sensorName || "Sensor Ruang Server",

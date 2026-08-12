@@ -15,6 +15,7 @@ import {
   Server,
   Thermometer,
   Volume2,
+  Zap,
 } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
@@ -97,6 +98,12 @@ export function SettingsPage() {
           offlineTimeout: Number(
             json.data.offlineTimeout,
           ),
+          voltageMin: Number(
+            json.data.voltageMin ?? defaults.voltageMin,
+          ),
+          voltageMax: Number(
+            json.data.voltageMax ?? defaults.voltageMax,
+          ),
           browserNotification: Boolean(
             json.data.browserNotification,
           ),
@@ -141,7 +148,11 @@ export function SettingsPage() {
     Number.isFinite(settings.warningTemperatureL5) &&
     Number.isFinite(settings.dangerTemperatureL5) &&
     settings.warningTemperatureL5 <
-    settings.dangerTemperatureL5
+    settings.dangerTemperatureL5 &&
+    Number.isFinite(settings.voltageMin) &&
+    Number.isFinite(settings.voltageMax) &&
+    settings.voltageMin <
+    settings.voltageMax
 
   const permissionLabel = useMemo(() => {
     switch (permission) {
@@ -565,6 +576,68 @@ export function SettingsPage() {
                   settings.dangerTemperatureL5,
                 )}
                 °C
+              </Badge>
+            </div>
+          </SettingsCard>
+
+          <SettingsCard
+            icon={Zap}
+            title="Batas Pengawasan Tegangan Lantai 4"
+            description="Tentukan rentang operasional tegangan listrik AC yang aman untuk memicu status bahaya."
+          >
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field
+                label="Batas Minimum Tegangan"
+                hint="Tegangan di bawah nilai ini dianggap Bahaya"
+              >
+                <NumberInput
+                  value={settings.voltageMin}
+                  onChange={value =>
+                    update(
+                      "voltageMin",
+                      value,
+                    )
+                  }
+                  suffix="V"
+                  min={100}
+                  max={220}
+                />
+              </Field>
+
+              <Field
+                label="Batas Maksimum Tegangan"
+                hint="Tegangan di atas nilai ini dianggap Bahaya"
+              >
+                <NumberInput
+                  value={settings.voltageMax}
+                  onChange={value =>
+                    update(
+                      "voltageMax",
+                      value,
+                    )
+                  }
+                  suffix="V"
+                  min={220}
+                  max={300}
+                />
+              </Field>
+            </div>
+
+            {settings.voltageMin >= settings.voltageMax && (
+              <p className="mt-3 text-sm text-rose-600 dark:text-rose-400">
+                Batas minimum tegangan harus lebih kecil dari batas maksimum.
+              </p>
+            )}
+
+            <div className="mt-5 flex flex-wrap gap-3 text-xs">
+              <Badge className="bg-rose-100 text-rose-700 hover:bg-rose-100 dark:bg-rose-950/60 dark:text-rose-300 dark:hover:bg-rose-950/60">
+                Bahaya (Drop) &lt; {Number(settings.voltageMin)} V
+              </Badge>
+              <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:text-emerald-300 dark:hover:bg-emerald-950/60">
+                Aman {Number(settings.voltageMin)} – {Number(settings.voltageMax)} V
+              </Badge>
+              <Badge className="bg-rose-100 text-rose-700 hover:bg-rose-100 dark:bg-rose-950/60 dark:text-rose-300 dark:hover:bg-rose-950/60">
+                Bahaya (Surge) &gt; {Number(settings.voltageMax)} V
               </Badge>
             </div>
           </SettingsCard>
