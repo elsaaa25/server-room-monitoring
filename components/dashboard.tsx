@@ -1623,7 +1623,7 @@ export function Dashboard() {
                           ? "AMAN"
                           : "BAHAYA",
                       detail: voltageL4 === null
-                        ? "Menunggu data tegangan"
+                        ? "Sensor tegangan terputus"
                         : voltageL4 < voltageMin
                           ? "Tegangan di bawah batas"
                           : voltageL4 > voltageMax
@@ -1665,7 +1665,7 @@ export function Dashboard() {
                           ? "AMAN"
                           : "BAHAYA",
                       detail: currentL4 === null
-                        ? "Menunggu data arus"
+                        ? "Sensor arus terputus"
                         : currentL4 <= CURRENT_CAPACITY
                           ? "Arus di bawah kapasitas"
                           : "Arus melebihi kapasitas",
@@ -1695,150 +1695,150 @@ export function Dashboard() {
               />
 
               <div className="hidden" aria-hidden="true">
-              <MetricStatistics02
-                items={[
-                  {
-                    icon: Thermometer,
-                    label: "Suhu Ruang Server",
-                    value: activeReadingL4
-                      ? `${Number(Number(activeReadingL4.temperature).toFixed(1))}°C`
-                      : "--°C",
-                    detail: activeReadingL4
-                      ? `Status: ${statusL4} (<${warningTemperature}°C)`
-                      : "Menunggu data",
-                    valueClassName: activeReadingL4
-                      ? getStatusColor(statusL4)
-                      : "text-muted-foreground",
-                    iconBgColor: "bg-emerald-500/10",
-                    iconColor: "text-emerald-600 dark:text-emerald-400",
-                  },
-                  {
-                    icon: Zap,
-                    label: "Tegangan Listrik (AC)",
-                    value: voltageL4 !== null
-                      ? `${voltageL4.toFixed(1)} V`
-                      : "-- V",
-                    detail: voltageL4 !== null
-                      ? voltageL4 >= voltageMin && voltageL4 <= voltageMax
-                        ? `${voltageMin}V - ${voltageMax}V Nominal (Stabil)`
-                        : voltageL4 < voltageMin
-                          ? `⚠️ Drop Voltage (<${voltageMin}V)`
-                          : `🚨 Overvoltage Surge (>${voltageMax}V)`
-                      : "Menunggu data",
-                    valueClassName: voltageL4 !== null
-                      ? voltageL4 >= voltageMin && voltageL4 <= voltageMax
+                <MetricStatistics02
+                  items={[
+                    {
+                      icon: Thermometer,
+                      label: "Suhu Ruang Server",
+                      value: activeReadingL4
+                        ? `${Number(Number(activeReadingL4.temperature).toFixed(1))}°C`
+                        : "--°C",
+                      detail: activeReadingL4
+                        ? `Status: ${statusL4} (<${warningTemperature}°C)`
+                        : "Menunggu data",
+                      valueClassName: activeReadingL4
+                        ? getStatusColor(statusL4)
+                        : "text-muted-foreground",
+                      iconBgColor: "bg-emerald-500/10",
+                      iconColor: "text-emerald-600 dark:text-emerald-400",
+                    },
+                    {
+                      icon: Zap,
+                      label: "Tegangan Listrik (AC)",
+                      value: voltageL4 !== null
+                        ? `${voltageL4.toFixed(1)} V`
+                        : "-- V",
+                      detail: voltageL4 !== null
+                        ? voltageL4 >= voltageMin && voltageL4 <= voltageMax
+                          ? `${voltageMin}V - ${voltageMax}V Nominal (Stabil)`
+                          : voltageL4 < voltageMin
+                            ? `⚠️ Drop Voltage (<${voltageMin}V)`
+                            : `🚨 Overvoltage Surge (>${voltageMax}V)`
+                        : "Menunggu data",
+                      valueClassName: voltageL4 !== null
+                        ? voltageL4 >= voltageMin && voltageL4 <= voltageMax
+                          ? "text-emerald-600 dark:text-emerald-400"
+                          : "text-rose-600 dark:text-rose-400"
+                        : "text-muted-foreground",
+                      iconBgColor: "bg-amber-500/10",
+                      iconColor: "text-amber-600 dark:text-amber-400",
+                    },
+                    {
+                      icon: Activity,
+                      label: "Arus & Beban Listrik",
+                      value: currentL4 !== null
+                        ? `${currentL4.toFixed(2)} A`
+                        : "-- A",
+                      detail: powerKwL4 !== null
+                        ? `⚡ Daya: ${powerKwL4.toFixed(2)} kW (${loadPercentageL4}% Load)`
+                        : "Menunggu data",
+                      valueClassName: currentL4 !== null
+                        ? "text-cyan-600 dark:text-cyan-400"
+                        : "text-muted-foreground",
+                      iconBgColor: "bg-cyan-500/10",
+                      iconColor: "text-cyan-600 dark:text-cyan-400",
+                    },
+                    {
+                      icon: Radio,
+                      label: "Sensor L4",
+                      value: onlineL4 ? "Online" : "Offline",
+                      detail: onlineL4 && readingL4
+                        ? `Sinkron: ${clock(readingL4.recordedAt, true)} WIB`
+                        : "Menunggu data",
+                      valueClassName: onlineL4
                         ? "text-emerald-600 dark:text-emerald-400"
-                        : "text-rose-600 dark:text-rose-400"
-                      : "text-muted-foreground",
-                    iconBgColor: "bg-amber-500/10",
-                    iconColor: "text-amber-600 dark:text-amber-400",
-                  },
-                  {
-                    icon: Activity,
-                    label: "Arus & Beban Listrik",
-                    value: currentL4 !== null
-                      ? `${currentL4.toFixed(2)} A`
-                      : "-- A",
-                    detail: powerKwL4 !== null
-                      ? `⚡ Daya: ${powerKwL4.toFixed(2)} kW (${loadPercentageL4}% Load)`
-                      : "Menunggu data",
-                    valueClassName: currentL4 !== null
-                      ? "text-cyan-600 dark:text-cyan-400"
-                      : "text-muted-foreground",
-                    iconBgColor: "bg-cyan-500/10",
-                    iconColor: "text-cyan-600 dark:text-cyan-400",
-                  },
-                  {
-                    icon: Radio,
-                    label: "Sensor L4",
-                    value: onlineL4 ? "Online" : "Offline",
-                    detail: onlineL4 && readingL4
-                      ? `Sinkron: ${clock(readingL4.recordedAt, true)} WIB`
-                      : "Menunggu data",
-                    valueClassName: onlineL4
-                      ? "text-emerald-600 dark:text-emerald-400"
-                      : "text-rose-600 dark:text-rose-400",
-                    iconBgColor: "bg-blue-500/10",
-                    iconColor: "text-blue-600 dark:text-blue-400",
-                  },
-                  {
-                    icon: ShieldCheck,
-                    label: "Kondisi Ruangan L4",
-                    value: !onlineL4
-                      ? "-"
-                      : statusL4 === "Bahaya"
-                        ? "BAHAYA"
-                        : statusL4 === "Waspada"
-                          ? "WASPADA"
-                          : "AMAN",
-                    detail: !onlineL4
-                      ? "Sensor terputus"
-                      : statusL4 === "Normal"
-                        ? "Pendingin Ruangan Normal"
-                        : "Periksa AC Server",
-                    valueClassName: !onlineL4
-                      ? "text-muted-foreground"
-                      : getStatusColor(statusL4),
-                    iconBgColor: "bg-slate-100 dark:bg-slate-800",
-                    iconColor: "text-slate-600 dark:text-slate-400",
-                  },
-                ]}
-              />
+                        : "text-rose-600 dark:text-rose-400",
+                      iconBgColor: "bg-blue-500/10",
+                      iconColor: "text-blue-600 dark:text-blue-400",
+                    },
+                    {
+                      icon: ShieldCheck,
+                      label: "Kondisi Ruangan L4",
+                      value: !onlineL4
+                        ? "-"
+                        : statusL4 === "Bahaya"
+                          ? "BAHAYA"
+                          : statusL4 === "Waspada"
+                            ? "WASPADA"
+                            : "AMAN",
+                      detail: !onlineL4
+                        ? "Sensor terputus"
+                        : statusL4 === "Normal"
+                          ? "Pendingin Ruangan Normal"
+                          : "Periksa AC Server",
+                      valueClassName: !onlineL4
+                        ? "text-muted-foreground"
+                        : getStatusColor(statusL4),
+                      iconBgColor: "bg-slate-100 dark:bg-slate-800",
+                      iconColor: "text-slate-600 dark:text-slate-400",
+                    },
+                  ]}
+                />
 
-              {/* Power & Electrical Health Banner L4 */}
-              <div className="mt-4 grid gap-3 grid-cols-1 md:grid-cols-3">
-                <div className="flex items-center justify-between p-3.5 rounded-xl border border-slate-200/80 bg-gradient-to-r from-amber-50/50 to-orange-50/30 dark:from-amber-950/20 dark:to-orange-950/10 dark:border-slate-800">
-                  <div className="flex items-center gap-3">
-                    <div className="flex size-9 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold shrink-0">
-                      <Zap className="size-4" />
+                {/* Power & Electrical Health Banner L4 */}
+                <div className="mt-4 grid gap-3 grid-cols-1 md:grid-cols-3">
+                  <div className="flex items-center justify-between p-3.5 rounded-xl border border-slate-200/80 bg-gradient-to-r from-amber-50/50 to-orange-50/30 dark:from-amber-950/20 dark:to-orange-950/10 dark:border-slate-800">
+                    <div className="flex items-center gap-3">
+                      <div className="flex size-9 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold shrink-0">
+                        <Zap className="size-4" />
+                      </div>
+                      <div>
+                        <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Stabilitas Tegangan</p>
+                        <p className="text-sm font-extrabold text-slate-900 dark:text-slate-100">
+                          {voltageL4 !== null ? `${voltageL4.toFixed(1)} V AC` : "-- V"}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Stabilitas Tegangan</p>
-                      <p className="text-sm font-extrabold text-slate-900 dark:text-slate-100">
-                        {voltageL4 !== null ? `${voltageL4.toFixed(1)} V AC` : "-- V"}
-                      </p>
+                    <Badge variant="outline" className={`text-[10px] font-semibold ${voltageL4 !== null && voltageL4 >= voltageMin && voltageL4 <= voltageMax ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900" : "border-rose-200 bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400"}`}>
+                      {voltageL4 !== null && voltageL4 >= voltageMin && voltageL4 <= voltageMax ? "Tegangan Normal" : "Volt Anomali"}
+                    </Badge>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3.5 rounded-xl border border-slate-200/80 bg-gradient-to-r from-cyan-50/50 to-blue-50/30 dark:from-cyan-950/20 dark:to-blue-950/10 dark:border-slate-800">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="flex size-9 items-center justify-center rounded-lg bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-bold shrink-0">
+                        <Activity className="size-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Kapasitas Arus</p>
+                        <p className="text-sm font-extrabold text-slate-900 dark:text-slate-100 truncate">
+                          {currentL4 !== null ? `${currentL4.toFixed(2)} A` : "-- A"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[10px] font-semibold text-slate-500 block">Kapasitas Load</span>
+                      <span className="text-xs font-bold text-cyan-700 dark:text-cyan-400">{loadPercentageL4 !== null ? `${loadPercentageL4}%` : "--%"}</span>
                     </div>
                   </div>
-                  <Badge variant="outline" className={`text-[10px] font-semibold ${voltageL4 !== null && voltageL4 >= voltageMin && voltageL4 <= voltageMax ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900" : "border-rose-200 bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400"}`}>
-                    {voltageL4 !== null && voltageL4 >= voltageMin && voltageL4 <= voltageMax ? "Tegangan Normal" : "Volt Anomali"}
-                  </Badge>
-                </div>
 
-                <div className="flex items-center justify-between p-3.5 rounded-xl border border-slate-200/80 bg-gradient-to-r from-cyan-50/50 to-blue-50/30 dark:from-cyan-950/20 dark:to-blue-950/10 dark:border-slate-800">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="flex size-9 items-center justify-center rounded-lg bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-bold shrink-0">
-                      <Activity className="size-4" />
+                  <div className="flex items-center justify-between p-3.5 rounded-xl border border-slate-200/80 bg-gradient-to-r from-emerald-50/50 to-teal-50/30 dark:from-emerald-950/20 dark:to-teal-950/10 dark:border-slate-800">
+                    <div className="flex items-center gap-3">
+                      <div className="flex size-9 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold shrink-0">
+                        <Cpu className="size-4" />
+                      </div>
+                      <div>
+                        <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Estimasi Daya Terpakai</p>
+                        <p className="text-sm font-extrabold text-emerald-700 dark:text-emerald-400">
+                          {powerKwL4 !== null ? `${powerKwL4.toFixed(2)} kW` : "-- kW"}
+                        </p>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Kapasitas Arus</p>
-                      <p className="text-sm font-extrabold text-slate-900 dark:text-slate-100 truncate">
-                        {currentL4 !== null ? `${currentL4.toFixed(2)} A` : "-- A"}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-[10px] font-semibold text-slate-500 block">Kapasitas Load</span>
-                    <span className="text-xs font-bold text-cyan-700 dark:text-cyan-400">{loadPercentageL4 !== null ? `${loadPercentageL4}%` : "--%"}</span>
+                    <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900 text-[10px] font-semibold">
+                      Daya Efisien
+                    </Badge>
                   </div>
                 </div>
-
-                <div className="flex items-center justify-between p-3.5 rounded-xl border border-slate-200/80 bg-gradient-to-r from-emerald-50/50 to-teal-50/30 dark:from-emerald-950/20 dark:to-teal-950/10 dark:border-slate-800">
-                  <div className="flex items-center gap-3">
-                    <div className="flex size-9 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold shrink-0">
-                      <Cpu className="size-4" />
-                    </div>
-                    <div>
-                      <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Estimasi Daya Terpakai</p>
-                      <p className="text-sm font-extrabold text-emerald-700 dark:text-emerald-400">
-                        {powerKwL4 !== null ? `${powerKwL4.toFixed(2)} kW` : "-- kW"}
-                      </p>
-                    </div>
-                  </div>
-                  <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900 text-[10px] font-semibold">
-                    Daya Efisien
-                  </Badge>
-                </div>
-              </div>
 
               </div>
 
@@ -1858,285 +1858,285 @@ export function Dashboard() {
               />
 
               <div className="hidden" aria-hidden="true">
-              <ChartControls
-                floor="4"
-                chartTab={chartTab}
-                onChartTabChange={setChartTab}
-                period={period}
-                onPeriodChange={setPeriod}
-              />
+                <ChartControls
+                  floor="4"
+                  chartTab={chartTab}
+                  onChartTabChange={setChartTab}
+                  period={period}
+                  onPeriodChange={setPeriod}
+                />
 
-              {/* Grid Tampilan Grafik L4 berdasarkan Tab Aktif */}
-              <div className={chartTab === "all" ? "grid grid-cols-1 lg:grid-cols-3 gap-4" : "grid grid-cols-1 gap-4"}>
-                {(chartTab === "all" || chartTab === "suhu") && (
-                  <Card className="overflow-hidden border-slate-200/80 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 rounded-2xl">
-                    <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 dark:border-slate-800/80 pb-4">
-                      <div>
-                        <CardTitle className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                          <span>{chartTab === "all" ? "Suhu" : "Grafik Tren Suhu Lantai 4"}</span>
-                          <Badge variant="outline" className="text-[10px] font-semibold border-slate-200 dark:border-slate-700 text-[#005A9C] dark:text-blue-400">
-                            {periodConfigs[period].label}
-                          </Badge>
-                        </CardTitle>
-                      </div>
-
-                      {chartTab !== "all" && (
-                        <div className="flex flex-wrap items-center gap-1.5 text-xs">
-                          <span className="rounded-lg bg-[#005A9C]/10 px-2.5 py-1 font-semibold text-[#005A9C] dark:bg-blue-900/30 dark:text-blue-300">
-                            Saat Ini: {readingL4 ? `${Number(Number(readingL4.temperature).toFixed(1))}°C` : "--°C"}
-                          </span>
-                          <span className="rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-1 font-medium text-slate-600 dark:text-slate-300">
-                            Min: {minTemp !== null ? `${minTemp.toFixed(1)}°C` : "--"}
-                          </span>
-                          <span className="rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-1 font-medium text-slate-600 dark:text-slate-300">
-                            Max: {maxTemp !== null ? `${maxTemp.toFixed(1)}°C` : "--"}
-                          </span>
-                          <span className="rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-1 font-medium text-slate-600 dark:text-slate-300">
-                            Avg: {avgTemp !== null ? `${avgTemp.toFixed(1)}°C` : "--"}
-                          </span>
+                {/* Grid Tampilan Grafik L4 berdasarkan Tab Aktif */}
+                <div className={chartTab === "all" ? "grid grid-cols-1 lg:grid-cols-3 gap-4" : "grid grid-cols-1 gap-4"}>
+                  {(chartTab === "all" || chartTab === "suhu") && (
+                    <Card className="overflow-hidden border-slate-200/80 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 rounded-2xl">
+                      <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 dark:border-slate-800/80 pb-4">
+                        <div>
+                          <CardTitle className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <span>{chartTab === "all" ? "Suhu" : "Grafik Tren Suhu Lantai 4"}</span>
+                            <Badge variant="outline" className="text-[10px] font-semibold border-slate-200 dark:border-slate-700 text-[#005A9C] dark:text-blue-400">
+                              {periodConfigs[period].label}
+                            </Badge>
+                          </CardTitle>
                         </div>
-                      )}
-                    </CardHeader>
 
-                    <CardContent className="h-80 pl-1 pr-4 pb-4">
-                      {loadingHistory && chartData.length === 0 ? (
-                        <ChartMessage loading message="Memuat grafik suhu..." />
-                      ) : !hasTemperatureData ? (
-                        <ChartMessage message="Belum ada data suhu pada periode ini." />
-                      ) : (
-                        <ResponsiveContainer width="100%" height="100%">
-                          <AreaChart data={chartData} margin={{ top: 16, right: 20, left: -5, bottom: 5 }}>
-                            <defs>
-                              <linearGradient id="tempL4Grad" x1="0" x2="0" y1="0" y2="1">
-                                <stop offset="0" stopColor="#10b981" stopOpacity={0.2} />
-                                <stop offset="1" stopColor="#10b981" stopOpacity={0} />
-                              </linearGradient>
-                            </defs>
-                            <CartesianGrid vertical={false} stroke="var(--border)" />
-                            <XAxis
-                              dataKey="timestamp"
-                              type="number"
-                              scale="time"
-                              domain={["dataMin", "dataMax"]}
-                              tickCount={6}
-                              tickFormatter={value =>
-                                new Intl.DateTimeFormat("id-ID", { timeZone: "Asia/Jakarta", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(Number(value)))
-                              }
-                              axisLine={false}
-                              tickLine={false}
-                              minTickGap={45}
-                              fontSize={11}
-                              tick={{ fill: "var(--muted-foreground)" }}
-                            />
-                            <YAxis domain={temperatureDomain} axisLine={false} tickLine={false} fontSize={11} width={48} tickFormatter={value => String(Number(value))} tick={{ fill: "var(--muted-foreground)" }} />
-                            <Tooltip
-                              content={({ active, payload, label }) => {
-                                if (active && payload && payload.length) {
-                                  return (
-                                    <div className="rounded-xl border border-border bg-popover p-2.5 shadow-md text-popover-foreground text-xs font-semibold">
-                                      <p className="font-mono text-muted-foreground mb-1">{fullDateTime(Number(label))}</p>
-                                      {payload.map((p, idx) => (
-                                        <p key={idx} className="flex items-center gap-1.5 text-xs">
-                                          <span className="size-1.5 rounded-full" style={{ backgroundColor: p.color || p.stroke }} />
-                                          <span className="text-muted-foreground font-medium">Suhu:</span>
-                                          <span className="font-bold">{Number(Number(p.value).toFixed(1))}°C</span>
-                                        </p>
-                                      ))}
-                                    </div>
-                                  )
+                        {chartTab !== "all" && (
+                          <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                            <span className="rounded-lg bg-[#005A9C]/10 px-2.5 py-1 font-semibold text-[#005A9C] dark:bg-blue-900/30 dark:text-blue-300">
+                              Saat Ini: {readingL4 ? `${Number(Number(readingL4.temperature).toFixed(1))}°C` : "--°C"}
+                            </span>
+                            <span className="rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-1 font-medium text-slate-600 dark:text-slate-300">
+                              Min: {minTemp !== null ? `${minTemp.toFixed(1)}°C` : "--"}
+                            </span>
+                            <span className="rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-1 font-medium text-slate-600 dark:text-slate-300">
+                              Max: {maxTemp !== null ? `${maxTemp.toFixed(1)}°C` : "--"}
+                            </span>
+                            <span className="rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-1 font-medium text-slate-600 dark:text-slate-300">
+                              Avg: {avgTemp !== null ? `${avgTemp.toFixed(1)}°C` : "--"}
+                            </span>
+                          </div>
+                        )}
+                      </CardHeader>
+
+                      <CardContent className="h-80 pl-1 pr-4 pb-4">
+                        {loadingHistory && chartData.length === 0 ? (
+                          <ChartMessage loading message="Memuat grafik suhu..." />
+                        ) : !hasTemperatureData ? (
+                          <ChartMessage message="Belum ada data suhu pada periode ini." />
+                        ) : (
+                          <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={chartData} margin={{ top: 16, right: 20, left: -5, bottom: 5 }}>
+                              <defs>
+                                <linearGradient id="tempL4Grad" x1="0" x2="0" y1="0" y2="1">
+                                  <stop offset="0" stopColor="#10b981" stopOpacity={0.2} />
+                                  <stop offset="1" stopColor="#10b981" stopOpacity={0} />
+                                </linearGradient>
+                              </defs>
+                              <CartesianGrid vertical={false} stroke="var(--border)" />
+                              <XAxis
+                                dataKey="timestamp"
+                                type="number"
+                                scale="time"
+                                domain={["dataMin", "dataMax"]}
+                                tickCount={6}
+                                tickFormatter={value =>
+                                  new Intl.DateTimeFormat("id-ID", { timeZone: "Asia/Jakarta", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(Number(value)))
                                 }
-                                return null
-                              }}
-                            />
-                            <ReferenceLine y={dangerTemperature} ifOverflow="extendDomain" stroke="#fb7185" strokeDasharray="5 4" label={{ value: `Bahaya (≥${dangerTemperature}°C)`, fill: "#f43f5e", fontSize: 10, position: "insideTopLeft" }} />
-                            <ReferenceLine y={warningTemperature} ifOverflow="extendDomain" stroke="#f59e0b" strokeDasharray="5 4" label={{ value: `Waspada (≥${warningTemperature}°C)`, fill: "#d97706", fontSize: 10, position: "insideTopLeft" }} />
-                            <Area type="monotone" dataKey="temperature" stroke="#10b981" strokeWidth={2.4} fill="url(#tempL4Grad)" connectNulls isAnimationActive={false} dot={chartData.length === 1 ? { r: 4, fill: "#10b981", strokeWidth: 0 } : false} activeDot={{ r: 5, fill: "#059669" }} />
-                          </AreaChart>
-                        </ResponsiveContainer>
-                      )}
-                    </CardContent>
-                  </Card>
-                )}
+                                axisLine={false}
+                                tickLine={false}
+                                minTickGap={45}
+                                fontSize={11}
+                                tick={{ fill: "var(--muted-foreground)" }}
+                              />
+                              <YAxis domain={temperatureDomain} axisLine={false} tickLine={false} fontSize={11} width={48} tickFormatter={value => String(Number(value))} tick={{ fill: "var(--muted-foreground)" }} />
+                              <Tooltip
+                                content={({ active, payload, label }) => {
+                                  if (active && payload && payload.length) {
+                                    return (
+                                      <div className="rounded-xl border border-border bg-popover p-2.5 shadow-md text-popover-foreground text-xs font-semibold">
+                                        <p className="font-mono text-muted-foreground mb-1">{fullDateTime(Number(label))}</p>
+                                        {payload.map((p, idx) => (
+                                          <p key={idx} className="flex items-center gap-1.5 text-xs">
+                                            <span className="size-1.5 rounded-full" style={{ backgroundColor: p.color || p.stroke }} />
+                                            <span className="text-muted-foreground font-medium">Suhu:</span>
+                                            <span className="font-bold">{Number(Number(p.value).toFixed(1))}°C</span>
+                                          </p>
+                                        ))}
+                                      </div>
+                                    )
+                                  }
+                                  return null
+                                }}
+                              />
+                              <ReferenceLine y={dangerTemperature} ifOverflow="extendDomain" stroke="#fb7185" strokeDasharray="5 4" label={{ value: `Bahaya (≥${dangerTemperature}°C)`, fill: "#f43f5e", fontSize: 10, position: "insideTopLeft" }} />
+                              <ReferenceLine y={warningTemperature} ifOverflow="extendDomain" stroke="#f59e0b" strokeDasharray="5 4" label={{ value: `Waspada (≥${warningTemperature}°C)`, fill: "#d97706", fontSize: 10, position: "insideTopLeft" }} />
+                              <Area type="monotone" dataKey="temperature" stroke="#10b981" strokeWidth={2.4} fill="url(#tempL4Grad)" connectNulls isAnimationActive={false} dot={chartData.length === 1 ? { r: 4, fill: "#10b981", strokeWidth: 0 } : false} activeDot={{ r: 5, fill: "#059669" }} />
+                            </AreaChart>
+                          </ResponsiveContainer>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
 
-                {(chartTab === "all" || chartTab === "tegangan") && (
-                  <Card className="overflow-hidden border-slate-200/80 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 rounded-2xl">
-                    <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 dark:border-slate-800/80 pb-4">
-                      <div>
-                        <CardTitle className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                          <span>{chartTab === "all" ? "Tegangan" : "Grafik Tegangan Listrik L4"}</span>
-                          <Badge variant="outline" className="text-[10px] font-semibold border-slate-200 dark:border-slate-700 text-amber-600 dark:text-amber-400">
-                            {periodConfigs[period].label}
-                          </Badge>
-                        </CardTitle>
-                      </div>
-
-                      {chartTab !== "all" && (
-                        <div className="flex flex-wrap items-center gap-1.5 text-xs">
-                          <span className="rounded-lg bg-amber-500/10 px-2.5 py-1 font-semibold text-amber-600 dark:text-amber-400">
-                            Saat Ini: {voltageL4 !== null ? `${voltageL4.toFixed(1)} V` : "-- V"}
-                          </span>
-                          <span className="rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-1 font-medium text-slate-600 dark:text-slate-300">
-                            Min: {minVolt !== null ? `${minVolt.toFixed(1)} V` : "--"}
-                          </span>
-                          <span className="rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-1 font-medium text-slate-600 dark:text-slate-300">
-                            Max: {maxVolt !== null ? `${maxVolt.toFixed(1)} V` : "--"}
-                          </span>
-                          <span className="rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-1 font-medium text-slate-600 dark:text-slate-300">
-                            Avg: {avgVolt !== null ? `${avgVolt.toFixed(1)} V` : "--"}
-                          </span>
+                  {(chartTab === "all" || chartTab === "tegangan") && (
+                    <Card className="overflow-hidden border-slate-200/80 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 rounded-2xl">
+                      <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 dark:border-slate-800/80 pb-4">
+                        <div>
+                          <CardTitle className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <span>{chartTab === "all" ? "Tegangan" : "Grafik Tegangan Listrik L4"}</span>
+                            <Badge variant="outline" className="text-[10px] font-semibold border-slate-200 dark:border-slate-700 text-amber-600 dark:text-amber-400">
+                              {periodConfigs[period].label}
+                            </Badge>
+                          </CardTitle>
                         </div>
-                      )}
-                    </CardHeader>
 
-                    <CardContent className="h-80 pl-1 pr-4 pb-4">
-                      {loadingHistory && chartData.length === 0 ? (
-                        <ChartMessage loading message="Memuat grafik tegangan..." />
-                      ) : !hasVoltageData ? (
-                        <ChartMessage message="Belum ada data tegangan dari sensor." />
-                      ) : (
-                        <ResponsiveContainer width="100%" height="100%">
-                          <AreaChart data={chartData} margin={{ top: 16, right: 20, left: -5, bottom: 5 }}>
-                            <defs>
-                              <linearGradient id="voltL4Grad" x1="0" x2="0" y1="0" y2="1">
-                                <stop offset="0" stopColor="#d97706" stopOpacity={0.15} />
-                                <stop offset="1" stopColor="#d97706" stopOpacity={0} />
-                              </linearGradient>
-                            </defs>
-                            <CartesianGrid vertical={false} stroke="var(--border)" />
-                            <XAxis
-                              dataKey="timestamp"
-                              type="number"
-                              scale="time"
-                              domain={["dataMin", "dataMax"]}
-                              tickCount={6}
-                              tickFormatter={value =>
-                                new Intl.DateTimeFormat("id-ID", { timeZone: "Asia/Jakarta", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(Number(value)))
-                              }
-                              axisLine={false}
-                              tickLine={false}
-                              minTickGap={45}
-                              fontSize={11}
-                              tick={{ fill: "var(--muted-foreground)" }}
-                            />
-                            <YAxis domain={voltageDomain} ticks={[200, 210, 220, 230, 240]} axisLine={false} tickLine={false} fontSize={11} width={48} tickFormatter={value => String(Number(value))} tick={{ fill: "var(--muted-foreground)" }} />
-                            <Tooltip
-                              content={({ active, payload, label }) => {
-                                if (active && payload && payload.length) {
-                                  return (
-                                    <div className="rounded-xl border border-border bg-popover p-2.5 shadow-md text-popover-foreground text-xs font-semibold">
-                                      <p className="font-mono text-muted-foreground mb-1">{fullDateTime(Number(label))}</p>
-                                      {payload.map((p, idx) => (
-                                        <p key={idx} className="flex items-center gap-1.5 text-xs">
-                                          <span className="size-1.5 rounded-full" style={{ backgroundColor: p.color || p.stroke }} />
-                                          <span className="text-muted-foreground font-medium">Tegangan:</span>
-                                          <span className="font-bold">{Number(Number(p.value).toFixed(1))} V</span>
-                                        </p>
-                                      ))}
-                                    </div>
-                                  )
+                        {chartTab !== "all" && (
+                          <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                            <span className="rounded-lg bg-amber-500/10 px-2.5 py-1 font-semibold text-amber-600 dark:text-amber-400">
+                              Saat Ini: {voltageL4 !== null ? `${voltageL4.toFixed(1)} V` : "-- V"}
+                            </span>
+                            <span className="rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-1 font-medium text-slate-600 dark:text-slate-300">
+                              Min: {minVolt !== null ? `${minVolt.toFixed(1)} V` : "--"}
+                            </span>
+                            <span className="rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-1 font-medium text-slate-600 dark:text-slate-300">
+                              Max: {maxVolt !== null ? `${maxVolt.toFixed(1)} V` : "--"}
+                            </span>
+                            <span className="rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-1 font-medium text-slate-600 dark:text-slate-300">
+                              Avg: {avgVolt !== null ? `${avgVolt.toFixed(1)} V` : "--"}
+                            </span>
+                          </div>
+                        )}
+                      </CardHeader>
+
+                      <CardContent className="h-80 pl-1 pr-4 pb-4">
+                        {loadingHistory && chartData.length === 0 ? (
+                          <ChartMessage loading message="Memuat grafik tegangan..." />
+                        ) : !hasVoltageData ? (
+                          <ChartMessage message="Belum ada data tegangan dari sensor." />
+                        ) : (
+                          <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={chartData} margin={{ top: 16, right: 20, left: -5, bottom: 5 }}>
+                              <defs>
+                                <linearGradient id="voltL4Grad" x1="0" x2="0" y1="0" y2="1">
+                                  <stop offset="0" stopColor="#d97706" stopOpacity={0.15} />
+                                  <stop offset="1" stopColor="#d97706" stopOpacity={0} />
+                                </linearGradient>
+                              </defs>
+                              <CartesianGrid vertical={false} stroke="var(--border)" />
+                              <XAxis
+                                dataKey="timestamp"
+                                type="number"
+                                scale="time"
+                                domain={["dataMin", "dataMax"]}
+                                tickCount={6}
+                                tickFormatter={value =>
+                                  new Intl.DateTimeFormat("id-ID", { timeZone: "Asia/Jakarta", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(Number(value)))
                                 }
-                                return null
-                              }}
-                            />
-                            <ReferenceLine y={220} ifOverflow="extendDomain" stroke="#3b82f6" strokeDasharray="4 4" label={{ value: "Target 220 V", fill: "#2563eb", fontSize: 10, position: "insideTopLeft" }} />
-                            <ReferenceLine y={200} ifOverflow="extendDomain" stroke="#f43f5e" strokeDasharray="4 4" />
-                            <ReferenceLine y={240} ifOverflow="extendDomain" stroke="#f43f5e" strokeDasharray="4 4" />
-                            <Area type="monotone" dataKey="voltage" stroke="#d97706" strokeWidth={2.4} fill="url(#voltL4Grad)" connectNulls isAnimationActive={false} dot={chartData.length === 1 ? { r: 4, fill: "#d97706", strokeWidth: 0 } : false} activeDot={{ r: 5, fill: "#b45309" }} />
-                          </AreaChart>
-                        </ResponsiveContainer>
-                      )}
-                    </CardContent>
-                  </Card>
-                )}
+                                axisLine={false}
+                                tickLine={false}
+                                minTickGap={45}
+                                fontSize={11}
+                                tick={{ fill: "var(--muted-foreground)" }}
+                              />
+                              <YAxis domain={voltageDomain} ticks={[200, 210, 220, 230, 240]} axisLine={false} tickLine={false} fontSize={11} width={48} tickFormatter={value => String(Number(value))} tick={{ fill: "var(--muted-foreground)" }} />
+                              <Tooltip
+                                content={({ active, payload, label }) => {
+                                  if (active && payload && payload.length) {
+                                    return (
+                                      <div className="rounded-xl border border-border bg-popover p-2.5 shadow-md text-popover-foreground text-xs font-semibold">
+                                        <p className="font-mono text-muted-foreground mb-1">{fullDateTime(Number(label))}</p>
+                                        {payload.map((p, idx) => (
+                                          <p key={idx} className="flex items-center gap-1.5 text-xs">
+                                            <span className="size-1.5 rounded-full" style={{ backgroundColor: p.color || p.stroke }} />
+                                            <span className="text-muted-foreground font-medium">Tegangan:</span>
+                                            <span className="font-bold">{Number(Number(p.value).toFixed(1))} V</span>
+                                          </p>
+                                        ))}
+                                      </div>
+                                    )
+                                  }
+                                  return null
+                                }}
+                              />
+                              <ReferenceLine y={220} ifOverflow="extendDomain" stroke="#3b82f6" strokeDasharray="4 4" label={{ value: "Target 220 V", fill: "#2563eb", fontSize: 10, position: "insideTopLeft" }} />
+                              <ReferenceLine y={200} ifOverflow="extendDomain" stroke="#f43f5e" strokeDasharray="4 4" />
+                              <ReferenceLine y={240} ifOverflow="extendDomain" stroke="#f43f5e" strokeDasharray="4 4" />
+                              <Area type="monotone" dataKey="voltage" stroke="#d97706" strokeWidth={2.4} fill="url(#voltL4Grad)" connectNulls isAnimationActive={false} dot={chartData.length === 1 ? { r: 4, fill: "#d97706", strokeWidth: 0 } : false} activeDot={{ r: 5, fill: "#b45309" }} />
+                            </AreaChart>
+                          </ResponsiveContainer>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
 
-                {(chartTab === "all" || chartTab === "arus") && (
-                  <Card className="overflow-hidden border-slate-200/80 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 rounded-2xl">
-                    <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 dark:border-slate-800/80 pb-4">
-                      <div>
-                        <CardTitle className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                          <span>{chartTab === "all" ? "Arus" : "Grafik Arus Listrik L4"}</span>
-                          <Badge variant="outline" className="text-[10px] font-semibold border-slate-200 dark:border-slate-700 text-cyan-600 dark:text-cyan-400">
-                            {periodConfigs[period].label}
-                          </Badge>
-                        </CardTitle>
-                      </div>
-
-                      {chartTab !== "all" && (
-                        <div className="flex flex-wrap items-center gap-1.5 text-xs">
-                          <span className="rounded-lg bg-cyan-500/10 px-2.5 py-1 font-semibold text-cyan-600 dark:text-cyan-400">
-                            Saat Ini: {currentL4 !== null ? `${currentL4.toFixed(2)} A` : "-- A"}
-                          </span>
-                          <span className="rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-1 font-medium text-slate-600 dark:text-slate-300">
-                            Min: {minCurr !== null ? `${minCurr.toFixed(2)} A` : "--"}
-                          </span>
-                          <span className="rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-1 font-medium text-slate-600 dark:text-slate-300">
-                            Max: {maxCurr !== null ? `${maxCurr.toFixed(2)} A` : "--"}
-                          </span>
-                          <span className="rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-1 font-medium text-slate-600 dark:text-slate-300">
-                            Avg: {avgCurr !== null ? `${avgCurr.toFixed(2)} A` : "--"}
-                          </span>
+                  {(chartTab === "all" || chartTab === "arus") && (
+                    <Card className="overflow-hidden border-slate-200/80 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 rounded-2xl">
+                      <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 dark:border-slate-800/80 pb-4">
+                        <div>
+                          <CardTitle className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <span>{chartTab === "all" ? "Arus" : "Grafik Arus Listrik L4"}</span>
+                            <Badge variant="outline" className="text-[10px] font-semibold border-slate-200 dark:border-slate-700 text-cyan-600 dark:text-cyan-400">
+                              {periodConfigs[period].label}
+                            </Badge>
+                          </CardTitle>
                         </div>
-                      )}
-                    </CardHeader>
 
-                    <CardContent className="h-80 pl-1 pr-4 pb-4">
-                      {loadingHistory && chartData.length === 0 ? (
-                        <ChartMessage loading message="Memuat grafik arus..." />
-                      ) : !hasCurrentData ? (
-                        <ChartMessage message="Belum ada data arus dari sensor." />
-                      ) : (
-                        <ResponsiveContainer width="100%" height="100%">
-                          <AreaChart data={chartData} margin={{ top: 16, right: 20, left: -5, bottom: 5 }}>
-                            <defs>
-                              <linearGradient id="currL4Grad" x1="0" x2="0" y1="0" y2="1">
-                                <stop offset="0" stopColor="#06b6d4" stopOpacity={0.2} />
-                                <stop offset="1" stopColor="#06b6d4" stopOpacity={0} />
-                              </linearGradient>
-                            </defs>
-                            <CartesianGrid vertical={false} stroke="var(--border)" />
-                            <XAxis
-                              dataKey="timestamp"
-                              type="number"
-                              scale="time"
-                              domain={["dataMin", "dataMax"]}
-                              tickCount={6}
-                              tickFormatter={value =>
-                                new Intl.DateTimeFormat("id-ID", { timeZone: "Asia/Jakarta", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(Number(value)))
-                              }
-                              axisLine={false}
-                              tickLine={false}
-                              minTickGap={45}
-                              fontSize={11}
-                              tick={{ fill: "var(--muted-foreground)" }}
-                            />
-                            <YAxis domain={currentDomain} axisLine={false} tickLine={false} fontSize={11} width={48} tickFormatter={value => `${Number(value).toFixed(1)}`} tick={{ fill: "var(--muted-foreground)" }} />
-                            <Tooltip
-                              content={({ active, payload, label }) => {
-                                if (active && payload && payload.length) {
-                                  return (
-                                    <div className="rounded-xl border border-border bg-popover p-2.5 shadow-md text-popover-foreground text-xs font-semibold">
-                                      <p className="font-mono text-muted-foreground mb-1">{fullDateTime(Number(label))}</p>
-                                      {payload.map((p, idx) => (
-                                        <p key={idx} className="flex items-center gap-1.5 text-xs">
-                                          <span className="size-1.5 rounded-full" style={{ backgroundColor: p.color || p.stroke }} />
-                                          <span className="text-muted-foreground font-medium">Arus:</span>
-                                          <span className="font-bold">{Number(Number(p.value).toFixed(2))} A</span>
-                                        </p>
-                                      ))}
-                                    </div>
-                                  )
+                        {chartTab !== "all" && (
+                          <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                            <span className="rounded-lg bg-cyan-500/10 px-2.5 py-1 font-semibold text-cyan-600 dark:text-cyan-400">
+                              Saat Ini: {currentL4 !== null ? `${currentL4.toFixed(2)} A` : "-- A"}
+                            </span>
+                            <span className="rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-1 font-medium text-slate-600 dark:text-slate-300">
+                              Min: {minCurr !== null ? `${minCurr.toFixed(2)} A` : "--"}
+                            </span>
+                            <span className="rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-1 font-medium text-slate-600 dark:text-slate-300">
+                              Max: {maxCurr !== null ? `${maxCurr.toFixed(2)} A` : "--"}
+                            </span>
+                            <span className="rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-1 font-medium text-slate-600 dark:text-slate-300">
+                              Avg: {avgCurr !== null ? `${avgCurr.toFixed(2)} A` : "--"}
+                            </span>
+                          </div>
+                        )}
+                      </CardHeader>
+
+                      <CardContent className="h-80 pl-1 pr-4 pb-4">
+                        {loadingHistory && chartData.length === 0 ? (
+                          <ChartMessage loading message="Memuat grafik arus..." />
+                        ) : !hasCurrentData ? (
+                          <ChartMessage message="Belum ada data arus dari sensor." />
+                        ) : (
+                          <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={chartData} margin={{ top: 16, right: 20, left: -5, bottom: 5 }}>
+                              <defs>
+                                <linearGradient id="currL4Grad" x1="0" x2="0" y1="0" y2="1">
+                                  <stop offset="0" stopColor="#06b6d4" stopOpacity={0.2} />
+                                  <stop offset="1" stopColor="#06b6d4" stopOpacity={0} />
+                                </linearGradient>
+                              </defs>
+                              <CartesianGrid vertical={false} stroke="var(--border)" />
+                              <XAxis
+                                dataKey="timestamp"
+                                type="number"
+                                scale="time"
+                                domain={["dataMin", "dataMax"]}
+                                tickCount={6}
+                                tickFormatter={value =>
+                                  new Intl.DateTimeFormat("id-ID", { timeZone: "Asia/Jakarta", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(Number(value)))
                                 }
-                                return null
-                              }}
-                            />
-                            <Area type="monotone" dataKey="current" stroke="#06b6d4" strokeWidth={2.2} fill="url(#currL4Grad)" connectNulls isAnimationActive={false} dot={chartData.length === 1 ? { r: 4, fill: "#06b6d4", strokeWidth: 0 } : false} activeDot={{ r: 5, fill: "#0891b2" }} />
-                          </AreaChart>
-                        </ResponsiveContainer>
-                      )}
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
+                                axisLine={false}
+                                tickLine={false}
+                                minTickGap={45}
+                                fontSize={11}
+                                tick={{ fill: "var(--muted-foreground)" }}
+                              />
+                              <YAxis domain={currentDomain} axisLine={false} tickLine={false} fontSize={11} width={48} tickFormatter={value => `${Number(value).toFixed(1)}`} tick={{ fill: "var(--muted-foreground)" }} />
+                              <Tooltip
+                                content={({ active, payload, label }) => {
+                                  if (active && payload && payload.length) {
+                                    return (
+                                      <div className="rounded-xl border border-border bg-popover p-2.5 shadow-md text-popover-foreground text-xs font-semibold">
+                                        <p className="font-mono text-muted-foreground mb-1">{fullDateTime(Number(label))}</p>
+                                        {payload.map((p, idx) => (
+                                          <p key={idx} className="flex items-center gap-1.5 text-xs">
+                                            <span className="size-1.5 rounded-full" style={{ backgroundColor: p.color || p.stroke }} />
+                                            <span className="text-muted-foreground font-medium">Arus:</span>
+                                            <span className="font-bold">{Number(Number(p.value).toFixed(2))} A</span>
+                                          </p>
+                                        ))}
+                                      </div>
+                                    )
+                                  }
+                                  return null
+                                }}
+                              />
+                              <Area type="monotone" dataKey="current" stroke="#06b6d4" strokeWidth={2.2} fill="url(#currL4Grad)" connectNulls isAnimationActive={false} dot={chartData.length === 1 ? { r: 4, fill: "#06b6d4", strokeWidth: 0 } : false} activeDot={{ r: 5, fill: "#0891b2" }} />
+                            </AreaChart>
+                          </ResponsiveContainer>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -2200,59 +2200,59 @@ export function Dashboard() {
               />
 
               <div className="hidden" aria-hidden="true">
-              <MetricStatistics02
-                items={[
-                  {
-                    icon: Thermometer,
-                    label: "Suhu Ruangan L5",
-                    value: activeReadingL5
-                      ? `${Number(Number(activeReadingL5.temperature).toFixed(1))}°C`
-                      : "--°C",
-                    detail: activeReadingL5
-                      ? `Status: ${statusL5} (<${warningTemperatureL5}°C)`
-                      : "Belum ada data",
-                    valueClassName: activeReadingL5
-                      ? getStatusColor(statusL5)
-                      : "text-muted-foreground",
-                    iconBgColor: "bg-purple-500/10",
-                    iconColor: "text-purple-600 dark:text-purple-400",
-                  },
-                  {
-                    icon: Radio,
-                    label: "Sensor L5",
-                    value: onlineL5 ? "Online" : "Offline",
-                    detail: onlineL5 && readingL5
-                      ? `Update: ${clock(readingL5.recordedAt, true)}`
-                      : "Belum ada data",
-                    valueClassName: onlineL5
-                      ? "text-emerald-600 dark:text-emerald-400"
-                      : "text-rose-600 dark:text-rose-400",
-                    iconBgColor: "bg-blue-500/10",
-                    iconColor: "text-blue-600 dark:text-blue-400",
-                  },
-                  {
-                    icon: ShieldCheck,
-                    label: "Kondisi Ruangan L5",
-                    value: !onlineL5
-                      ? "-"
-                      : statusL5 === "Bahaya"
-                        ? "BAHAYA"
-                        : statusL5 === "Waspada"
-                          ? "WASPADA"
-                          : "AMAN",
-                    detail: !onlineL5
-                      ? "Sensor terputus"
-                      : statusL5 === "Normal"
-                        ? "Suhu ruangan normal"
-                        : "Periksa kondisi AC Lantai 5",
-                    valueClassName: !onlineL5
-                      ? "text-muted-foreground"
-                      : getStatusColor(statusL5),
-                    iconBgColor: "bg-slate-100 dark:bg-slate-800",
-                    iconColor: "text-slate-600 dark:text-slate-400",
-                  },
-                ]}
-              />
+                <MetricStatistics02
+                  items={[
+                    {
+                      icon: Thermometer,
+                      label: "Suhu Ruangan L5",
+                      value: activeReadingL5
+                        ? `${Number(Number(activeReadingL5.temperature).toFixed(1))}°C`
+                        : "--°C",
+                      detail: activeReadingL5
+                        ? `Status: ${statusL5} (<${warningTemperatureL5}°C)`
+                        : "Belum ada data",
+                      valueClassName: activeReadingL5
+                        ? getStatusColor(statusL5)
+                        : "text-muted-foreground",
+                      iconBgColor: "bg-purple-500/10",
+                      iconColor: "text-purple-600 dark:text-purple-400",
+                    },
+                    {
+                      icon: Radio,
+                      label: "Sensor L5",
+                      value: onlineL5 ? "Online" : "Offline",
+                      detail: onlineL5 && readingL5
+                        ? `Update: ${clock(readingL5.recordedAt, true)}`
+                        : "Belum ada data",
+                      valueClassName: onlineL5
+                        ? "text-emerald-600 dark:text-emerald-400"
+                        : "text-rose-600 dark:text-rose-400",
+                      iconBgColor: "bg-blue-500/10",
+                      iconColor: "text-blue-600 dark:text-blue-400",
+                    },
+                    {
+                      icon: ShieldCheck,
+                      label: "Kondisi Ruangan L5",
+                      value: !onlineL5
+                        ? "-"
+                        : statusL5 === "Bahaya"
+                          ? "BAHAYA"
+                          : statusL5 === "Waspada"
+                            ? "WASPADA"
+                            : "AMAN",
+                      detail: !onlineL5
+                        ? "Sensor terputus"
+                        : statusL5 === "Normal"
+                          ? "Suhu ruangan normal"
+                          : "Periksa kondisi AC Lantai 5",
+                      valueClassName: !onlineL5
+                        ? "text-muted-foreground"
+                        : getStatusColor(statusL5),
+                      iconBgColor: "bg-slate-100 dark:bg-slate-800",
+                      iconColor: "text-slate-600 dark:text-slate-400",
+                    },
+                  ]}
+                />
 
               </div>
 
@@ -2272,285 +2272,285 @@ export function Dashboard() {
               />
 
               <div className="hidden" aria-hidden="true">
-              <ChartControls
-                floor="5"
-                chartTab={chartTab}
-                onChartTabChange={setChartTab}
-                period={period}
-                onPeriodChange={setPeriod}
-              />
+                <ChartControls
+                  floor="5"
+                  chartTab={chartTab}
+                  onChartTabChange={setChartTab}
+                  period={period}
+                  onPeriodChange={setPeriod}
+                />
 
-              {/* Grid Tampilan Grafik L5 berdasarkan Tab Aktif */}
-              <div className={chartTab === "all" ? "grid grid-cols-1 lg:grid-cols-3 gap-4" : "grid grid-cols-1 gap-4"}>
-                {(chartTab === "all" || chartTab === "suhu") && (
-                  <Card className="overflow-hidden border-slate-200/80 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 rounded-2xl">
-                    <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 dark:border-slate-800/80 pb-4">
-                      <div>
-                        <CardTitle className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                          <span>{chartTab === "all" ? "Suhu" : "Grafik Tren Suhu Lantai 5"}</span>
-                          <Badge variant="outline" className="text-[10px] font-semibold border-slate-200 dark:border-slate-700 text-purple-600 dark:text-purple-400">
-                            {periodConfigs[period].label}
-                          </Badge>
-                        </CardTitle>
-                      </div>
-
-                      {chartTab !== "all" && (
-                        <div className="flex flex-wrap items-center gap-1.5 text-xs">
-                          <span className="rounded-lg bg-purple-500/10 px-2.5 py-1 font-semibold text-purple-600 dark:text-purple-400">
-                            Saat Ini: {readingL5 ? `${Number(Number(readingL5.temperature).toFixed(1))}°C` : "--°C"}
-                          </span>
-                          <span className="rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-1 font-medium text-slate-600 dark:text-slate-300">
-                            Min: {minTemp !== null ? `${minTemp.toFixed(1)}°C` : "--"}
-                          </span>
-                          <span className="rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-1 font-medium text-slate-600 dark:text-slate-300">
-                            Max: {maxTemp !== null ? `${maxTemp.toFixed(1)}°C` : "--"}
-                          </span>
-                          <span className="rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-1 font-medium text-slate-600 dark:text-slate-300">
-                            Avg: {avgTemp !== null ? `${avgTemp.toFixed(1)}°C` : "--"}
-                          </span>
+                {/* Grid Tampilan Grafik L5 berdasarkan Tab Aktif */}
+                <div className={chartTab === "all" ? "grid grid-cols-1 lg:grid-cols-3 gap-4" : "grid grid-cols-1 gap-4"}>
+                  {(chartTab === "all" || chartTab === "suhu") && (
+                    <Card className="overflow-hidden border-slate-200/80 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 rounded-2xl">
+                      <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 dark:border-slate-800/80 pb-4">
+                        <div>
+                          <CardTitle className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <span>{chartTab === "all" ? "Suhu" : "Grafik Tren Suhu Lantai 5"}</span>
+                            <Badge variant="outline" className="text-[10px] font-semibold border-slate-200 dark:border-slate-700 text-purple-600 dark:text-purple-400">
+                              {periodConfigs[period].label}
+                            </Badge>
+                          </CardTitle>
                         </div>
-                      )}
-                    </CardHeader>
 
-                    <CardContent className="h-80 pl-1 pr-4 pb-4">
-                      {loadingHistory && chartData.length === 0 ? (
-                        <ChartMessage loading message="Memuat grafik suhu..." />
-                      ) : !hasTemperatureData ? (
-                        <ChartMessage message="Belum ada data suhu pada periode ini." />
-                      ) : (
-                        <ResponsiveContainer width="100%" height="100%">
-                          <AreaChart data={chartData} margin={{ top: 16, right: 20, left: -5, bottom: 5 }}>
-                            <defs>
-                              <linearGradient id="tempL5Grad" x1="0" x2="0" y1="0" y2="1">
-                                <stop offset="0" stopColor="#8b5cf6" stopOpacity={0.2} />
-                                <stop offset="1" stopColor="#8b5cf6" stopOpacity={0} />
-                              </linearGradient>
-                            </defs>
-                            <CartesianGrid vertical={false} stroke="var(--border)" />
-                            <XAxis
-                              dataKey="timestamp"
-                              type="number"
-                              scale="time"
-                              domain={["dataMin", "dataMax"]}
-                              tickCount={6}
-                              tickFormatter={value =>
-                                new Intl.DateTimeFormat("id-ID", { timeZone: "Asia/Jakarta", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(Number(value)))
-                              }
-                              axisLine={false}
-                              tickLine={false}
-                              minTickGap={45}
-                              fontSize={11}
-                              tick={{ fill: "var(--muted-foreground)" }}
-                            />
-                            <YAxis domain={temperatureDomain} axisLine={false} tickLine={false} fontSize={11} width={48} tickFormatter={value => String(Number(value))} tick={{ fill: "var(--muted-foreground)" }} />
-                            <Tooltip
-                              content={({ active, payload, label }) => {
-                                if (active && payload && payload.length) {
-                                  return (
-                                    <div className="rounded-xl border border-border bg-popover p-2.5 shadow-md text-popover-foreground text-xs font-semibold">
-                                      <p className="font-mono text-muted-foreground mb-1">{fullDateTime(Number(label))}</p>
-                                      {payload.map((p, idx) => (
-                                        <p key={idx} className="flex items-center gap-1.5 text-xs">
-                                          <span className="size-1.5 rounded-full" style={{ backgroundColor: p.color || p.stroke }} />
-                                          <span className="text-muted-foreground font-medium">Suhu:</span>
-                                          <span className="font-bold">{Number(Number(p.value).toFixed(1))}°C</span>
-                                        </p>
-                                      ))}
-                                    </div>
-                                  )
+                        {chartTab !== "all" && (
+                          <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                            <span className="rounded-lg bg-purple-500/10 px-2.5 py-1 font-semibold text-purple-600 dark:text-purple-400">
+                              Saat Ini: {readingL5 ? `${Number(Number(readingL5.temperature).toFixed(1))}°C` : "--°C"}
+                            </span>
+                            <span className="rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-1 font-medium text-slate-600 dark:text-slate-300">
+                              Min: {minTemp !== null ? `${minTemp.toFixed(1)}°C` : "--"}
+                            </span>
+                            <span className="rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-1 font-medium text-slate-600 dark:text-slate-300">
+                              Max: {maxTemp !== null ? `${maxTemp.toFixed(1)}°C` : "--"}
+                            </span>
+                            <span className="rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-1 font-medium text-slate-600 dark:text-slate-300">
+                              Avg: {avgTemp !== null ? `${avgTemp.toFixed(1)}°C` : "--"}
+                            </span>
+                          </div>
+                        )}
+                      </CardHeader>
+
+                      <CardContent className="h-80 pl-1 pr-4 pb-4">
+                        {loadingHistory && chartData.length === 0 ? (
+                          <ChartMessage loading message="Memuat grafik suhu..." />
+                        ) : !hasTemperatureData ? (
+                          <ChartMessage message="Belum ada data suhu pada periode ini." />
+                        ) : (
+                          <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={chartData} margin={{ top: 16, right: 20, left: -5, bottom: 5 }}>
+                              <defs>
+                                <linearGradient id="tempL5Grad" x1="0" x2="0" y1="0" y2="1">
+                                  <stop offset="0" stopColor="#8b5cf6" stopOpacity={0.2} />
+                                  <stop offset="1" stopColor="#8b5cf6" stopOpacity={0} />
+                                </linearGradient>
+                              </defs>
+                              <CartesianGrid vertical={false} stroke="var(--border)" />
+                              <XAxis
+                                dataKey="timestamp"
+                                type="number"
+                                scale="time"
+                                domain={["dataMin", "dataMax"]}
+                                tickCount={6}
+                                tickFormatter={value =>
+                                  new Intl.DateTimeFormat("id-ID", { timeZone: "Asia/Jakarta", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(Number(value)))
                                 }
-                                return null
-                              }}
-                            />
-                            <ReferenceLine y={dangerTemperatureL5} ifOverflow="extendDomain" stroke="#fb7185" strokeDasharray="5 4" label={{ value: `Bahaya (≥${dangerTemperatureL5}°C)`, fill: "#f43f5e", fontSize: 10, position: "insideTopLeft" }} />
-                            <ReferenceLine y={warningTemperatureL5} ifOverflow="extendDomain" stroke="#f59e0b" strokeDasharray="5 4" label={{ value: `Waspada (≥${warningTemperatureL5}°C)`, fill: "#d97706", fontSize: 10, position: "insideTopLeft" }} />
-                            <Area type="monotone" dataKey="temperature" stroke="#8b5cf6" strokeWidth={2.4} fill="url(#tempL5Grad)" connectNulls isAnimationActive={false} dot={chartData.length === 1 ? { r: 4, fill: "#8b5cf6", strokeWidth: 0 } : false} activeDot={{ r: 5, fill: "#7c3aed" }} />
-                          </AreaChart>
-                        </ResponsiveContainer>
-                      )}
-                    </CardContent>
-                  </Card>
-                )}
+                                axisLine={false}
+                                tickLine={false}
+                                minTickGap={45}
+                                fontSize={11}
+                                tick={{ fill: "var(--muted-foreground)" }}
+                              />
+                              <YAxis domain={temperatureDomain} axisLine={false} tickLine={false} fontSize={11} width={48} tickFormatter={value => String(Number(value))} tick={{ fill: "var(--muted-foreground)" }} />
+                              <Tooltip
+                                content={({ active, payload, label }) => {
+                                  if (active && payload && payload.length) {
+                                    return (
+                                      <div className="rounded-xl border border-border bg-popover p-2.5 shadow-md text-popover-foreground text-xs font-semibold">
+                                        <p className="font-mono text-muted-foreground mb-1">{fullDateTime(Number(label))}</p>
+                                        {payload.map((p, idx) => (
+                                          <p key={idx} className="flex items-center gap-1.5 text-xs">
+                                            <span className="size-1.5 rounded-full" style={{ backgroundColor: p.color || p.stroke }} />
+                                            <span className="text-muted-foreground font-medium">Suhu:</span>
+                                            <span className="font-bold">{Number(Number(p.value).toFixed(1))}°C</span>
+                                          </p>
+                                        ))}
+                                      </div>
+                                    )
+                                  }
+                                  return null
+                                }}
+                              />
+                              <ReferenceLine y={dangerTemperatureL5} ifOverflow="extendDomain" stroke="#fb7185" strokeDasharray="5 4" label={{ value: `Bahaya (≥${dangerTemperatureL5}°C)`, fill: "#f43f5e", fontSize: 10, position: "insideTopLeft" }} />
+                              <ReferenceLine y={warningTemperatureL5} ifOverflow="extendDomain" stroke="#f59e0b" strokeDasharray="5 4" label={{ value: `Waspada (≥${warningTemperatureL5}°C)`, fill: "#d97706", fontSize: 10, position: "insideTopLeft" }} />
+                              <Area type="monotone" dataKey="temperature" stroke="#8b5cf6" strokeWidth={2.4} fill="url(#tempL5Grad)" connectNulls isAnimationActive={false} dot={chartData.length === 1 ? { r: 4, fill: "#8b5cf6", strokeWidth: 0 } : false} activeDot={{ r: 5, fill: "#7c3aed" }} />
+                            </AreaChart>
+                          </ResponsiveContainer>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
 
-                {(chartTab === "all" || chartTab === "tegangan") && (
-                  <Card className="overflow-hidden border-slate-200/80 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 rounded-2xl">
-                    <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 dark:border-slate-800/80 pb-4">
-                      <div>
-                        <CardTitle className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                          <span>{chartTab === "all" ? "Tegangan" : "Grafik Tegangan Listrik L5"}</span>
-                          <Badge variant="outline" className="text-[10px] font-semibold border-slate-200 dark:border-slate-700 text-amber-600 dark:text-amber-400">
-                            {periodConfigs[period].label}
-                          </Badge>
-                        </CardTitle>
-                      </div>
-
-                      {chartTab !== "all" && (
-                        <div className="flex flex-wrap items-center gap-1.5 text-xs">
-                          <span className="rounded-lg bg-amber-500/10 px-2.5 py-1 font-semibold text-amber-600 dark:text-amber-400">
-                            Saat Ini: {voltageL5 !== null ? `${voltageL5.toFixed(1)} V` : "-- V"}
-                          </span>
-                          <span className="rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-1 font-medium text-slate-600 dark:text-slate-300">
-                            Min: {minVolt !== null ? `${minVolt.toFixed(1)} V` : "--"}
-                          </span>
-                          <span className="rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-1 font-medium text-slate-600 dark:text-slate-300">
-                            Max: {maxVolt !== null ? `${maxVolt.toFixed(1)} V` : "--"}
-                          </span>
-                          <span className="rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-1 font-medium text-slate-600 dark:text-slate-300">
-                            Avg: {avgVolt !== null ? `${avgVolt.toFixed(1)} V` : "--"}
-                          </span>
+                  {(chartTab === "all" || chartTab === "tegangan") && (
+                    <Card className="overflow-hidden border-slate-200/80 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 rounded-2xl">
+                      <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 dark:border-slate-800/80 pb-4">
+                        <div>
+                          <CardTitle className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <span>{chartTab === "all" ? "Tegangan" : "Grafik Tegangan Listrik L5"}</span>
+                            <Badge variant="outline" className="text-[10px] font-semibold border-slate-200 dark:border-slate-700 text-amber-600 dark:text-amber-400">
+                              {periodConfigs[period].label}
+                            </Badge>
+                          </CardTitle>
                         </div>
-                      )}
-                    </CardHeader>
 
-                    <CardContent className="h-80 pl-1 pr-4 pb-4">
-                      {loadingHistory && chartData.length === 0 ? (
-                        <ChartMessage loading message="Memuat grafik tegangan..." />
-                      ) : !hasVoltageData ? (
-                        <ChartMessage message="Belum ada data tegangan dari sensor." />
-                      ) : (
-                        <ResponsiveContainer width="100%" height="100%">
-                          <AreaChart data={chartData} margin={{ top: 16, right: 20, left: -5, bottom: 5 }}>
-                            <defs>
-                              <linearGradient id="voltL5Grad" x1="0" x2="0" y1="0" y2="1">
-                                <stop offset="0" stopColor="#d97706" stopOpacity={0.15} />
-                                <stop offset="1" stopColor="#d97706" stopOpacity={0} />
-                              </linearGradient>
-                            </defs>
-                            <CartesianGrid vertical={false} stroke="var(--border)" />
-                            <XAxis
-                              dataKey="timestamp"
-                              type="number"
-                              scale="time"
-                              domain={["dataMin", "dataMax"]}
-                              tickCount={6}
-                              tickFormatter={value =>
-                                new Intl.DateTimeFormat("id-ID", { timeZone: "Asia/Jakarta", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(Number(value)))
-                              }
-                              axisLine={false}
-                              tickLine={false}
-                              minTickGap={45}
-                              fontSize={11}
-                              tick={{ fill: "var(--muted-foreground)" }}
-                            />
-                            <YAxis domain={voltageDomain} ticks={[200, 210, 220, 230, 240]} axisLine={false} tickLine={false} fontSize={11} width={48} tickFormatter={value => String(Number(value))} tick={{ fill: "var(--muted-foreground)" }} />
-                            <Tooltip
-                              content={({ active, payload, label }) => {
-                                if (active && payload && payload.length) {
-                                  return (
-                                    <div className="rounded-xl border border-border bg-popover p-2.5 shadow-md text-popover-foreground text-xs font-semibold">
-                                      <p className="font-mono text-muted-foreground mb-1">{fullDateTime(Number(label))}</p>
-                                      {payload.map((p, idx) => (
-                                        <p key={idx} className="flex items-center gap-1.5 text-xs">
-                                          <span className="size-1.5 rounded-full" style={{ backgroundColor: p.color || p.stroke }} />
-                                          <span className="text-muted-foreground font-medium">Tegangan:</span>
-                                          <span className="font-bold">{Number(Number(p.value).toFixed(1))} V</span>
-                                        </p>
-                                      ))}
-                                    </div>
-                                  )
+                        {chartTab !== "all" && (
+                          <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                            <span className="rounded-lg bg-amber-500/10 px-2.5 py-1 font-semibold text-amber-600 dark:text-amber-400">
+                              Saat Ini: {voltageL5 !== null ? `${voltageL5.toFixed(1)} V` : "-- V"}
+                            </span>
+                            <span className="rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-1 font-medium text-slate-600 dark:text-slate-300">
+                              Min: {minVolt !== null ? `${minVolt.toFixed(1)} V` : "--"}
+                            </span>
+                            <span className="rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-1 font-medium text-slate-600 dark:text-slate-300">
+                              Max: {maxVolt !== null ? `${maxVolt.toFixed(1)} V` : "--"}
+                            </span>
+                            <span className="rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-1 font-medium text-slate-600 dark:text-slate-300">
+                              Avg: {avgVolt !== null ? `${avgVolt.toFixed(1)} V` : "--"}
+                            </span>
+                          </div>
+                        )}
+                      </CardHeader>
+
+                      <CardContent className="h-80 pl-1 pr-4 pb-4">
+                        {loadingHistory && chartData.length === 0 ? (
+                          <ChartMessage loading message="Memuat grafik tegangan..." />
+                        ) : !hasVoltageData ? (
+                          <ChartMessage message="Belum ada data tegangan dari sensor." />
+                        ) : (
+                          <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={chartData} margin={{ top: 16, right: 20, left: -5, bottom: 5 }}>
+                              <defs>
+                                <linearGradient id="voltL5Grad" x1="0" x2="0" y1="0" y2="1">
+                                  <stop offset="0" stopColor="#d97706" stopOpacity={0.15} />
+                                  <stop offset="1" stopColor="#d97706" stopOpacity={0} />
+                                </linearGradient>
+                              </defs>
+                              <CartesianGrid vertical={false} stroke="var(--border)" />
+                              <XAxis
+                                dataKey="timestamp"
+                                type="number"
+                                scale="time"
+                                domain={["dataMin", "dataMax"]}
+                                tickCount={6}
+                                tickFormatter={value =>
+                                  new Intl.DateTimeFormat("id-ID", { timeZone: "Asia/Jakarta", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(Number(value)))
                                 }
-                                return null
-                              }}
-                            />
-                            <ReferenceLine y={220} ifOverflow="extendDomain" stroke="#3b82f6" strokeDasharray="4 4" label={{ value: "Target 220 V", fill: "#2563eb", fontSize: 10, position: "insideTopLeft" }} />
-                            <ReferenceLine y={200} ifOverflow="extendDomain" stroke="#f43f5e" strokeDasharray="4 4" />
-                            <ReferenceLine y={240} ifOverflow="extendDomain" stroke="#f43f5e" strokeDasharray="4 4" />
-                            <Area type="monotone" dataKey="voltage" stroke="#d97706" strokeWidth={2.4} fill="url(#voltL5Grad)" connectNulls isAnimationActive={false} dot={chartData.length === 1 ? { r: 4, fill: "#d97706", strokeWidth: 0 } : false} activeDot={{ r: 5, fill: "#b45309" }} />
-                          </AreaChart>
-                        </ResponsiveContainer>
-                      )}
-                    </CardContent>
-                  </Card>
-                )}
+                                axisLine={false}
+                                tickLine={false}
+                                minTickGap={45}
+                                fontSize={11}
+                                tick={{ fill: "var(--muted-foreground)" }}
+                              />
+                              <YAxis domain={voltageDomain} ticks={[200, 210, 220, 230, 240]} axisLine={false} tickLine={false} fontSize={11} width={48} tickFormatter={value => String(Number(value))} tick={{ fill: "var(--muted-foreground)" }} />
+                              <Tooltip
+                                content={({ active, payload, label }) => {
+                                  if (active && payload && payload.length) {
+                                    return (
+                                      <div className="rounded-xl border border-border bg-popover p-2.5 shadow-md text-popover-foreground text-xs font-semibold">
+                                        <p className="font-mono text-muted-foreground mb-1">{fullDateTime(Number(label))}</p>
+                                        {payload.map((p, idx) => (
+                                          <p key={idx} className="flex items-center gap-1.5 text-xs">
+                                            <span className="size-1.5 rounded-full" style={{ backgroundColor: p.color || p.stroke }} />
+                                            <span className="text-muted-foreground font-medium">Tegangan:</span>
+                                            <span className="font-bold">{Number(Number(p.value).toFixed(1))} V</span>
+                                          </p>
+                                        ))}
+                                      </div>
+                                    )
+                                  }
+                                  return null
+                                }}
+                              />
+                              <ReferenceLine y={220} ifOverflow="extendDomain" stroke="#3b82f6" strokeDasharray="4 4" label={{ value: "Target 220 V", fill: "#2563eb", fontSize: 10, position: "insideTopLeft" }} />
+                              <ReferenceLine y={200} ifOverflow="extendDomain" stroke="#f43f5e" strokeDasharray="4 4" />
+                              <ReferenceLine y={240} ifOverflow="extendDomain" stroke="#f43f5e" strokeDasharray="4 4" />
+                              <Area type="monotone" dataKey="voltage" stroke="#d97706" strokeWidth={2.4} fill="url(#voltL5Grad)" connectNulls isAnimationActive={false} dot={chartData.length === 1 ? { r: 4, fill: "#d97706", strokeWidth: 0 } : false} activeDot={{ r: 5, fill: "#b45309" }} />
+                            </AreaChart>
+                          </ResponsiveContainer>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
 
-                {(chartTab === "all" || chartTab === "arus") && (
-                  <Card className="overflow-hidden border-slate-200/80 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 rounded-2xl">
-                    <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 dark:border-slate-800/80 pb-4">
-                      <div>
-                        <CardTitle className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                          <span>{chartTab === "all" ? "Arus" : "Grafik Arus Listrik L5"}</span>
-                          <Badge variant="outline" className="text-[10px] font-semibold border-slate-200 dark:border-slate-700 text-cyan-600 dark:text-cyan-400">
-                            {periodConfigs[period].label}
-                          </Badge>
-                        </CardTitle>
-                      </div>
-
-                      {chartTab !== "all" && (
-                        <div className="flex flex-wrap items-center gap-1.5 text-xs">
-                          <span className="rounded-lg bg-cyan-500/10 px-2.5 py-1 font-semibold text-cyan-600 dark:text-cyan-400">
-                            Saat Ini: {currentL5 !== null ? `${currentL5.toFixed(2)} A` : "-- A"}
-                          </span>
-                          <span className="rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-1 font-medium text-slate-600 dark:text-slate-300">
-                            Min: {minCurr !== null ? `${minCurr.toFixed(2)} A` : "--"}
-                          </span>
-                          <span className="rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-1 font-medium text-slate-600 dark:text-slate-300">
-                            Max: {maxCurr !== null ? `${maxCurr.toFixed(2)} A` : "--"}
-                          </span>
-                          <span className="rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-1 font-medium text-slate-600 dark:text-slate-300">
-                            Avg: {avgCurr !== null ? `${avgCurr.toFixed(2)} A` : "--"}
-                          </span>
+                  {(chartTab === "all" || chartTab === "arus") && (
+                    <Card className="overflow-hidden border-slate-200/80 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 rounded-2xl">
+                      <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 dark:border-slate-800/80 pb-4">
+                        <div>
+                          <CardTitle className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <span>{chartTab === "all" ? "Arus" : "Grafik Arus Listrik L5"}</span>
+                            <Badge variant="outline" className="text-[10px] font-semibold border-slate-200 dark:border-slate-700 text-cyan-600 dark:text-cyan-400">
+                              {periodConfigs[period].label}
+                            </Badge>
+                          </CardTitle>
                         </div>
-                      )}
-                    </CardHeader>
 
-                    <CardContent className="h-80 pl-1 pr-4 pb-4">
-                      {loadingHistory && chartData.length === 0 ? (
-                        <ChartMessage loading message="Memuat grafik arus..." />
-                      ) : !hasCurrentData ? (
-                        <ChartMessage message="Belum ada data arus dari sensor." />
-                      ) : (
-                        <ResponsiveContainer width="100%" height="100%">
-                          <AreaChart data={chartData} margin={{ top: 16, right: 20, left: -5, bottom: 5 }}>
-                            <defs>
-                              <linearGradient id="currL5Grad" x1="0" x2="0" y1="0" y2="1">
-                                <stop offset="0" stopColor="#06b6d4" stopOpacity={0.2} />
-                                <stop offset="1" stopColor="#06b6d4" stopOpacity={0} />
-                              </linearGradient>
-                            </defs>
-                            <CartesianGrid vertical={false} stroke="var(--border)" />
-                            <XAxis
-                              dataKey="timestamp"
-                              type="number"
-                              scale="time"
-                              domain={["dataMin", "dataMax"]}
-                              tickCount={6}
-                              tickFormatter={value =>
-                                new Intl.DateTimeFormat("id-ID", { timeZone: "Asia/Jakarta", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(Number(value)))
-                              }
-                              axisLine={false}
-                              tickLine={false}
-                              minTickGap={45}
-                              fontSize={11}
-                              tick={{ fill: "var(--muted-foreground)" }}
-                            />
-                            <YAxis domain={currentDomain} axisLine={false} tickLine={false} fontSize={11} width={48} tickFormatter={value => `${Number(value).toFixed(1)}`} tick={{ fill: "var(--muted-foreground)" }} />
-                            <Tooltip
-                              content={({ active, payload, label }) => {
-                                if (active && payload && payload.length) {
-                                  return (
-                                    <div className="rounded-xl border border-border bg-popover p-2.5 shadow-md text-popover-foreground text-xs font-semibold">
-                                      <p className="font-mono text-muted-foreground mb-1">{fullDateTime(Number(label))}</p>
-                                      {payload.map((p, idx) => (
-                                        <p key={idx} className="flex items-center gap-1.5 text-xs">
-                                          <span className="size-1.5 rounded-full" style={{ backgroundColor: p.color || p.stroke }} />
-                                          <span className="text-muted-foreground font-medium">Arus:</span>
-                                          <span className="font-bold">{Number(Number(p.value).toFixed(2))} A</span>
-                                        </p>
-                                      ))}
-                                    </div>
-                                  )
+                        {chartTab !== "all" && (
+                          <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                            <span className="rounded-lg bg-cyan-500/10 px-2.5 py-1 font-semibold text-cyan-600 dark:text-cyan-400">
+                              Saat Ini: {currentL5 !== null ? `${currentL5.toFixed(2)} A` : "-- A"}
+                            </span>
+                            <span className="rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-1 font-medium text-slate-600 dark:text-slate-300">
+                              Min: {minCurr !== null ? `${minCurr.toFixed(2)} A` : "--"}
+                            </span>
+                            <span className="rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-1 font-medium text-slate-600 dark:text-slate-300">
+                              Max: {maxCurr !== null ? `${maxCurr.toFixed(2)} A` : "--"}
+                            </span>
+                            <span className="rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-1 font-medium text-slate-600 dark:text-slate-300">
+                              Avg: {avgCurr !== null ? `${avgCurr.toFixed(2)} A` : "--"}
+                            </span>
+                          </div>
+                        )}
+                      </CardHeader>
+
+                      <CardContent className="h-80 pl-1 pr-4 pb-4">
+                        {loadingHistory && chartData.length === 0 ? (
+                          <ChartMessage loading message="Memuat grafik arus..." />
+                        ) : !hasCurrentData ? (
+                          <ChartMessage message="Belum ada data arus dari sensor." />
+                        ) : (
+                          <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={chartData} margin={{ top: 16, right: 20, left: -5, bottom: 5 }}>
+                              <defs>
+                                <linearGradient id="currL5Grad" x1="0" x2="0" y1="0" y2="1">
+                                  <stop offset="0" stopColor="#06b6d4" stopOpacity={0.2} />
+                                  <stop offset="1" stopColor="#06b6d4" stopOpacity={0} />
+                                </linearGradient>
+                              </defs>
+                              <CartesianGrid vertical={false} stroke="var(--border)" />
+                              <XAxis
+                                dataKey="timestamp"
+                                type="number"
+                                scale="time"
+                                domain={["dataMin", "dataMax"]}
+                                tickCount={6}
+                                tickFormatter={value =>
+                                  new Intl.DateTimeFormat("id-ID", { timeZone: "Asia/Jakarta", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(Number(value)))
                                 }
-                                return null
-                              }}
-                            />
-                            <Area type="monotone" dataKey="current" stroke="#06b6d4" strokeWidth={2.2} fill="url(#currL5Grad)" connectNulls isAnimationActive={false} dot={chartData.length === 1 ? { r: 4, fill: "#06b6d4", strokeWidth: 0 } : false} activeDot={{ r: 5, fill: "#0891b2" }} />
-                          </AreaChart>
-                        </ResponsiveContainer>
-                      )}
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
+                                axisLine={false}
+                                tickLine={false}
+                                minTickGap={45}
+                                fontSize={11}
+                                tick={{ fill: "var(--muted-foreground)" }}
+                              />
+                              <YAxis domain={currentDomain} axisLine={false} tickLine={false} fontSize={11} width={48} tickFormatter={value => `${Number(value).toFixed(1)}`} tick={{ fill: "var(--muted-foreground)" }} />
+                              <Tooltip
+                                content={({ active, payload, label }) => {
+                                  if (active && payload && payload.length) {
+                                    return (
+                                      <div className="rounded-xl border border-border bg-popover p-2.5 shadow-md text-popover-foreground text-xs font-semibold">
+                                        <p className="font-mono text-muted-foreground mb-1">{fullDateTime(Number(label))}</p>
+                                        {payload.map((p, idx) => (
+                                          <p key={idx} className="flex items-center gap-1.5 text-xs">
+                                            <span className="size-1.5 rounded-full" style={{ backgroundColor: p.color || p.stroke }} />
+                                            <span className="text-muted-foreground font-medium">Arus:</span>
+                                            <span className="font-bold">{Number(Number(p.value).toFixed(2))} A</span>
+                                          </p>
+                                        ))}
+                                      </div>
+                                    )
+                                  }
+                                  return null
+                                }}
+                              />
+                              <Area type="monotone" dataKey="current" stroke="#06b6d4" strokeWidth={2.2} fill="url(#currL5Grad)" connectNulls isAnimationActive={false} dot={chartData.length === 1 ? { r: 4, fill: "#06b6d4", strokeWidth: 0 } : false} activeDot={{ r: 5, fill: "#0891b2" }} />
+                            </AreaChart>
+                          </ResponsiveContainer>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -3064,317 +3064,317 @@ function CombinedTelemetryChart({
             </div>
 
             <div className="h-full pl-12">
-            <ResponsiveContainer width="100%" height="100%">
-            <AreaChart
-              data={data}
-              margin={{ top: 10, right: 18, left: 0, bottom: 16 }}
-              onMouseLeave={() => setHoveredMetric(null)}
-            >
-              <defs>
-                <linearGradient id={`combinedTempL${floor}`} x1="0" x2="0" y1="0" y2="1">
-                  <stop offset="0" stopColor="#10b981" stopOpacity={0.2} />
-                  <stop offset="1" stopColor="#10b981" stopOpacity={0} />
-                </linearGradient>
-                <linearGradient id={`combinedVoltL${floor}`} x1="0" x2="0" y1="0" y2="1">
-                  <stop offset="0" stopColor="#f59e0b" stopOpacity={0.16} />
-                  <stop offset="1" stopColor="#f59e0b" stopOpacity={0} />
-                </linearGradient>
-                <linearGradient id={`combinedCurrentL${floor}`} x1="0" x2="0" y1="0" y2="1">
-                  <stop offset="0" stopColor="#06b6d4" stopOpacity={0.16} />
-                  <stop offset="1" stopColor="#06b6d4" stopOpacity={0} />
-                </linearGradient>
-              </defs>
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart
+                  data={data}
+                  margin={{ top: 10, right: 18, left: 0, bottom: 16 }}
+                  onMouseLeave={() => setHoveredMetric(null)}
+                >
+                  <defs>
+                    <linearGradient id={`combinedTempL${floor}`} x1="0" x2="0" y1="0" y2="1">
+                      <stop offset="0" stopColor="#10b981" stopOpacity={0.2} />
+                      <stop offset="1" stopColor="#10b981" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id={`combinedVoltL${floor}`} x1="0" x2="0" y1="0" y2="1">
+                      <stop offset="0" stopColor="#f59e0b" stopOpacity={0.16} />
+                      <stop offset="1" stopColor="#f59e0b" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id={`combinedCurrentL${floor}`} x1="0" x2="0" y1="0" y2="1">
+                      <stop offset="0" stopColor="#06b6d4" stopOpacity={0.16} />
+                      <stop offset="1" stopColor="#06b6d4" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
 
-              <CartesianGrid vertical={false} stroke="var(--border)" />
-              <XAxis
-                dataKey="timestamp"
-                type="number"
-                scale="time"
-                domain={timeline.domain}
-                ticks={timeline.ticks}
-                interval={0}
-                axisLine={false}
-                tickLine={false}
-                height={36}
-                tick={props => {
-                  const { x, y, payload } = props
-                  if (!payload || payload.value === undefined) return null
+                  <CartesianGrid vertical={false} stroke="var(--border)" />
+                  <XAxis
+                    dataKey="timestamp"
+                    type="number"
+                    scale="time"
+                    domain={timeline.domain}
+                    ticks={timeline.ticks}
+                    interval={0}
+                    axisLine={false}
+                    tickLine={false}
+                    height={36}
+                    tick={props => {
+                      const { x, y, payload } = props
+                      if (!payload || payload.value === undefined) return null
 
-                  const valueNum = Number(payload.value)
-                  const isLatest =
-                    timeline.latestTimestamp !== undefined &&
-                    Math.abs(valueNum - timeline.latestTimestamp) < 1000
+                      const valueNum = Number(payload.value)
+                      const isLatest =
+                        timeline.latestTimestamp !== undefined &&
+                        Math.abs(valueNum - timeline.latestTimestamp) < 1000
 
-                  return (
-                    <g transform={`translate(${x},${y})`}>
-                      <text
-                        x={0}
-                        y={0}
-                        dy={isLatest ? 22 : 10}
-                        textAnchor="middle"
-                        fill={isLatest ? "#10b981" : "var(--muted-foreground)"}
-                        fontSize={11}
-                        fontWeight={isLatest ? 600 : 400}
-                      >
-                        {isLatest
-                          ? `Sekarang (${formatAxisClock(valueNum)})`
-                          : formatAxisClock(valueNum)}
-                      </text>
-                    </g>
-                  )
-                }}
-              />
-
-              <YAxis yAxisId="suhu" domain={temperatureDomain} hide />
-              <YAxis yAxisId="tegangan" domain={voltageDomain} hide />
-              <YAxis yAxisId="arus" domain={currentDomain} hide />
-
-              {timeline.latestTimestamp && (
-                <ReferenceLine
-                  x={timeline.latestTimestamp}
-                  stroke="#10b981"
-                  strokeDasharray="4 4"
-                  strokeWidth={1.5}
-                />
-              )}
-
-              {displayedMetric === "suhu" && (
-                <>
-                  <ReferenceLine
-                    yAxisId="suhu"
-                    y={dangerTemperature}
-                    ifOverflow="extendDomain"
-                    stroke="#fb7185"
-                    strokeDasharray="5 4"
-                    label={{
-                      value: `Bahaya (≥${dangerTemperature}°C)`,
-                      fill: "#f43f5e",
-                      fontSize: 10,
-                      position: "insideTopLeft",
+                      return (
+                        <g transform={`translate(${x},${y})`}>
+                          <text
+                            x={0}
+                            y={0}
+                            dy={isLatest ? 22 : 10}
+                            textAnchor="middle"
+                            fill={isLatest ? "#10b981" : "var(--muted-foreground)"}
+                            fontSize={11}
+                            fontWeight={isLatest ? 600 : 400}
+                          >
+                            {isLatest
+                              ? `Sekarang (${formatAxisClock(valueNum)})`
+                              : formatAxisClock(valueNum)}
+                          </text>
+                        </g>
+                      )
                     }}
                   />
-                  <ReferenceLine
-                    yAxisId="suhu"
-                    y={warningTemperature}
-                    ifOverflow="extendDomain"
-                    stroke="#f59e0b"
-                    strokeDasharray="5 4"
-                    label={{
-                      value: `Waspada (≥${warningTemperature}°C)`,
-                      fill: "#d97706",
-                      fontSize: 10,
-                      position: "insideTopLeft",
-                    }}
-                  />
-                </>
-              )}
 
-              {displayedMetric === "tegangan" && (
-                <>
-                  <ReferenceLine
-                    yAxisId="tegangan"
-                    y={VOLTAGE_TARGET}
-                    ifOverflow="extendDomain"
-                    stroke="#3b82f6"
-                    strokeDasharray="4 4"
-                    label={{
-                      value: `Target ${VOLTAGE_TARGET} V`,
-                      fill: "#2563eb",
-                      fontSize: 10,
-                      position: "insideTopLeft",
-                    }}
-                  />
-                  <ReferenceLine
-                    yAxisId="tegangan"
-                    y={voltageMin}
-                    ifOverflow="extendDomain"
-                    stroke="#f43f5e"
-                    strokeDasharray="4 4"
-                    label={{
-                      value: `Batas minimum ${voltageMin} V`,
-                      fill: "#f43f5e",
-                      fontSize: 10,
-                      position: "insideBottomLeft",
-                    }}
-                  />
-                  <ReferenceLine
-                    yAxisId="tegangan"
-                    y={voltageMax}
-                    ifOverflow="extendDomain"
-                    stroke="#f43f5e"
-                    strokeDasharray="4 4"
-                    label={{
-                      value: `Batas maksimum ${voltageMax} V`,
-                      fill: "#f43f5e",
-                      fontSize: 10,
-                      position: "insideTopLeft",
-                    }}
-                  />
-                </>
-              )}
+                  <YAxis yAxisId="suhu" domain={temperatureDomain} hide />
+                  <YAxis yAxisId="tegangan" domain={voltageDomain} hide />
+                  <YAxis yAxisId="arus" domain={currentDomain} hide />
 
-              {displayedMetric === "arus" && (
-                <ReferenceLine
-                  yAxisId="arus"
-                  y={CURRENT_CAPACITY}
-                  ifOverflow="extendDomain"
-                  stroke="#f43f5e"
-                  strokeDasharray="5 4"
-                  label={{
-                    value: `Batas kapasitas ${CURRENT_CAPACITY} A`,
-                    fill: "#f43f5e",
-                    fontSize: 10,
-                    position: "insideTopLeft",
-                  }}
-                />
-              )}
+                  {timeline.latestTimestamp && (
+                    <ReferenceLine
+                      x={timeline.latestTimestamp}
+                      stroke="#10b981"
+                      strokeDasharray="4 4"
+                      strokeWidth={1.5}
+                    />
+                  )}
 
-              <Tooltip
-                cursor={{ stroke: "var(--muted-foreground)", strokeDasharray: "4 4", strokeOpacity: 0.45 }}
-                content={({ active, payload, label }) => {
-                  if (!active || !payload?.length) {
-                    return null
-                  }
+                  {displayedMetric === "suhu" && (
+                    <>
+                      <ReferenceLine
+                        yAxisId="suhu"
+                        y={dangerTemperature}
+                        ifOverflow="extendDomain"
+                        stroke="#fb7185"
+                        strokeDasharray="5 4"
+                        label={{
+                          value: `Bahaya (≥${dangerTemperature}°C)`,
+                          fill: "#f43f5e",
+                          fontSize: 10,
+                          position: "insideTopLeft",
+                        }}
+                      />
+                      <ReferenceLine
+                        yAxisId="suhu"
+                        y={warningTemperature}
+                        ifOverflow="extendDomain"
+                        stroke="#f59e0b"
+                        strokeDasharray="5 4"
+                        label={{
+                          value: `Waspada (≥${warningTemperature}°C)`,
+                          fill: "#d97706",
+                          fontSize: 10,
+                          position: "insideTopLeft",
+                        }}
+                      />
+                    </>
+                  )}
 
-                  const uniquePayload = payload.filter(
-                    (item, index, items) =>
-                      items.findIndex(
-                        candidate =>
-                          String(candidate.dataKey) ===
-                          String(item.dataKey),
-                      ) === index,
-                  )
+                  {displayedMetric === "tegangan" && (
+                    <>
+                      <ReferenceLine
+                        yAxisId="tegangan"
+                        y={VOLTAGE_TARGET}
+                        ifOverflow="extendDomain"
+                        stroke="#3b82f6"
+                        strokeDasharray="4 4"
+                        label={{
+                          value: `Target ${VOLTAGE_TARGET} V`,
+                          fill: "#2563eb",
+                          fontSize: 10,
+                          position: "insideTopLeft",
+                        }}
+                      />
+                      <ReferenceLine
+                        yAxisId="tegangan"
+                        y={voltageMin}
+                        ifOverflow="extendDomain"
+                        stroke="#f43f5e"
+                        strokeDasharray="4 4"
+                        label={{
+                          value: `Batas minimum ${voltageMin} V`,
+                          fill: "#f43f5e",
+                          fontSize: 10,
+                          position: "insideBottomLeft",
+                        }}
+                      />
+                      <ReferenceLine
+                        yAxisId="tegangan"
+                        y={voltageMax}
+                        ifOverflow="extendDomain"
+                        stroke="#f43f5e"
+                        strokeDasharray="4 4"
+                        label={{
+                          value: `Batas maksimum ${voltageMax} V`,
+                          fill: "#f43f5e",
+                          fontSize: 10,
+                          position: "insideTopLeft",
+                        }}
+                      />
+                    </>
+                  )}
 
-                  return (
-                    <div className="rounded-xl border border-border bg-popover p-2.5 text-xs text-popover-foreground shadow-md">
-                      <p className="mb-1.5 font-mono font-semibold text-muted-foreground">
-                        {fullDateTime(Number(label))}
-                      </p>
-                      {uniquePayload.map(item => {
-                        const key = String(item.dataKey) as "temperature" | "voltage" | "current"
-                        const metric: ChartMetric =
-                          key === "temperature"
-                            ? "suhu"
-                            : key === "voltage"
-                              ? "tegangan"
-                              : "arus"
-                        const detail = metricDetails[metric]
-                        const precision = metric === "arus" ? 2 : 1
+                  {displayedMetric === "arus" && (
+                    <ReferenceLine
+                      yAxisId="arus"
+                      y={CURRENT_CAPACITY}
+                      ifOverflow="extendDomain"
+                      stroke="#f43f5e"
+                      strokeDasharray="5 4"
+                      label={{
+                        value: `Batas kapasitas ${CURRENT_CAPACITY} A`,
+                        fill: "#f43f5e",
+                        fontSize: 10,
+                        position: "insideTopLeft",
+                      }}
+                    />
+                  )}
 
-                        return (
-                          <p key={key} className="flex items-center gap-2 py-0.5">
-                            <span className="size-1.5 rounded-full" style={{ backgroundColor: detail.color }} />
-                            <span className="text-muted-foreground">{detail.label}:</span>
-                            <span className="font-bold">
-                              {Number(item.value).toFixed(precision)} {detail.unit}
-                            </span>
+                  <Tooltip
+                    cursor={{ stroke: "var(--muted-foreground)", strokeDasharray: "4 4", strokeOpacity: 0.45 }}
+                    content={({ active, payload, label }) => {
+                      if (!active || !payload?.length) {
+                        return null
+                      }
+
+                      const uniquePayload = payload.filter(
+                        (item, index, items) =>
+                          items.findIndex(
+                            candidate =>
+                              String(candidate.dataKey) ===
+                              String(item.dataKey),
+                          ) === index,
+                      )
+
+                      return (
+                        <div className="rounded-xl border border-border bg-popover p-2.5 text-xs text-popover-foreground shadow-md">
+                          <p className="mb-1.5 font-mono font-semibold text-muted-foreground">
+                            {fullDateTime(Number(label))}
                           </p>
-                        )
-                      })}
-                    </div>
-                  )
-                }}
-              />
+                          {uniquePayload.map(item => {
+                            const key = String(item.dataKey) as "temperature" | "voltage" | "current"
+                            const metric: ChartMetric =
+                              key === "temperature"
+                                ? "suhu"
+                                : key === "voltage"
+                                  ? "tegangan"
+                                  : "arus"
+                            const detail = metricDetails[metric]
+                            const precision = metric === "arus" ? 2 : 1
 
-              {visibleMetrics.includes("suhu") && hasData.suhu && (
-                <Area
-                  yAxisId="suhu"
-                  type="monotone"
-                  dataKey="temperature"
-                  name="Suhu"
-                  stroke="#10b981"
-                  strokeWidth={2.5}
-                  fill={`url(#combinedTempL${floor})`}
-                  connectNulls
-                  isAnimationActive={false}
-                  dot={false}
-                  activeDot={{ r: 4, fill: "#059669" }}
-                  onMouseEnter={() => setHoveredMetric("suhu")}
-                />
-              )}
-              {visibleMetrics.includes("tegangan") && hasData.tegangan && (
-                <Area
-                  yAxisId="tegangan"
-                  type="monotone"
-                  dataKey="voltage"
-                  name="Tegangan"
-                  stroke="#f59e0b"
-                  strokeWidth={2.4}
-                  fill={`url(#combinedVoltL${floor})`}
-                  connectNulls
-                  isAnimationActive={false}
-                  dot={false}
-                  activeDot={{ r: 4, fill: "#d97706" }}
-                  onMouseEnter={() => setHoveredMetric("tegangan")}
-                />
-              )}
-              {visibleMetrics.includes("arus") && hasData.arus && (
-                <Area
-                  yAxisId="arus"
-                  type="monotone"
-                  dataKey="current"
-                  name="Arus"
-                  stroke="#06b6d4"
-                  strokeWidth={2.4}
-                  fill={`url(#combinedCurrentL${floor})`}
-                  connectNulls
-                  isAnimationActive={false}
-                  dot={false}
-                  activeDot={{ r: 4, fill: "#0891b2" }}
-                  onMouseEnter={() => setHoveredMetric("arus")}
-                />
-              )}
+                            return (
+                              <p key={key} className="flex items-center gap-2 py-0.5">
+                                <span className="size-1.5 rounded-full" style={{ backgroundColor: detail.color }} />
+                                <span className="text-muted-foreground">{detail.label}:</span>
+                                <span className="font-bold">
+                                  {Number(item.value).toFixed(precision)} {detail.unit}
+                                </span>
+                              </p>
+                            )
+                          })}
+                        </div>
+                      )
+                    }}
+                  />
 
-              {visibleMetrics.includes("suhu") && hasData.suhu && (
-                <Line
-                  yAxisId="suhu"
-                  type="monotone"
-                  dataKey="temperature"
-                  stroke="#10b981"
-                  strokeOpacity={0.001}
-                  strokeWidth={16}
-                  dot={false}
-                  activeDot={false}
-                  isAnimationActive={false}
-                  tooltipType="none"
-                  style={{ cursor: "crosshair", pointerEvents: "stroke" }}
-                  onMouseEnter={() => setHoveredMetric("suhu")}
-                />
-              )}
-              {visibleMetrics.includes("tegangan") && hasData.tegangan && (
-                <Line
-                  yAxisId="tegangan"
-                  type="monotone"
-                  dataKey="voltage"
-                  stroke="#f59e0b"
-                  strokeOpacity={0.001}
-                  strokeWidth={16}
-                  dot={false}
-                  activeDot={false}
-                  isAnimationActive={false}
-                  tooltipType="none"
-                  style={{ cursor: "crosshair", pointerEvents: "stroke" }}
-                  onMouseEnter={() => setHoveredMetric("tegangan")}
-                />
-              )}
-              {visibleMetrics.includes("arus") && hasData.arus && (
-                <Line
-                  yAxisId="arus"
-                  type="monotone"
-                  dataKey="current"
-                  stroke="#06b6d4"
-                  strokeOpacity={0.001}
-                  strokeWidth={16}
-                  dot={false}
-                  activeDot={false}
-                  isAnimationActive={false}
-                  tooltipType="none"
-                  style={{ cursor: "crosshair", pointerEvents: "stroke" }}
-                  onMouseEnter={() => setHoveredMetric("arus")}
-                />
-              )}
-            </AreaChart>
-            </ResponsiveContainer>
+                  {visibleMetrics.includes("suhu") && hasData.suhu && (
+                    <Area
+                      yAxisId="suhu"
+                      type="monotone"
+                      dataKey="temperature"
+                      name="Suhu"
+                      stroke="#10b981"
+                      strokeWidth={2.5}
+                      fill={`url(#combinedTempL${floor})`}
+                      connectNulls
+                      isAnimationActive={false}
+                      dot={false}
+                      activeDot={{ r: 4, fill: "#059669" }}
+                      onMouseEnter={() => setHoveredMetric("suhu")}
+                    />
+                  )}
+                  {visibleMetrics.includes("tegangan") && hasData.tegangan && (
+                    <Area
+                      yAxisId="tegangan"
+                      type="monotone"
+                      dataKey="voltage"
+                      name="Tegangan"
+                      stroke="#f59e0b"
+                      strokeWidth={2.4}
+                      fill={`url(#combinedVoltL${floor})`}
+                      connectNulls
+                      isAnimationActive={false}
+                      dot={false}
+                      activeDot={{ r: 4, fill: "#d97706" }}
+                      onMouseEnter={() => setHoveredMetric("tegangan")}
+                    />
+                  )}
+                  {visibleMetrics.includes("arus") && hasData.arus && (
+                    <Area
+                      yAxisId="arus"
+                      type="monotone"
+                      dataKey="current"
+                      name="Arus"
+                      stroke="#06b6d4"
+                      strokeWidth={2.4}
+                      fill={`url(#combinedCurrentL${floor})`}
+                      connectNulls
+                      isAnimationActive={false}
+                      dot={false}
+                      activeDot={{ r: 4, fill: "#0891b2" }}
+                      onMouseEnter={() => setHoveredMetric("arus")}
+                    />
+                  )}
+
+                  {visibleMetrics.includes("suhu") && hasData.suhu && (
+                    <Line
+                      yAxisId="suhu"
+                      type="monotone"
+                      dataKey="temperature"
+                      stroke="#10b981"
+                      strokeOpacity={0.001}
+                      strokeWidth={16}
+                      dot={false}
+                      activeDot={false}
+                      isAnimationActive={false}
+                      tooltipType="none"
+                      style={{ cursor: "crosshair", pointerEvents: "stroke" }}
+                      onMouseEnter={() => setHoveredMetric("suhu")}
+                    />
+                  )}
+                  {visibleMetrics.includes("tegangan") && hasData.tegangan && (
+                    <Line
+                      yAxisId="tegangan"
+                      type="monotone"
+                      dataKey="voltage"
+                      stroke="#f59e0b"
+                      strokeOpacity={0.001}
+                      strokeWidth={16}
+                      dot={false}
+                      activeDot={false}
+                      isAnimationActive={false}
+                      tooltipType="none"
+                      style={{ cursor: "crosshair", pointerEvents: "stroke" }}
+                      onMouseEnter={() => setHoveredMetric("tegangan")}
+                    />
+                  )}
+                  {visibleMetrics.includes("arus") && hasData.arus && (
+                    <Line
+                      yAxisId="arus"
+                      type="monotone"
+                      dataKey="current"
+                      stroke="#06b6d4"
+                      strokeOpacity={0.001}
+                      strokeWidth={16}
+                      dot={false}
+                      activeDot={false}
+                      isAnimationActive={false}
+                      tooltipType="none"
+                      style={{ cursor: "crosshair", pointerEvents: "stroke" }}
+                      onMouseEnter={() => setHoveredMetric("arus")}
+                    />
+                  )}
+                </AreaChart>
+              </ResponsiveContainer>
             </div>
           </div>
         )}
@@ -3611,7 +3611,7 @@ function MetricStatistics02({ items }: { items: MetricItemData[] }) {
           return (
             <div
               key={index}
-                className="w-full sm:w-1/2 lg:w-auto lg:flex-1 border-slate-100 dark:border-slate-800/80 border-b lg:border-b-0 border-e sm:odd:border-e lg:even:border-e lg:border-e lg:last:border-e-0 last:border-b-0 transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-800/30"
+              className="w-full sm:w-1/2 lg:w-auto lg:flex-1 border-slate-100 dark:border-slate-800/80 border-b lg:border-b-0 border-e sm:odd:border-e lg:even:border-e lg:border-e lg:last:border-e-0 last:border-b-0 transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-800/30"
             >
               <div className="p-5 flex items-start justify-between gap-3 h-full">
                 <div className="flex flex-col justify-between gap-2 min-w-0 flex-1">
