@@ -1226,25 +1226,30 @@ export function Dashboard() {
   const onlineL5 =
     isOnline(readingL5)
 
+  // Jika sensor offline, gunakan undefined agar suhu juga tampil sebagai "--"
+  const activeReadingL4 = onlineL4 ? readingL4 : undefined
+  const activeReadingL5 = onlineL5 ? readingL5 : undefined
+
   const statusL4 =
     getTempStatusL4(
-      readingL4?.temperature,
+      activeReadingL4?.temperature,
     )
 
   const statusL5 =
     getTempStatusL5(
-      readingL5?.temperature,
+      activeReadingL5?.temperature,
     )
 
-  const voltageL4 = readingL4?.voltage !== null && readingL4?.voltage !== undefined ? Number(readingL4.voltage) : null
-  const currentL4 = readingL4?.current !== null && readingL4?.current !== undefined ? Number(readingL4.current) : null
+  // Jika sensor offline semua nilai null agar tidak ada data lama yang tertinggal
+  const voltageL4 = onlineL4 && readingL4?.voltage !== null && readingL4?.voltage !== undefined ? Number(readingL4.voltage) : null
+  const currentL4 = onlineL4 && readingL4?.current !== null && readingL4?.current !== undefined ? Number(readingL4.current) : null
   const powerKwL4 = voltageL4 !== null && currentL4 !== null ? (voltageL4 * currentL4) / 1000 : null
   const loadPercentageL4 = currentL4 !== null ? Math.min(Math.round((currentL4 / CURRENT_CAPACITY) * 100), 100) : null
 
   // Dipertahankan hanya untuk blok grafik lama yang sudah disembunyikan.
   // Kapabilitas UI aktif Lantai 5 tetap hanya suhu.
-  const voltageL5 = readingL5?.voltage !== null && readingL5?.voltage !== undefined ? Number(readingL5.voltage) : null
-  const currentL5 = readingL5?.current !== null && readingL5?.current !== undefined ? Number(readingL5.current) : null
+  const voltageL5 = onlineL5 && readingL5?.voltage !== null && readingL5?.voltage !== undefined ? Number(readingL5.voltage) : null
+  const currentL5 = onlineL5 && readingL5?.current !== null && readingL5?.current !== undefined ? Number(readingL5.current) : null
   const powerKwL5 = voltageL5 !== null && currentL5 !== null ? (voltageL5 * currentL5) / 1000 : null
   const loadPercentageL5 = currentL5 !== null ? Math.min(Math.round((currentL5 / CURRENT_CAPACITY) * 100), 100) : null
 
@@ -1533,13 +1538,13 @@ export function Dashboard() {
                     metric: {
                       icon: Thermometer,
                       label: "Suhu Ruang Server",
-                      value: readingL4
-                        ? `${Number(Number(readingL4.temperature).toFixed(1))}°C`
+                      value: activeReadingL4
+                        ? `${Number(Number(activeReadingL4.temperature).toFixed(1))}°C`
                         : "--°C",
-                      detail: readingL4
+                      detail: activeReadingL4
                         ? `Batas waspada ${warningTemperature}°C`
                         : "Menunggu data",
-                      valueClassName: readingL4
+                      valueClassName: activeReadingL4
                         ? getStatusColor(statusL4)
                         : "text-muted-foreground",
                       iconBgColor: "bg-emerald-500/10",
@@ -1654,7 +1659,7 @@ export function Dashboard() {
                   icon: Radio,
                   label: "Sensor L4",
                   value: onlineL4 ? "Online" : "Offline",
-                  detail: readingL4
+                  detail: onlineL4 && readingL4
                     ? `Sinkron: ${clock(readingL4.recordedAt, true)} WIB`
                     : "Menunggu data",
                   valueClassName: onlineL4
@@ -1671,13 +1676,13 @@ export function Dashboard() {
                   {
                     icon: Thermometer,
                     label: "Suhu Ruang Server",
-                    value: readingL4
-                      ? `${Number(Number(readingL4.temperature).toFixed(1))}°C`
+                    value: activeReadingL4
+                      ? `${Number(Number(activeReadingL4.temperature).toFixed(1))}°C`
                       : "--°C",
-                    detail: readingL4
+                    detail: activeReadingL4
                       ? `Status: ${statusL4} (<${warningTemperature}°C)`
                       : "Menunggu data",
-                    valueClassName: readingL4
+                    valueClassName: activeReadingL4
                       ? getStatusColor(statusL4)
                       : "text-muted-foreground",
                     iconBgColor: "bg-emerald-500/10",
@@ -1723,7 +1728,7 @@ export function Dashboard() {
                     icon: Radio,
                     label: "Sensor L4",
                     value: onlineL4 ? "Online" : "Offline",
-                    detail: readingL4
+                    detail: onlineL4 && readingL4
                       ? `Sinkron: ${clock(readingL4.recordedAt, true)} WIB`
                       : "Menunggu data",
                     valueClassName: onlineL4
@@ -2120,13 +2125,13 @@ export function Dashboard() {
                     metric: {
                       icon: Thermometer,
                       label: "Suhu Ruangan L5",
-                      value: readingL5
-                        ? `${Number(Number(readingL5.temperature).toFixed(1))}°C`
+                      value: activeReadingL5
+                        ? `${Number(Number(activeReadingL5.temperature).toFixed(1))}°C`
                         : "--°C",
-                      detail: readingL5
+                      detail: activeReadingL5
                         ? `Batas waspada ${warningTemperatureL5}°C`
                         : "Belum ada data",
-                      valueClassName: readingL5
+                      valueClassName: activeReadingL5
                         ? getStatusColor(statusL5)
                         : "text-muted-foreground",
                       iconBgColor: "bg-purple-500/10",
@@ -2159,7 +2164,7 @@ export function Dashboard() {
                   icon: Radio,
                   label: "Sensor L5",
                   value: onlineL5 ? "Online" : "Offline",
-                  detail: readingL5
+                  detail: onlineL5 && readingL5
                     ? `Update: ${clock(readingL5.recordedAt, true)}`
                     : "Belum ada data",
                   valueClassName: onlineL5
@@ -2176,13 +2181,13 @@ export function Dashboard() {
                   {
                     icon: Thermometer,
                     label: "Suhu Ruangan L5",
-                    value: readingL5
-                      ? `${Number(Number(readingL5.temperature).toFixed(1))}°C`
+                    value: activeReadingL5
+                      ? `${Number(Number(activeReadingL5.temperature).toFixed(1))}°C`
                       : "--°C",
-                    detail: readingL5
+                    detail: activeReadingL5
                       ? `Status: ${statusL5} (<${warningTemperatureL5}°C)`
                       : "Belum ada data",
-                    valueClassName: readingL5
+                    valueClassName: activeReadingL5
                       ? getStatusColor(statusL5)
                       : "text-muted-foreground",
                     iconBgColor: "bg-purple-500/10",
@@ -2192,7 +2197,7 @@ export function Dashboard() {
                     icon: Radio,
                     label: "Sensor L5",
                     value: onlineL5 ? "Online" : "Offline",
-                    detail: readingL5
+                    detail: onlineL5 && readingL5
                       ? `Update: ${clock(readingL5.recordedAt, true)}`
                       : "Belum ada data",
                     valueClassName: onlineL5
