@@ -588,7 +588,7 @@ export function SettingsPage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <Field
                 label="Batas Minimum Tegangan"
-                hint="Tegangan di bawah nilai ini dianggap Bahaya"
+                hint="Tegangan di bawah nilai ini statusnya LOW"
               >
                 <NumberInput
                   value={settings.voltageMin}
@@ -606,7 +606,7 @@ export function SettingsPage() {
 
               <Field
                 label="Batas Maksimum Tegangan"
-                hint="Tegangan di atas nilai ini dianggap Bahaya"
+                hint="Tegangan di atas nilai ini statusnya HIGH"
               >
                 <NumberInput
                   value={settings.voltageMax}
@@ -630,14 +630,14 @@ export function SettingsPage() {
             )}
 
             <div className="mt-5 flex flex-wrap gap-3 text-xs">
-              <Badge className="bg-rose-100 text-rose-700 hover:bg-rose-100 dark:bg-rose-950/60 dark:text-rose-300 dark:hover:bg-rose-950/60">
-                Bahaya (Drop) &lt; {Number(settings.voltageMin)} V
+              <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 dark:bg-blue-950/60 dark:text-blue-300 dark:hover:bg-blue-950/60">
+                LOW &lt; {Number(settings.voltageMin)} V
               </Badge>
               <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:text-emerald-300 dark:hover:bg-emerald-950/60">
-                Aman {Number(settings.voltageMin)} – {Number(settings.voltageMax)} V
+                NORMAL {Number(settings.voltageMin)} – {Number(settings.voltageMax)} V
               </Badge>
               <Badge className="bg-rose-100 text-rose-700 hover:bg-rose-100 dark:bg-rose-950/60 dark:text-rose-300 dark:hover:bg-rose-950/60">
-                Bahaya (Surge) &gt; {Number(settings.voltageMax)} V
+                HIGH &gt; {Number(settings.voltageMax)} V
               </Badge>
             </div>
           </SettingsCard>

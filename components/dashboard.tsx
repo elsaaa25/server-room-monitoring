@@ -1619,21 +1619,25 @@ export function Dashboard() {
                       label: "Kondisi Tegangan L4",
                       value: voltageL4 === null
                         ? "-"
-                        : voltageL4 >= voltageMin && voltageL4 <= voltageMax
-                          ? "AMAN"
-                          : "BAHAYA",
+                        : voltageL4 < voltageMin
+                          ? "LOW"
+                          : voltageL4 > voltageMax
+                            ? "HIGH"
+                            : "NORMAL",
                       detail: voltageL4 === null
                         ? "Sensor tegangan terputus"
                         : voltageL4 < voltageMin
-                          ? "Tegangan di bawah batas"
+                          ? "Tegangan di bawah batas minimum"
                           : voltageL4 > voltageMax
-                            ? "Tegangan di atas batas"
-                            : "Tegangan dalam batas aman",
+                            ? "Tegangan di atas batas maksimum"
+                            : "Tegangan dalam rentang normal",
                       valueClassName: voltageL4 === null
                         ? "text-muted-foreground"
-                        : voltageL4 >= voltageMin && voltageL4 <= voltageMax
-                          ? "text-emerald-600 dark:text-emerald-400"
-                          : "text-rose-600 dark:text-rose-400",
+                        : voltageL4 < voltageMin
+                          ? "text-blue-600 dark:text-blue-400"
+                          : voltageL4 > voltageMax
+                            ? "text-rose-600 dark:text-rose-400"
+                            : "text-emerald-600 dark:text-emerald-400",
                       iconBgColor: "bg-amber-500/10",
                       iconColor: "text-amber-600 dark:text-amber-400",
                     },
@@ -1799,9 +1803,23 @@ export function Dashboard() {
                         </p>
                       </div>
                     </div>
-                    <Badge variant="outline" className={`text-[10px] font-semibold ${voltageL4 !== null && voltageL4 >= voltageMin && voltageL4 <= voltageMax ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900" : "border-rose-200 bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400"}`}>
-                      {voltageL4 !== null && voltageL4 >= voltageMin && voltageL4 <= voltageMax ? "Tegangan Normal" : "Volt Anomali"}
-                    </Badge>
+                    <Badge variant="outline" className={`text-[10px] font-semibold ${
+                       voltageL4 === null
+                         ? "border-slate-200 bg-slate-50 text-slate-500 dark:bg-slate-900 dark:text-slate-400"
+                         : voltageL4 < voltageMin
+                           ? "border-blue-200 bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-900"
+                           : voltageL4 > voltageMax
+                             ? "border-rose-200 bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-900"
+                             : "border-emerald-200 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900"
+                     }`}>
+                       {voltageL4 === null
+                         ? "--"
+                         : voltageL4 < voltageMin
+                           ? "LOW"
+                           : voltageL4 > voltageMax
+                             ? "HIGH"
+                             : "NORMAL"}
+                     </Badge>
                   </div>
 
                   <div className="flex items-center justify-between p-3.5 rounded-xl border border-slate-200/80 bg-gradient-to-r from-cyan-50/50 to-blue-50/30 dark:from-cyan-950/20 dark:to-blue-950/10 dark:border-slate-800">
