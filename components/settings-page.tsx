@@ -397,10 +397,10 @@ export function SettingsPage() {
       {feedback && (
         <div
           className={`mb-4 rounded-xl border px-4 py-3 text-sm ${feedback.type === "success"
-              ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300"
-              : feedback.type === "error"
-                ? "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300"
-                : "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/30 dark:text-blue-300"
+            ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300"
+            : feedback.type === "error"
+              ? "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300"
+              : "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/30 dark:text-blue-300"
             }`}
         >
           {feedback.message}
@@ -631,13 +631,13 @@ export function SettingsPage() {
 
             <div className="mt-5 flex flex-wrap gap-3 text-xs">
               <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 dark:bg-blue-950/60 dark:text-blue-300 dark:hover:bg-blue-950/60">
-                LOW &lt; {Number(settings.voltageMin)} V
+                Low &lt; {Number(settings.voltageMin)} V
               </Badge>
               <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:text-emerald-300 dark:hover:bg-emerald-950/60">
-                NORMAL {Number(settings.voltageMin)} – {Number(settings.voltageMax)} V
+                Normal {Number(settings.voltageMin)} – {Number(settings.voltageMax)} V
               </Badge>
               <Badge className="bg-rose-100 text-rose-700 hover:bg-rose-100 dark:bg-rose-950/60 dark:text-rose-300 dark:hover:bg-rose-950/60">
-                HIGH &gt; {Number(settings.voltageMax)} V
+                High &gt; {Number(settings.voltageMax)} V
               </Badge>
             </div>
           </SettingsCard>
@@ -941,8 +941,8 @@ function Toggle({
         disabled={disabled}
         onClick={() => onChange(!checked)}
         className={`relative h-6 w-11 shrink-0 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-50 ${checked
-            ? "bg-primary"
-            : "bg-muted"
+          ? "bg-primary"
+          : "bg-muted"
           }`}
       >
         <span
