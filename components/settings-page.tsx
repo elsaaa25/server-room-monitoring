@@ -630,7 +630,7 @@ export function SettingsPage() {
             )}
 
             <div className="mt-5 flex flex-wrap gap-3 text-xs">
-              <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 dark:bg-blue-950/60 dark:text-blue-300 dark:hover:bg-blue-950/60">
+              <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 dark:bg-amber-950/60 dark:text-amber-300 dark:hover:bg-amber-950/60">
                 Low &lt; {Number(settings.voltageMin)} V
               </Badge>
               <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:text-emerald-300 dark:hover:bg-emerald-950/60">

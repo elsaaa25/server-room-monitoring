@@ -38,6 +38,8 @@ type AlertAction =
   | "escalated"
   | "unchanged"
 
+type VoltageAnomalyType = "Drop" | "Surge"
+
 type SavedReading = {
   id: number
   sensorId: string
@@ -49,6 +51,15 @@ type SavedReading = {
 
 type OpenAlert = {
   id: number
+  level: AlertLevel
+  status: "Aktif" | "Ditangani"
+  createdAt: Date
+  resolvedAt: Date | null
+}
+
+type OpenVoltageAlert = {
+  id: number
+  anomalyType: VoltageAnomalyType
   level: AlertLevel
   status: "Aktif" | "Ditangani"
   createdAt: Date
@@ -115,6 +126,44 @@ function getAlertContent(
       `telah melewati batas waspada ` +
       `${warningTemperature.toFixed(2)}°C. ` +
       `Periksa pendingin dan sirkulasi udara.`,
+  }
+}
+
+function getVoltageAnomalyType(
+  voltage: number,
+  voltageMin: number,
+  voltageMax: number,
+): VoltageAnomalyType | null {
+  if (voltage < voltageMin) return "Drop"
+  if (voltage > voltageMax) return "Surge"
+  return null
+}
+
+function getVoltageAlertContent(
+  sensorId: string,
+  anomalyType: VoltageAnomalyType,
+  voltage: number,
+  voltageMin: number,
+  voltageMax: number,
+) {
+  const location = getSensorLocation(sensorId)
+
+  if (anomalyType === "Drop") {
+    return {
+      title: `Tegangan Drop di ${location}`,
+      detail:
+        `Tegangan terdeteksi ${voltage.toFixed(1)} V, ` +
+        `di bawah batas minimum ${voltageMin.toFixed(1)} V. ` +
+        `Periksa sumber listrik dan stabilizer.`,
+    }
+  }
+
+  return {
+    title: `Tegangan Surge di ${location}`,
+    detail:
+      `Tegangan terdeteksi ${voltage.toFixed(1)} V, ` +
+      `melebihi batas maksimum ${voltageMax.toFixed(1)} V. ` +
+      `Segera periksa UPS dan jalur listrik.`,
   }
 }
 
@@ -244,8 +293,8 @@ export async function POST(request: Request) {
         readingResult.rows[0]
 
       /*
-       * Mengambil batas suhu terbaru dari
-       * halaman Pengaturan.
+       * Mengambil batas suhu dan tegangan terbaru
+       * dari halaman Pengaturan.
        */
       const settingsResult =
         await client.query<{
@@ -253,6 +302,8 @@ export async function POST(request: Request) {
           dangerTemperature: number
           warningTemperatureL5: number
           dangerTemperatureL5: number
+          voltageMin: number
+          voltageMax: number
         }>(
           `
             SELECT
@@ -263,7 +314,11 @@ export async function POST(request: Request) {
               warning_temperature_l5::float8
                 AS "warningTemperatureL5",
               danger_temperature_l5::float8
-                AS "dangerTemperatureL5"
+                AS "dangerTemperatureL5",
+              COALESCE(voltage_min::float8, 200)
+                AS "voltageMin",
+              COALESCE(voltage_max::float8, 240)
+                AS "voltageMax"
             FROM monitoring_settings
             WHERE id = 'global'
             LIMIT 1
@@ -511,8 +566,147 @@ export async function POST(request: Request) {
         }
       }
 
+      /*
+       * ─────────────────────────────────────────
+       * SISTEM PERINGATAN TEGANGAN
+       * ─────────────────────────────────────────
+       * Hanya berjalan jika sensor mengirim data
+       * tegangan (voltage !== null).
+       */
+      const voltageMin = Number(
+        settingsResult.rows[0]?.voltageMin ?? 200,
+      )
+      const voltageMax = Number(
+        settingsResult.rows[0]?.voltageMax ?? 240,
+      )
+
+      let voltageAlertAction: AlertAction = "unchanged"
+
+      if (savedReading.voltage !== null) {
+        const voltageValue = savedReading.voltage
+        const anomalyType = getVoltageAnomalyType(
+          voltageValue,
+          voltageMin,
+          voltageMax,
+        )
+
+        if (anomalyType === null) {
+          /*
+           * TEGANGAN NORMAL
+           * Tutup semua voltage_alerts yang masih terbuka.
+           */
+          await client.query(
+            `
+              UPDATE voltage_alerts
+              SET
+                status = 'Ditangani',
+                resolved_at = COALESCE(
+                  resolved_at,
+                  $2
+                )
+              WHERE sensor_id = $1
+                AND resolved_at IS NULL
+            `,
+            [sensorId, savedReading.recordedAt],
+          )
+
+          voltageAlertAction = "normal"
+        } else {
+          /*
+           * Cari voltage alert yang masih aktif (terbuka).
+           */
+          const openVoltageResult =
+            await client.query<OpenVoltageAlert>(
+              `
+                SELECT
+                  id,
+                  anomaly_type AS "anomalyType",
+                  level,
+                  status,
+                  created_at AS "createdAt",
+                  resolved_at AS "resolvedAt"
+                FROM voltage_alerts
+                WHERE sensor_id = $1
+                  AND resolved_at IS NULL
+                ORDER BY
+                  created_at DESC,
+                  id DESC
+                LIMIT 1
+              `,
+              [sensorId],
+            )
+
+          const latestVoltageAlert =
+            openVoltageResult.rows[0]
+
+          /*
+           * Tidak ada alert terbuka → buat baru.
+           * Jenis anomaly berubah (misal Drop → Surge) → buat baru.
+           */
+          const isNewVoltageCycle = !latestVoltageAlert
+          const isTypeChanged =
+            latestVoltageAlert?.anomalyType !== anomalyType
+
+          if (isNewVoltageCycle || isTypeChanged) {
+            if (isTypeChanged && latestVoltageAlert) {
+              /* Tutup alert lama yang jenisnya berbeda */
+              await client.query(
+                `
+                  UPDATE voltage_alerts
+                  SET status = 'Ditangani'
+                  WHERE sensor_id = $1
+                    AND status = 'Aktif'
+                    AND resolved_at IS NULL
+                `,
+                [sensorId],
+              )
+            }
+
+            const voltageContent = getVoltageAlertContent(
+              sensorId,
+              anomalyType,
+              voltageValue,
+              voltageMin,
+              voltageMax,
+            )
+
+            await client.query(
+              `
+                INSERT INTO voltage_alerts (
+                  reading_id,
+                  sensor_id,
+                  anomaly_type,
+                  level,
+                  status,
+                  voltage,
+                  title,
+                  detail,
+                  created_at
+                )
+                VALUES (
+                  $1, $2, $3, 'Bahaya',
+                  'Aktif', $4, $5, $6, $7
+                )
+              `,
+              [
+                savedReading.id,
+                sensorId,
+                anomalyType,
+                voltageValue,
+                voltageContent.title,
+                voltageContent.detail,
+                savedReading.recordedAt,
+              ],
+            )
+
+            voltageAlertAction = "created"
+          }
+        }
+      }
+
       await client.query("COMMIT")
       transactionStarted = false
+
 
       return NextResponse.json(
         {
@@ -524,6 +718,9 @@ export async function POST(request: Request) {
             level:
               alertLevel ?? "Normal",
             action: alertAction,
+          },
+          voltageAlert: {
+            action: voltageAlertAction,
           },
         },
         { status: 201 },
