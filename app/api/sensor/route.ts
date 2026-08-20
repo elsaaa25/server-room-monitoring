@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
 import { db } from "@/lib/db"
+import { sendEmail } from "@/lib/email"
 
 export const runtime = "nodejs"
 
@@ -32,22 +33,8 @@ const readingSchema = z.object({
 })
 
 type AlertLevel = "Waspada" | "Bahaya"
-type AlertAction =
-  | "normal"
-  | "created"
-  | "escalated"
-  | "unchanged"
 
 type VoltageAnomalyType = "Drop" | "Surge"
-
-type SavedReading = {
-  id: number
-  sensorId: string
-  temperature: number
-  voltage: number | null
-  current: number | null
-  recordedAt: Date
-}
 
 type OpenAlert = {
   id: number
@@ -66,17 +53,28 @@ type OpenVoltageAlert = {
   resolvedAt: Date | null
 }
 
-function getSensorLocation(
-  sensorId: string,
-): string {
-  if (sensorId === "TEMP-L4") {
-    return "Lantai 4 (Ruang Server)"
-  }
+type DbSettings = {
+  warningTemperature: number
+  dangerTemperature: number
+  warningTemperatureL5: number
+  dangerTemperatureL5: number
+  voltageMin: number
+  voltageMax: number
+}
 
-  if (sensorId === "TEMP-L5") {
-    return "Lantai 5 (Ruang ATC)"
-  }
+// Default threshold jika tabel monitoring_settings kosong
+const DEFAULT_SETTINGS: DbSettings = {
+  warningTemperature: 27,
+  dangerTemperature: 30,
+  warningTemperatureL5: 27,
+  dangerTemperatureL5: 30,
+  voltageMin: 200,
+  voltageMax: 240,
+}
 
+function getSensorLocation(sensorId: string): string {
+  if (sensorId === "TEMP-L4") return "Lantai 4 (Ruang Server)"
+  if (sensorId === "TEMP-L5") return "Lantai 5 (Ruang ATC)"
   return sensorId
 }
 
@@ -85,14 +83,8 @@ function getAlertLevel(
   warningTemperature: number,
   dangerTemperature: number,
 ): AlertLevel | null {
-  if (temperature >= dangerTemperature) {
-    return "Bahaya"
-  }
-
-  if (temperature > warningTemperature) {
-    return "Waspada"
-  }
-
+  if (temperature >= dangerTemperature) return "Bahaya"
+  if (temperature > warningTemperature) return "Waspada"
   return null
 }
 
@@ -103,13 +95,11 @@ function getAlertContent(
   warningTemperature: number,
   dangerTemperature: number,
 ) {
-  const location =
-    getSensorLocation(sensorId)
+  const location = getSensorLocation(sensorId)
 
   if (level === "Bahaya") {
     return {
-      title:
-        `Suhu ${location} berada pada level bahaya`,
+      title: `Suhu ${location} berada pada level bahaya`,
       detail:
         `Suhu ${temperature.toFixed(2)}°C ` +
         `telah mencapai atau melewati batas bahaya ` +
@@ -119,8 +109,7 @@ function getAlertContent(
   }
 
   return {
-    title:
-      `Suhu ${location} berada pada level waspada`,
+    title: `Suhu ${location} berada pada level waspada`,
     detail:
       `Suhu ${temperature.toFixed(2)}°C ` +
       `telah melewati batas waspada ` +
@@ -167,15 +156,232 @@ function getVoltageAlertContent(
   }
 }
 
+// Ambil semua email pengguna aktif untuk notifikasi
+async function getRecipientEmails(): Promise<string[]> {
+  try {
+    const result = await db.query<{ email: string }>(
+      `SELECT email FROM users WHERE is_active = TRUE ORDER BY created_at ASC`,
+    )
+    return result.rows.map((r) => r.email)
+  } catch {
+    return []
+  }
+}
+
+// Ambil threshold dari database, fallback ke default jika gagal
+async function getSettings(): Promise<DbSettings> {
+  try {
+    const result = await db.query<DbSettings>(
+      `SELECT
+        warning_temperature::float8   AS "warningTemperature",
+        danger_temperature::float8    AS "dangerTemperature",
+        warning_temperature_l5::float8 AS "warningTemperatureL5",
+        danger_temperature_l5::float8  AS "dangerTemperatureL5",
+        voltage_min::float8           AS "voltageMin",
+        voltage_max::float8           AS "voltageMax"
+       FROM monitoring_settings
+       WHERE id = 'global'
+       LIMIT 1`,
+    )
+    if (result.rows.length === 0) return DEFAULT_SETTINGS
+    return result.rows[0]
+  } catch (err) {
+    console.error("Gagal mengambil monitoring_settings, pakai default:", err)
+    return DEFAULT_SETTINGS
+  }
+}
+
+// ============================================================
+// Logika alert suhu — buat / eskalasi / resolve
+// ============================================================
+
+async function handleTemperatureAlert(
+  sensorId: string,
+  readingId: number,
+  temperature: number,
+  warningTemp: number,
+  dangerTemp: number,
+): Promise<void> {
+  const newLevel = getAlertLevel(temperature, warningTemp, dangerTemp)
+
+  // Cari alert aktif yang ada untuk sensor ini
+  const existingResult = await db.query<OpenAlert>(
+    `SELECT id, level, status, created_at AS "createdAt", resolved_at AS "resolvedAt"
+     FROM temperature_alerts
+     WHERE sensor_id = $1 AND status = 'Aktif'
+     LIMIT 1`,
+    [sensorId],
+  )
+  const existing = existingResult.rows[0] ?? null
+
+  // Suhu normal — resolve alert aktif jika ada
+  if (!newLevel) {
+    if (existing) {
+      await db.query(
+        `UPDATE temperature_alerts
+         SET status = 'Ditangani', resolved_at = NOW()
+         WHERE id = $1`,
+        [existing.id],
+      )
+      console.log(`[Alert Suhu] Resolved alert #${existing.id} (${sensorId}) — suhu kembali normal`)
+    }
+    return
+  }
+
+  // Suhu di atas batas — buat alert baru jika belum ada
+  if (!existing) {
+    const content = getAlertContent(sensorId, newLevel, temperature, warningTemp, dangerTemp)
+
+    await db.query(
+      `INSERT INTO temperature_alerts
+         (reading_id, sensor_id, level, status, temperature, title, detail, created_at)
+       VALUES ($1, $2, $3, 'Aktif', $4, $5, $6, NOW())`,
+      [readingId, sensorId, newLevel, temperature, content.title, content.detail],
+    )
+    console.log(`[Alert Suhu] Dibuat alert ${newLevel} untuk ${sensorId} (${temperature}°C)`)
+
+    // Kirim email notifikasi
+    void sendAlertEmail(content.title, content.detail).catch((err) =>
+      console.error("[Alert Suhu] Gagal kirim email:", err),
+    )
+    return
+  }
+
+  // Alert sudah ada — eskalasi jika naik dari Waspada ke Bahaya
+  if (existing.level === "Waspada" && newLevel === "Bahaya") {
+    const content = getAlertContent(sensorId, newLevel, temperature, warningTemp, dangerTemp)
+
+    await db.query(
+      `UPDATE temperature_alerts
+       SET level = $1, temperature = $2, title = $3, detail = $4, reading_id = $5
+       WHERE id = $6`,
+      [newLevel, temperature, content.title, content.detail, readingId, existing.id],
+    )
+    console.log(`[Alert Suhu] Eskalasi alert #${existing.id} (${sensorId}) ke Bahaya`)
+
+    void sendAlertEmail(content.title, content.detail).catch((err) =>
+      console.error("[Alert Suhu] Gagal kirim email eskalasi:", err),
+    )
+  }
+  // Level sama atau turun — tidak perlu tindakan
+}
+
+// ============================================================
+// Logika alert tegangan — buat / resolve
+// ============================================================
+
+async function handleVoltageAlert(
+  sensorId: string,
+  readingId: number,
+  voltage: number,
+  voltageMin: number,
+  voltageMax: number,
+): Promise<void> {
+  const anomalyType = getVoltageAnomalyType(voltage, voltageMin, voltageMax)
+
+  // Cari voltage alert aktif
+  const existingResult = await db.query<OpenVoltageAlert>(
+    `SELECT id, anomaly_type AS "anomalyType", level, status,
+            created_at AS "createdAt", resolved_at AS "resolvedAt"
+     FROM voltage_alerts
+     WHERE sensor_id = $1 AND status = 'Aktif'
+     LIMIT 1`,
+    [sensorId],
+  )
+  const existing = existingResult.rows[0] ?? null
+
+  // Tegangan normal — resolve alert aktif jika ada
+  if (!anomalyType) {
+    if (existing) {
+      await db.query(
+        `UPDATE voltage_alerts
+         SET status = 'Ditangani', resolved_at = NOW()
+         WHERE id = $1`,
+        [existing.id],
+      )
+      console.log(`[Alert Tegangan] Resolved alert #${existing.id} (${sensorId}) — tegangan normal`)
+    }
+    return
+  }
+
+  // Ada anomali dan belum ada alert aktif — buat baru
+  if (!existing) {
+    const content = getVoltageAlertContent(sensorId, anomalyType, voltage, voltageMin, voltageMax)
+    // Waspada jika deviasi kecil, Bahaya jika > 10% dari batas
+    const deviation =
+      anomalyType === "Drop"
+        ? ((voltageMin - voltage) / voltageMin) * 100
+        : ((voltage - voltageMax) / voltageMax) * 100
+    const level: AlertLevel = deviation > 10 ? "Bahaya" : "Waspada"
+
+    await db.query(
+      `INSERT INTO voltage_alerts
+         (reading_id, sensor_id, anomaly_type, level, status, voltage, title, detail, created_at)
+       VALUES ($1, $2, $3, $4, 'Aktif', $5, $6, $7, NOW())`,
+      [readingId, sensorId, anomalyType, level, voltage, content.title, content.detail],
+    )
+    console.log(`[Alert Tegangan] Dibuat alert ${anomalyType} ${level} untuk ${sensorId} (${voltage} V)`)
+
+    void sendAlertEmail(content.title, content.detail).catch((err) =>
+      console.error("[Alert Tegangan] Gagal kirim email:", err),
+    )
+  }
+  // Sudah ada alert aktif — tidak buat duplikat
+}
+
+// ============================================================
+// Kirim email ke semua pengguna aktif
+// ============================================================
+
+async function sendAlertEmail(subject: string, detail: string): Promise<void> {
+  const emails = await getRecipientEmails()
+  if (emails.length === 0) {
+    console.warn("[Email] Tidak ada penerima email aktif.")
+    return
+  }
+
+  const appUrl = process.env.APP_URL ?? ""
+  const html = `
+    <div style="font-family:sans-serif;max-width:600px;margin:auto">
+      <div style="background:#dc2626;color:#fff;padding:16px 24px;border-radius:8px 8px 0 0">
+        <h2 style="margin:0;font-size:18px">⚠️ ${subject}</h2>
+      </div>
+      <div style="background:#f9f9f9;padding:24px;border-radius:0 0 8px 8px;border:1px solid #e5e5e5;border-top:none">
+        <p style="margin:0 0 16px;color:#374151;font-size:15px">${detail}</p>
+        ${
+          appUrl
+            ? `<a href="${appUrl}/alerts"
+                 style="display:inline-block;background:#dc2626;color:#fff;padding:10px 20px;
+                        border-radius:6px;text-decoration:none;font-size:14px;font-weight:600">
+                 Lihat Dashboard
+               </a>`
+            : ""
+        }
+        <p style="margin:24px 0 0;color:#9ca3af;font-size:12px">
+          Pesan ini dikirim otomatis oleh Sistem Monitoring Ruang Server.
+        </p>
+      </div>
+    </div>
+  `
+
+  await sendEmail({ to: emails, subject, html })
+  console.log(`[Email] Terkirim ke ${emails.length} penerima: "${subject}"`)
+}
+
+// ============================================================
+// POST Handler — Menerima data dari ESP32
+// ============================================================
+
 export async function POST(request: Request) {
   try {
+    // 1. Validasi API Key
     const sensorApiKey = process.env.SENSOR_API_KEY
 
     if (!sensorApiKey) {
       console.error("SENSOR_API_KEY belum tersedia.")
       return NextResponse.json(
         { success: false, error: "Konfigurasi server belum lengkap" },
-        { status: 500 }
+        { status: 500 },
       )
     }
 
@@ -184,55 +390,89 @@ export async function POST(request: Request) {
     if (authorization !== `Bearer ${sensorApiKey}`) {
       return NextResponse.json(
         { success: false, error: "Perangkat tidak diizinkan" },
-        { status: 401 }
+        { status: 401 },
       )
     }
 
+    // 2. Parse JSON Body
     let body: unknown
     try {
       body = await request.json()
     } catch {
       return NextResponse.json(
         { success: false, error: "JSON tidak valid" },
-        { status: 400 }
+        { status: 400 },
       )
     }
 
-    // 1. Validasi Input Data
+    // 3. Validasi Schema
     const result = readingSchema.safeParse(body)
     if (!result.success) {
       return NextResponse.json(
         { success: false, error: "Data tidak valid", details: result.error.format() },
-        { status: 400 }
+        { status: 400 },
       )
     }
 
     const { sensorId, temperature, voltage, current } = result.data
 
-    // 2. Simpan Data ke Database Supabase
-    // Menggunakan Pool dari pg yang dikonfigurasi di lib/db
-    const query = `
-      INSERT INTO sensor_readings (sensor_id, temperature, voltage, current, recorded_at)
-      VALUES ($1, $2, $3, $4, NOW())
-      RETURNING *
-    `
-    const values = [sensorId, temperature, voltage ?? null, current ?? null]
-    
-    // Asumsi database Pool diimport dari '@/lib/db'
-    const dbResult = await db.query(query, values)
-    const savedReading = dbResult.rows[0]
+    // 4. Simpan data ke sensor_readings
+    const insertResult = await db.query<{ id: number }>(
+      `INSERT INTO sensor_readings (sensor_id, temperature, voltage, current, recorded_at)
+       VALUES ($1, $2, $3, $4, NOW())
+       RETURNING id`,
+      [sensorId, temperature, voltage ?? null, current ?? null],
+    )
 
-    // 3. Kembalikan Response Sukses
-    return NextResponse.json({
-      success: true,
-      data: savedReading
+    const readingId = insertResult.rows[0].id
+    console.log(`[Sensor] Data disimpan: id=${readingId} sensorId=${sensorId} temp=${temperature} volt=${voltage ?? "-"} current=${current ?? "-"}`)
+
+    // 5. Ambil threshold dari monitoring_settings
+    const settings = await getSettings()
+
+    const warningTemp =
+      sensorId === "TEMP-L5"
+        ? settings.warningTemperatureL5
+        : settings.warningTemperature
+
+    const dangerTemp =
+      sensorId === "TEMP-L5"
+        ? settings.dangerTemperatureL5
+        : settings.dangerTemperature
+
+    // 6. Proses alert suhu dan tegangan secara paralel
+    //    (tidak await — jangan blokir response ke ESP32 jika email lambat)
+    const alertPromises: Promise<void>[] = [
+      handleTemperatureAlert(sensorId, readingId, temperature, warningTemp, dangerTemp),
+    ]
+
+    // Alert tegangan hanya dari TEMP-L4 (yang punya sensor ZMPT101B)
+    if (sensorId === "TEMP-L4" && typeof voltage === "number") {
+      alertPromises.push(
+        handleVoltageAlert(sensorId, readingId, voltage, settings.voltageMin, settings.voltageMax),
+      )
+    }
+
+    // Jalankan alert handler di background, tidak memblokir response
+    Promise.allSettled(alertPromises).then((results) => {
+      results.forEach((r) => {
+        if (r.status === "rejected") {
+          console.error("[Alert] Error di alert handler:", r.reason)
+        }
+      })
     })
 
+    // 7. Response sukses ke ESP32
+    return NextResponse.json({
+      success: true,
+      readingId,
+      message: "Data sensor berhasil disimpan",
+    })
   } catch (error) {
     console.error("Gagal menyimpan data sensor:", error)
     return NextResponse.json(
       { success: false, error: "Gagal menyimpan data sensor" },
-      { status: 500 }
+      { status: 500 },
     )
   }
 }
